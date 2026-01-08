@@ -1,0 +1,170 @@
+.loginPage {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #050505;
+    position: relative;
+    overflow: hidden;
+}
+
+.backgroundGlow1 {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 40%;
+    height: 40%;
+    background: radial-gradient(circle, rgba(88, 101, 242, 0.2) 0%, rgba(88, 101, 242, 0) 70%);
+    filter: blur(80px);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.backgroundGlow2 {
+    position: absolute;
+    bottom: -10%;
+    right: -10%;
+    width: 40%;
+    height: 40%;
+    background: radial-gradient(circle, rgba(147, 51, 234, 0.2) 0%, rgba(147, 51, 234, 0) 70%);
+    filter: blur(80px);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.loginCard {
+    width: 100%;
+    max-width: 400px;
+    z-index: 10;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: var(--space-8);
+}
+
+.logoWrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--color-accent-primary), #9333ea);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-4) auto;
+    box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
+}
+
+.title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.subtitle {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-1);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.input {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    outline: none;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.input:focus {
+    border-color: var(--color-accent-primary);
+    box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+.input::placeholder {
+    color: var(--color-text-tertiary);
+}
+
+.errorText {
+    color: var(--color-status-danger);
+    font-size: var(--font-size-xs);
+    margin-top: var(--space-1);
+}
+
+.submitButton {
+    width: 100%;
+    background: var(--color-text-primary);
+    color: var(--color-text-inverse);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    border: none;
+    cursor: pointer;
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    margin-top: var(--space-2);
+}
+
+.submitButton:hover {
+    background-color: #e5e7eb;
+}
+
+.submitButton:active {
+    transform: scale(0.98);
+}
+
+.demoInfo {
+    margin-top: var(--space-6);
+    text-align: center;
+}
+
+.demoText {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
+.demoEmail {
+    color: var(--color-text-secondary);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

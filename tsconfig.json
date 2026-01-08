@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@bundlros/ui": ["./_Shared/index.ts"]
+    }
+  },
+  "references": [
+    { "path": "./1-Identity & Access/tsconfig.json" },
+    { "path": "./2-Core Data Model & API/tsconfig.json" },
+    { "path": "./13-Bundlr Budgets/tsconfig.json" },
+    { "path": "./_Shared/tsconfig.json" }
+  ]
+}

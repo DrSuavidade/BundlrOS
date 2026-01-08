@@ -1,0 +1,5 @@
+{
+  "name": "Nexus Entity Explorer",
+  "description": "A structural database explorer for managing Clients, Contracts, Projects, and Deliverables with strict state workflows.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,120 @@
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    cursor: pointer;
+    border: 1px solid transparent;
+    user-select: none;
+}
+
+.button:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-bg-app), 0 0 0 4px var(--color-accent-primary);
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* Variants */
+.primary {
+    background-color: var(--color-accent-primary);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.primary:hover {
+    background-color: var(--color-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px -1px rgba(0, 0, 0, 0.15), 0 3px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.primary:active {
+    transform: translateY(0);
+}
+
+.secondary {
+    background-color: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-subtle);
+}
+
+.secondary:hover {
+    background-color: var(--color-bg-card-hover);
+    border-color: var(--color-border-default);
+}
+
+.danger {
+    background-color: var(--color-status-danger);
+    color: white;
+}
+
+.danger:hover {
+    filter: brightness(1.1);
+}
+
+.ghost {
+    background-color: transparent;
+    color: var(--color-text-secondary);
+}
+
+.ghost:hover {
+    background-color: var(--color-bg-subtle);
+    color: var(--color-text-primary);
+}
+
+/* Sizes */
+.sm {
+    height: 2rem;
+    /* 32px */
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+    /* 12px */
+    border-radius: var(--radius-sm, 0.375rem);
+}
+
+.md {
+    height: 2.5rem;
+    /* 40px */
+    padding: 0 1rem;
+    font-size: 0.875rem;
+    /* 14px */
+    border-radius: var(--radius-md, 0.5rem);
+}
+
+.lg {
+    height: 3rem;
+    /* 48px */
+    padding: 0 1.5rem;
+    font-size: 1rem;
+    /* 16px */
+    border-radius: var(--radius-md, 0.5rem);
+}
+
+.iconSpacer {
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.loadingSpinner {
+    animation: spin 1s linear infinite;
+    margin-right: 0.5rem;
+    height: 1rem;
+    width: 1rem;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

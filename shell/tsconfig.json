@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src", "../env.d.ts"],
+  "references": [
+    { "path": "../_Shared" },
+    { "path": "../1-Identity & Access" },
+    { "path": "../2-Core Data Model & API" },
+    { "path": "../3-Event Bus & Automation Runs" },
+    { "path": "../4-File Asset Hub" },
+    { "path": "../5-Unified Inbox" },
+    { "path": "../6-Client 360" },
+    { "path": "../7-Service Factories" },
+    { "path": "../8-Approvals Center" },
+    { "path": "../9-QA Gates & Checks" },
+    { "path": "../10-Reporting & KPIs" },
+    { "path": "../11-Capacity & SLA Radar" },
+    { "path": "../12-Admin Integrations Hub" },
+    { "path": "../13-Bundlr Budgets" }
+  ]
+}

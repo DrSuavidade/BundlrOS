@@ -1,0 +1,29 @@
+.glassCard {
+    position: relative;
+    overflow: hidden;
+    background: rgba(28, 33, 40, 0.6);
+    /* --color-bg-card with opacity */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: transform var(--transition-normal), border-color var(--transition-normal);
+}
+
+.glassCard::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.05) 0%,
+            rgba(255, 255, 255, 0) 100%);
+    pointer-events: none;
+}
+
+.padding {
+    padding: var(--space-8);
+}

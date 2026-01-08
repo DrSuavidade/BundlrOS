@@ -1,0 +1,5 @@
+{
+  "name": "Nexus Identity",
+  "description": "A modern, dark-themed OS-style user management dashboard featuring RBAC, audit logs, and clean visuals.",
+  "requestFramePermissions": []
+}

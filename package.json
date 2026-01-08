@@ -1,0 +1,21 @@
+{
+  "name": "bundlr-os-monorepo",
+  "private": true,
+  "scripts": {
+    "clean": "rm -rf **/node_modules",
+    "install:all": "pnpm install",
+    "dev:shell": "pnpm --filter shell dev",
+    "lint": "pnpm -r lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "vite": "^6.0.0"
+  },
+  "dependencies": {
+    "@types/node": "^22.19.3",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "react-router-dom": "^7.1.0",
+    "lucide-react": "^0.562.0"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "9",
+  "description": "A technical QA dashboard for visualizing automated quality checks, managing deliverable gates, and analyzing failures with Gemini.",
+  "requestFramePermissions": []
+}

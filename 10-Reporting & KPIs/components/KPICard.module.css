@@ -1,0 +1,77 @@
+.card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.card:hover {
+    border-color: var(--color-border-default);
+    background: var(--color-bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-4);
+}
+
+.name {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.trendBadge {
+    display: flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
+}
+
+.trendPositive {
+    background: var(--color-status-success-bg);
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.trendNegative {
+    background: var(--color-status-danger-bg);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+.trendNeutral {
+    background: var(--color-bg-subtle);
+    color: var(--color-text-tertiary);
+    border-color: var(--color-border-subtle);
+}
+
+.valueContainer {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-2);
+}
+
+.value {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.comparison {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}

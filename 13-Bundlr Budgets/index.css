@@ -1,0 +1,5 @@
+@import "../_Shared/styles/global.css";
+
+/* Module 13: Budgets overrides */
+
+/* The shared global.css already handles scrollbars, so we only add module-specific logic here if needed */
