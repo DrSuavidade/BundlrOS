@@ -158,28 +158,26 @@ export default function App() {
   );
 
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg-app)] text-[var(--color-text-primary)]">
+    <div className="page-container">
       {/* Module Sub-Header */}
-      <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">
-            Integration Health
-          </h1>
-          <p className="text-xs text-[var(--color-text-tertiary)] font-medium">
+      <header className="page-header">
+        <div className="page-header__content">
+          <h1 className="page-header__title">Integration Health</h1>
+          <p className="page-header__subtitle">
             Manage client connections and monitor sync status across the
             ecosystem.
           </p>
         </div>
 
-        <div className="flex gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-tertiary)]" />
+        <div className="page-header__actions">
+          <div className="search-input">
+            <Search className="search-input__icon w-4 h-4" />
             <input
               type="text"
               placeholder="Search integration..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg text-xs text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] w-full sm:w-64"
+              className="form-input form-input--sm pl-9 w-full sm:w-64"
             />
           </div>
           <Button

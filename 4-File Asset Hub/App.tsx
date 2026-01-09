@@ -94,16 +94,16 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg-app)] text-[var(--color-text-primary)]">
+    <div className="page-container">
       {/* Module Sub-Header / Toolbar */}
-      <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4 flex-1">
-          <div className="relative w-80">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)] h-4 w-4" />
+      <header className="page-header">
+        <div className="page-header__actions flex-1">
+          <div className="search-input w-80">
+            <Search className="search-input__icon h-4 w-4" />
             <input
               type="text"
               placeholder="Search assets..."
-              className="w-full bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg pl-10 pr-4 py-2 text-xs text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] transition-all"
+              className="form-input pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -112,7 +112,7 @@ const App: React.FC = () => {
           <div className="hidden lg:flex items-center gap-2">
             <Filter className="text-[var(--color-text-tertiary)] h-3 w-3" />
             <select
-              className="bg-transparent text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)] focus:outline-none"
+              className="form-select text-[10px]"
               value={selectedClient}
               onChange={(e) => {
                 setSelectedClient(e.target.value);
@@ -129,10 +129,10 @@ const App: React.FC = () => {
           </div>
 
           {selectedClient && (
-            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-left-2">
+            <div className="flex items-center gap-2 animate-fade-in">
               <span className="text-[var(--color-text-tertiary)]">/</span>
               <select
-                className="bg-transparent text-[10px] font-bold uppercase tracking-wider text-[var(--color-text-secondary)] focus:outline-none max-w-[200px]"
+                className="form-select text-[10px] max-w-[200px]"
                 value={selectedDeliverable}
                 onChange={(e) => setSelectedDeliverable(e.target.value)}
               >
@@ -147,7 +147,7 @@ const App: React.FC = () => {
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="page-header__actions">
           <div className="flex bg-[var(--color-bg-subtle)] p-1 rounded-lg border border-[var(--color-border-subtle)]">
             <button
               onClick={() => setViewMode("grid")}

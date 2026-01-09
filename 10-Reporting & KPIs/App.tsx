@@ -127,9 +127,27 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex bg-[var(--color-bg-app)] min-h-full font-sans text-[var(--color-text-primary)]">
+    <div className="flex h-full">
       <Sidebar currentView={view} onChangeView={setView} />
-      <main className="flex-1 p-8">{renderContent()}</main>
+      <main className="flex-1 overflow-y-auto">
+        <div className="page-container p-8">
+          <header className="page-header">
+            <div className="page-header__content">
+              <h1 className="page-header__title">
+                {view === "DASHBOARD"
+                  ? "KPI Overview"
+                  : view === "REPORTS"
+                  ? "Analytic Reports"
+                  : "Report Details"}
+              </h1>
+              <p className="page-header__subtitle">
+                Executive reporting and performance intelligence
+              </p>
+            </div>
+          </header>
+          {renderContent()}
+        </div>
+      </main>
     </div>
   );
 };

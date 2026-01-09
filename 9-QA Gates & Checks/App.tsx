@@ -39,21 +39,21 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg-app)] text-[var(--color-text-primary)]">
+    <div className="page-container">
       {/* Module Sub-Header */}
-      <header className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">
-            Quality Assurance Monitor
-          </h1>
-          <p className="text-xs text-[var(--color-text-tertiary)] font-medium">
+      <header className="page-header">
+        <div className="page-header__content">
+          <h1 className="page-header__title">Quality Assurance Monitor</h1>
+          <p className="page-header__subtitle">
             Automated gatekeeper for system deliverables and asset validation.
           </p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-[10px] text-[var(--color-text-secondary)] font-mono bg-[var(--color-bg-subtle)] px-3 py-1.5 rounded-full border border-[var(--color-border-subtle)]">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          SYSTEM OPERATIONAL
+        <div className="page-header__actions">
+          <div className="status-pill status-pill--live">
+            <div className="status-pill__dot" />
+            SYSTEM OPERATIONAL
+          </div>
         </div>
       </header>
 
@@ -76,8 +76,8 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="py-6 text-center text-[var(--color-text-tertiary)] text-[10px] border-t border-[var(--color-border-subtle)] mt-8">
-        <p className="uppercase tracking-widest font-bold">
+      <footer className="page-footer">
+        <p className="page-footer__text">
           QA Nexus System • n8n Integration Active • Gemini Analysis Enabled
         </p>
       </footer>

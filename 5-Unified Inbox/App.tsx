@@ -9,6 +9,12 @@ import {
   PieChart,
   AlertTriangle,
   Zap,
+  X,
+  User,
+  Building2,
+  Tag,
+  FileText,
+  Clock,
 } from "lucide-react";
 import { AppShell, Button } from "@bundlros/ui";
 import styles from "./components/Inbox.module.css";
@@ -67,6 +73,7 @@ const generateMockData = (): IntakeItem[] => {
 const App: React.FC = () => {
   const [items, setItems] = useState<IntakeItem[]>(generateMockData());
   const [selectedItem, setSelectedItem] = useState<IntakeItem | null>(null);
+  const [isNewIntakeOpen, setIsNewIntakeOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: "All",
@@ -74,11 +81,57 @@ const App: React.FC = () => {
     client: "All",
   });
 
+  // New Intake Form State
+  const [newIntake, setNewIntake] = useState({
+    title: "",
+    description: "",
+    client: "",
+    priority: Priority.MEDIUM,
+    requestor: "",
+  });
+
+  const clients = [
+    "Acme Corp",
+    "Globex",
+    "Soylent Corp",
+    "Initech",
+    "Massive Dynamic",
+  ];
+
   const handleUpdateItem = (updated: IntakeItem) => {
     setItems((prev) =>
       prev.map((item) => (item.id === updated.id ? updated : item))
     );
     setSelectedItem(updated);
+  };
+
+  const handleCreateIntake = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newIntake.title || !newIntake.client) return;
+
+    const newItem: IntakeItem = {
+      id: `INT-${1000 + items.length}`,
+      title: newIntake.title,
+      description: newIntake.description || "No description provided.",
+      client: newIntake.client,
+      requestor: newIntake.requestor || "unknown@example.com",
+      priority: newIntake.priority,
+      status: Status.NEW,
+      createdAt: new Date().toISOString(),
+      slaDueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h from now
+      assignee: undefined,
+      tags: [],
+    };
+
+    setItems((prev) => [newItem, ...prev]);
+    setIsNewIntakeOpen(false);
+    setNewIntake({
+      title: "",
+      description: "",
+      client: "",
+      priority: Priority.MEDIUM,
+      requestor: "",
+    });
   };
 
   const filteredItems = useMemo(() => {
@@ -233,6 +286,7 @@ const App: React.FC = () => {
               variant="primary"
               size="sm"
               leftIcon={<PlusCircle size={14} />}
+              onClick={() => setIsNewIntakeOpen(true)}
             >
               New Intake
             </Button>
@@ -269,6 +323,171 @@ const App: React.FC = () => {
           />
         )}
       </div>
+
+      {/* New Intake Modal */}
+      {isNewIntakeOpen && (
+        <div
+          className="modal-overlay"
+          onClick={() => setIsNewIntakeOpen(false)}
+        >
+          <div
+            className="modal w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal__header">
+              <h2 className="modal__title flex items-center gap-2">
+                <PlusCircle
+                  size={18}
+                  className="text-[var(--color-accent-primary)]"
+                />
+                Create New Intake
+              </h2>
+              <button
+                onClick={() => setIsNewIntakeOpen(false)}
+                className="modal__close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleCreateIntake}
+              className="modal__body space-y-5"
+            >
+              {/* Title */}
+              <div>
+                <label className="form-label flex items-center gap-2">
+                  <FileText size={14} />
+                  Subject / Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newIntake.title}
+                  onChange={(e) =>
+                    setNewIntake({ ...newIntake, title: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="Brief description of the issue or request"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="form-label">Description</label>
+                <textarea
+                  value={newIntake.description}
+                  onChange={(e) =>
+                    setNewIntake({ ...newIntake, description: e.target.value })
+                  }
+                  className="form-input min-h-[100px] resize-none"
+                  placeholder="Provide additional details about this intake..."
+                  rows={4}
+                />
+              </div>
+
+              {/* Client & Priority Row */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="form-label flex items-center gap-2">
+                    <Building2 size={14} />
+                    Client
+                  </label>
+                  <select
+                    required
+                    value={newIntake.client}
+                    onChange={(e) =>
+                      setNewIntake({ ...newIntake, client: e.target.value })
+                    }
+                    className="form-select w-full"
+                  >
+                    <option value="">Select client...</option>
+                    {clients.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="form-label flex items-center gap-2">
+                    <Zap size={14} />
+                    Priority
+                  </label>
+                  <select
+                    value={newIntake.priority}
+                    onChange={(e) =>
+                      setNewIntake({
+                        ...newIntake,
+                        priority: e.target.value as Priority,
+                      })
+                    }
+                    className="form-select w-full"
+                  >
+                    {Object.values(Priority).map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Requestor */}
+              <div>
+                <label className="form-label flex items-center gap-2">
+                  <User size={14} />
+                  Requestor Email
+                </label>
+                <input
+                  type="email"
+                  value={newIntake.requestor}
+                  onChange={(e) =>
+                    setNewIntake({ ...newIntake, requestor: e.target.value })
+                  }
+                  className="form-input"
+                  placeholder="requestor@company.com"
+                />
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-xl p-4 flex items-start gap-3">
+                <Clock
+                  size={16}
+                  className="text-[var(--color-text-tertiary)] mt-0.5"
+                />
+                <div>
+                  <p className="text-xs font-medium text-[var(--color-text-secondary)]">
+                    SLA will be automatically calculated
+                  </p>
+                  <p className="text-[10px] text-[var(--color-text-tertiary)] mt-0.5">
+                    Based on client contract and selected priority level
+                  </p>
+                </div>
+              </div>
+            </form>
+
+            <div className="modal__footer">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsNewIntakeOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleCreateIntake}
+                leftIcon={<PlusCircle size={14} />}
+              >
+                Create Intake
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

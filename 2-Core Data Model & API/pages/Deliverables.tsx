@@ -1,19 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  Deliverable, DeliverableStatus, Project, Client 
-} from '../types';
-import { MockAPI } from '../services/mockBackend';
-import { StatusPill } from '../components/ui/StatusPill';
-import { 
-  Plus, Filter, ArrowRight, CheckCircle, XCircle, FileText, 
-  ChevronRight, Calendar, Archive
-} from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { Deliverable, DeliverableStatus, Project, Client } from "../types";
+import { MockAPI } from "../services/mockBackend";
+import { StatusPill } from "../components/ui/StatusPill";
+import {
+  Plus,
+  Filter,
+  ArrowRight,
+  CheckCircle,
+  XCircle,
+  FileText,
+  ChevronRight,
+  Calendar,
+  Archive,
+  Package,
+  X,
+} from "lucide-react";
+import { Button } from "@bundlros/ui";
 
 const ALLOWED_TRANSITIONS: Record<string, DeliverableStatus[]> = {
   [DeliverableStatus.DRAFT]: [DeliverableStatus.AWAITING_APPROVAL],
-  [DeliverableStatus.AWAITING_APPROVAL]: [DeliverableStatus.APPROVED, DeliverableStatus.DRAFT],
+  [DeliverableStatus.AWAITING_APPROVAL]: [
+    DeliverableStatus.APPROVED,
+    DeliverableStatus.DRAFT,
+  ],
   [DeliverableStatus.APPROVED]: [DeliverableStatus.IN_QA],
-  [DeliverableStatus.IN_QA]: [DeliverableStatus.READY, DeliverableStatus.QA_FAILED],
+  [DeliverableStatus.IN_QA]: [
+    DeliverableStatus.READY,
+    DeliverableStatus.QA_FAILED,
+  ],
   [DeliverableStatus.QA_FAILED]: [DeliverableStatus.IN_QA],
   [DeliverableStatus.READY]: [DeliverableStatus.PUBLISHED],
   [DeliverableStatus.PUBLISHED]: [DeliverableStatus.ARCHIVED],
@@ -23,12 +37,12 @@ const ALLOWED_TRANSITIONS: Record<string, DeliverableStatus[]> = {
 export const Deliverables: React.FC = () => {
   const [items, setItems] = useState<Deliverable[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
+
   // New Item State
-  const [newItemTitle, setNewItemTitle] = useState('');
-  const [newItemProject, setNewItemProject] = useState('');
+  const [newItemTitle, setNewItemTitle] = useState("");
+  const [newItemProject, setNewItemProject] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -37,7 +51,7 @@ export const Deliverables: React.FC = () => {
   const fetchData = async () => {
     const [d, p] = await Promise.all([
       MockAPI.getDeliverables(),
-      MockAPI.getProjects()
+      MockAPI.getProjects(),
     ]);
     setItems(d);
     setProjects(p);
@@ -50,15 +64,15 @@ export const Deliverables: React.FC = () => {
     await MockAPI.createDeliverable({
       project_id: newItemProject,
       title: newItemTitle,
-      type: 'document',
+      type: "document",
       status: DeliverableStatus.DRAFT,
-      version: 'v0.1',
-      due_date: new Date().toISOString().split('T')[0]
+      version: "v0.1",
+      due_date: new Date().toISOString().split("T")[0],
     });
-    
+
     setIsCreateModalOpen(false);
-    setNewItemTitle('');
-    setNewItemProject('');
+    setNewItemTitle("");
+    setNewItemProject("");
     fetchData();
   };
 
@@ -67,192 +81,251 @@ export const Deliverables: React.FC = () => {
     fetchData();
   };
 
-  const filteredItems = filterStatus === 'all' 
-    ? items 
-    : items.filter(i => i.status === filterStatus);
+  const filteredItems =
+    filterStatus === "all"
+      ? items
+      : items.filter((i) => i.status === filterStatus);
 
   const getTransitionActions = (item: Deliverable) => {
     const targets = ALLOWED_TRANSITIONS[item.status] || [];
-    
-    return targets.map(target => {
-      let label = 'Advance';
+
+    return targets.map((target) => {
+      let label = "Advance";
       let Icon = ArrowRight;
-      let btnClass = 'text-slate-600 hover:bg-slate-100 hover:text-slate-900';
+      let btnClass =
+        "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] border-[var(--color-border-subtle)]";
 
       if (target === DeliverableStatus.APPROVED) {
-        label = 'Approve';
+        label = "Approve";
         Icon = CheckCircle;
-        btnClass = 'text-green-600 hover:bg-green-50';
-      } else if (target === DeliverableStatus.QA_FAILED || (item.status === 'awaiting_approval' && target === 'draft')) {
-        label = 'Reject/Fail';
+        btnClass =
+          "text-emerald-400 hover:bg-emerald-500/10 border-emerald-500/20";
+      } else if (
+        target === DeliverableStatus.QA_FAILED ||
+        (item.status === "awaiting_approval" && target === "draft")
+      ) {
+        label = "Reject";
         Icon = XCircle;
-        btnClass = 'text-red-600 hover:bg-red-50';
+        btnClass = "text-red-400 hover:bg-red-500/10 border-red-500/20";
       } else if (target === DeliverableStatus.PUBLISHED) {
-        label = 'Publish';
+        label = "Publish";
         Icon = CheckCircle;
-        btnClass = 'text-indigo-600 hover:bg-indigo-50';
+        btnClass =
+          "text-[var(--color-accent-primary)] hover:bg-[var(--color-accent-subtle)] border-[var(--color-accent-primary)]/20";
       } else if (target === DeliverableStatus.ARCHIVED) {
-        label = 'Archive';
+        label = "Archive";
         Icon = Archive;
-        btnClass = 'text-slate-400 hover:bg-slate-100';
+        btnClass =
+          "text-[var(--color-text-tertiary)] hover:bg-[var(--color-bg-elevated)] border-[var(--color-border-subtle)]";
       }
 
       return (
         <button
           key={target}
           onClick={() => handleTransition(item.id, target)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-transparent hover:border-slate-200 ${btnClass}`}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all border ${btnClass}`}
           title={`Move to ${target}`}
         >
-          <Icon size={14} className={Icon === Archive ? "" : ""} />
+          <Icon size={12} />
           {label}
         </button>
       );
     });
   };
 
+  const filterOptions = [
+    { value: "all", label: "All" },
+    { value: "draft", label: "Draft" },
+    { value: "awaiting_approval", label: "Awaiting Approval" },
+    { value: "in_qa", label: "In QA" },
+    { value: "published", label: "Published" },
+  ];
+
   return (
-    <div>
-      {/* Header Actions */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Deliverables</h1>
-          <p className="text-slate-500 mt-1">Manage project outputs and workflows.</p>
+    <div className="page-container">
+      {/* Header */}
+      <header className="page-header">
+        <div className="page-header__content">
+          <h1 className="page-header__title flex items-center gap-3">
+            <Package className="text-[var(--color-accent-primary)]" size={24} />
+            Deliverables
+          </h1>
+          <p className="page-header__subtitle">
+            Manage project outputs and workflow state transitions
+          </p>
         </div>
-        <button 
-          onClick={() => setIsCreateModalOpen(true)}
-          className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm"
-        >
-          <Plus size={18} />
-          New Deliverable
-        </button>
-      </div>
+        <div className="page-header__actions">
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={<Plus size={16} />}
+            onClick={() => setIsCreateModalOpen(true)}
+          >
+            New Deliverable
+          </Button>
+        </div>
+      </header>
 
       {/* Filters */}
-      <div className="bg-white border border-slate-200 rounded-t-xl p-4 flex items-center gap-4">
-        <div className="flex items-center gap-2 text-slate-500 text-sm">
-          <Filter size={16} />
-          <span className="font-medium">Filter Status:</span>
-        </div>
-        <div className="flex gap-2">
-          {['all', 'draft', 'awaiting_approval', 'in_qa', 'published'].map(status => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`
-                px-3 py-1.5 rounded-full text-xs font-medium transition-colors border
-                ${filterStatus === status 
-                  ? 'bg-slate-100 border-slate-300 text-slate-800' 
-                  : 'bg-white border-transparent text-slate-500 hover:bg-slate-50 hover:border-slate-200'}
-              `}
-            >
-              {status.replace('_', ' ').toUpperCase()}
-            </button>
-          ))}
+      <div className="card mb-6">
+        <div className="card__body py-3">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-[var(--color-text-tertiary)] text-sm">
+              <Filter size={14} />
+              <span className="font-medium text-xs uppercase tracking-wider">
+                Status:
+              </span>
+            </div>
+            <div className="flex gap-2">
+              {filterOptions.map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setFilterStatus(value)}
+                  className={`
+                    px-3 py-1.5 rounded-md text-[10px] font-semibold transition-all border uppercase tracking-wide
+                    ${
+                      filterStatus === value
+                        ? "bg-[var(--color-accent-subtle)] border-[var(--color-accent-primary)]/20 text-[var(--color-accent-primary)]"
+                        : "bg-[var(--color-bg-subtle)] border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] hover:border-[var(--color-border-default)]"
+                    }
+                  `}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white border-x border-b border-slate-200 rounded-b-xl overflow-hidden shadow-sm">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-500 font-medium border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4 font-semibold w-1/4">Title / ID</th>
-              <th className="px-6 py-4 font-semibold">Project</th>
-              <th className="px-6 py-4 font-semibold">Status</th>
-              <th className="px-6 py-4 font-semibold">Version</th>
-              <th className="px-6 py-4 font-semibold">Actions (State Transition)</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {filteredItems.map(item => {
-              const project = projects.find(p => p.id === item.project_id);
-              return (
-                <tr key={item.id} className="hover:bg-slate-50/50 group transition-colors">
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col">
-                      <span className="font-medium text-slate-900">{item.title}</span>
-                      <span className="text-xs font-mono text-slate-400 mt-0.5">#{item.id}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-slate-300"></div>
-                      {project?.name || 'Unknown Project'}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <StatusPill status={item.status} />
-                  </td>
-                  <td className="px-6 py-4 font-mono text-xs text-slate-500">
-                    {item.version}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2 opacity-100 transition-opacity">
-                      {getTransitionActions(item)}
+      <div className="card card--elevated overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th style={{ width: "30%" }}>Title / ID</th>
+                <th>Project</th>
+                <th>Status</th>
+                <th>Version</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredItems.map((item) => {
+                const project = projects.find((p) => p.id === item.project_id);
+                return (
+                  <tr key={item.id} className="group">
+                    <td>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-[var(--color-text-primary)]">
+                          {item.title}
+                        </span>
+                        <span className="text-[10px] font-mono text-[var(--color-text-tertiary)] mt-0.5">
+                          #{item.id}
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-[var(--color-accent-primary)]"></div>
+                        <span>{project?.name || "Unknown Project"}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <StatusPill status={item.status} />
+                    </td>
+                    <td>
+                      <span className="font-mono text-xs">{item.version}</span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        {getTransitionActions(item)}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredItems.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="!py-12">
+                    <div className="empty-state">
+                      <div className="empty-state__icon">
+                        <FileText size={28} />
+                      </div>
+                      <p className="empty-state__title">
+                        No Deliverables Found
+                      </p>
+                      <p className="empty-state__description">
+                        No items match the current filter. Try adjusting the
+                        filter or create a new deliverable.
+                      </p>
                     </div>
                   </td>
                 </tr>
-              );
-            })}
-            {filteredItems.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                  No deliverables found matching current filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Simple Create Modal (Inline implementation for brevity in single file requirement context, effectively) */}
+      {/* Create Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 animate-in fade-in zoom-in duration-200">
-            <h2 className="text-lg font-bold text-slate-900 mb-4">Create Deliverable</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
+        <div className="modal-overlay">
+          <div className="modal w-full max-w-md">
+            <div className="modal__header">
+              <h2 className="modal__title flex items-center gap-2">
+                <Plus size={16} />
+                Create Deliverable
+              </h2>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="modal__close"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="modal__body space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
-                <input 
-                  type="text" 
+                <label className="form-label">Title</label>
+                <input
+                  type="text"
                   required
                   value={newItemTitle}
-                  onChange={e => setNewItemTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
+                  onChange={(e) => setNewItemTitle(e.target.value)}
+                  className="form-input"
                   placeholder="e.g., Q3 Financial Report"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Project</label>
-                <select 
+                <label className="form-label">Project</label>
+                <select
                   required
                   value={newItemProject}
-                  onChange={e => setNewItemProject(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm bg-white"
+                  onChange={(e) => setNewItemProject(e.target.value)}
+                  className="form-select w-full"
                 >
                   <option value="">Select Project...</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button 
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg"
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg"
-                >
-                  Create Draft
-                </button>
-              </div>
             </form>
+            <div className="modal__footer">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsCreateModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="primary" size="sm" onClick={handleCreate}>
+                Create Draft
+              </Button>
+            </div>
           </div>
         </div>
       )}

@@ -369,15 +369,15 @@ const App: React.FC = () => {
           />
 
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-200">
+            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
               {labels.serviceBuilder}
             </h2>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-[var(--color-text-tertiary)]">
                 {labels.presetLabel}
               </span>
               <select
-                className="text-xs border border-slate-200 dark:border-slate-700 rounded px-2 py-1 bg-white dark:bg-slate-900"
+                className="form-select text-xs"
                 value={selectedPresetId}
                 onChange={(e) => handlePresetSelect(e.target.value)}
               >
@@ -402,13 +402,13 @@ const App: React.FC = () => {
         {/* Right Column: Preview */}
         <div className="lg:col-span-7 flex flex-col sticky top-24 h-[calc(100vh-8rem)]">
           {/* Preview Toggle */}
-          <div className="flex gap-2 mb-4 bg-slate-200 dark:bg-slate-800 p-1 rounded-lg self-start">
+          <div className="flex gap-2 mb-4 bg-[var(--color-bg-subtle)] p-1 rounded-lg self-start border border-[var(--color-border-subtle)]">
             <button
               onClick={() => setActiveTab("proposal")}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 activeTab === "proposal"
-                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
+                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
               }`}
             >
               <Layout size={16} />
@@ -418,8 +418,8 @@ const App: React.FC = () => {
               onClick={() => setActiveTab("json")}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 activeTab === "json"
-                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
+                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
               }`}
             >
               <Code size={16} />
@@ -429,8 +429,8 @@ const App: React.FC = () => {
               onClick={() => setActiveTab("template")}
               className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
                 activeTab === "template"
-                  ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-300 shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
+                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
               }`}
             >
               <FileText size={16} />
@@ -454,7 +454,7 @@ const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsTemplateFullscreen(true)}
-                  className="absolute right-4 top-2 z-10 inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white/90 px-2 py-1 text-xs font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:bg-slate-800/90 dark:border-slate-700 dark:text-slate-200"
+                  className="absolute right-4 top-2 z-10 inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-card)] px-2 py-1 text-xs font-medium text-[var(--color-text-secondary)] shadow-sm hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] transition-all"
                 >
                   <Maximize2 size={14} />
                   <span className="hidden sm:inline">Maximizar</span>
@@ -467,9 +467,9 @@ const App: React.FC = () => {
         </div>
       </main>
       {isTemplateFullscreen && (
-        <div className="fixed inset-0 z-[9999] bg-slate-900/80 backdrop-blur-sm flex flex-col">
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex flex-col">
           {/* Top bar */}
-          <div className="flex items-center justify-between px-4 py-3 text-slate-100 border-b border-slate-700">
+          <div className="flex items-center justify-between px-4 py-3 text-[var(--color-text-primary)] border-b border-[var(--color-border-subtle)]">
             <div className="flex items-center gap-2">
               <FileText size={18} />
               <span className="text-sm font-medium">
@@ -481,7 +481,7 @@ const App: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowTemplateJsonEditor((prev) => !prev)}
-                className="inline-flex items-center gap-1 rounded-md border border-slate-600 px-3 py-1.5 text-xs font-medium hover:bg-slate-800"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--color-bg-elevated)] transition-all"
               >
                 <Code size={14} />
                 <span>
@@ -492,9 +492,8 @@ const App: React.FC = () => {
               <button
                 type="button"
                 onClick={handleDownloadTemplatePdf}
-                className="inline-flex items-center gap-1 rounded-md border border-slate-600 px-3 py-1.5 text-xs font-medium hover:bg-slate-800"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--color-bg-elevated)] transition-all"
               >
-                {/* use any icon you already import, or just text */}
                 <span>Download PDF</span>
               </button>
 
@@ -504,7 +503,7 @@ const App: React.FC = () => {
                   setIsTemplateFullscreen(false);
                   setShowTemplateJsonEditor(false);
                 }}
-                className="inline-flex items-center gap-1 rounded-md border border-slate-600 px-3 py-1.5 text-xs font-medium hover:bg-slate-800"
+                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--color-bg-elevated)] transition-all"
               >
                 <X size={14} />
                 <span>Voltar</span>
@@ -524,19 +523,19 @@ const App: React.FC = () => {
             </div>
 
             {showTemplateJsonEditor && (
-              <div className="w-[420px] bg-slate-950/90 border border-slate-700 rounded-xl flex flex-col overflow-hidden">
-                <div className="px-3 py-2 border-b border-slate-700 flex items-center justify-between">
-                  <span className="text-xs font-mono text-slate-300">
+              <div className="w-[420px] bg-[var(--color-bg-card)] border border-[var(--color-border-subtle)] rounded-xl flex flex-col overflow-hidden">
+                <div className="px-3 py-2 border-b border-[var(--color-border-subtle)] flex items-center justify-between">
+                  <span className="text-xs font-mono text-[var(--color-text-secondary)]">
                     template_budget.json
                   </span>
                   {templateJsonError && (
-                    <span className="text-[10px] text-red-400">
+                    <span className="text-[10px] text-[var(--color-status-danger)]">
                       {templateJsonError}
                     </span>
                   )}
                 </div>
                 <textarea
-                  className="flex-1 w-full bg-transparent text-[11px] font-mono text-slate-100 p-3 outline-none resize-none"
+                  className="flex-1 w-full bg-transparent text-[11px] font-mono text-[var(--color-text-primary)] p-3 outline-none resize-none"
                   value={
                     templateJsonText ?? JSON.stringify(templateBase, null, 2)
                   }

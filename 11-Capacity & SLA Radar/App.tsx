@@ -102,25 +102,21 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[var(--color-bg-app)] text-[var(--color-text-primary)]">
+    <div className="page-container">
       {/* Module Sub-Header */}
-      <header className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">
-            Operational Overview
-          </h1>
-          <p className="text-xs text-[var(--color-text-tertiary)] font-medium">
+      <header className="page-header">
+        <div className="page-header__content">
+          <h1 className="page-header__title">Operational Overview</h1>
+          <p className="page-header__subtitle">
             Real-time monitoring of client capacity and SLA compliance
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="page-header__actions">
           {events.length > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-bg-subtle)] rounded-full border border-[var(--color-border-subtle)] animate-pulse">
+            <div className="status-pill status-pill--live">
               <Zap size={14} className="text-amber-400" />
-              <span className="text-[10px] text-[var(--color-text-secondary)] font-mono">
-                Live: {events[0].message}
-              </span>
+              <span>Live: {events[0].message}</span>
             </div>
           )}
           <Button

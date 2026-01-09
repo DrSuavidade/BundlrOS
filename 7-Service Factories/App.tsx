@@ -106,7 +106,7 @@ const App: React.FC = () => {
   }, [selectedId, factories.length]); // Dependencies simplified for demo
 
   return (
-    <div className="flex h-full text-[var(--color-text-primary)] font-sans border border-[var(--color-border-subtle)] rounded-lg overflow-hidden bg-[var(--color-bg-card)]">
+    <div className="flex h-full text-[var(--color-text-primary)] font-sans rounded-lg overflow-hidden">
       {/* Sidebar */}
       <FactoryList
         factories={factories}
@@ -146,7 +146,7 @@ const App: React.FC = () => {
             {selectedFactory && (
               <div className="flex items-center gap-3">
                 {selectedFactory.status === Status.BLOCKED && (
-                  <div className="px-2 py-0.5 bg-amber-900/10 border border-amber-700/50 rounded flex items-center gap-2 text-amber-500 text-[10px] font-bold uppercase animate-pulse">
+                  <div className="badge badge--warning flex items-center gap-2 animate-pulse">
                     <AlertTriangle size={12} />
                     Blocked
                   </div>
@@ -251,54 +251,46 @@ const App: React.FC = () => {
 
       {/* Bootstrap Modal */}
       {isBootstrapOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[var(--color-bg-card)] border border-[var(--color-border-subtle)] shadow-2xl w-80 rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] flex justify-between items-center">
-              <h3 className="text-[var(--color-text-primary)] font-bold uppercase tracking-wider text-xs">
-                Bootstrap Factory
-              </h3>
+        <div className="modal-overlay">
+          <div className="modal w-80">
+            <div className="modal__header">
+              <h3 className="modal__title">Bootstrap Factory</h3>
               <button
                 onClick={() => setIsBootstrapOpen(false)}
-                className="text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+                className="modal__close text-lg"
               >
                 &times;
               </button>
             </div>
-            <form onSubmit={handleBootstrap} className="p-4 space-y-4">
+            <form onSubmit={handleBootstrap} className="modal__body space-y-4">
               <div>
-                <label className="block text-[10px] font-mono text-[var(--color-text-tertiary)] mb-1 uppercase">
-                  Client Name
-                </label>
+                <label className="form-label">Client Name</label>
                 <input
                   type="text"
                   required
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
-                  className="w-full bg-[var(--color-bg-app)] border border-[var(--color-border-subtle)] p-2 text-[var(--color-text-primary)] focus:border-[var(--color-accent-primary)] focus:outline-none text-xs rounded-md"
+                  className="form-input form-input--sm"
                   placeholder="ACME Corp"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-mono text-[var(--color-text-tertiary)] mb-1 uppercase">
-                  Contract ID
-                </label>
+                <label className="form-label">Contract ID</label>
                 <input
                   type="text"
                   required
                   value={newContractId}
                   onChange={(e) => setNewContractId(e.target.value)}
-                  className="w-full bg-[var(--color-bg-app)] border border-[var(--color-border-subtle)] p-2 text-[var(--color-text-primary)] focus:border-[var(--color-accent-primary)] focus:outline-none text-xs rounded-md"
+                  className="form-input form-input--sm"
                   placeholder="CTR-2023-001"
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-mono text-[var(--color-text-tertiary)] mb-1 uppercase">
-                  Pipeline Template
-                </label>
+                <label className="form-label">Pipeline Template</label>
                 <select
                   value={selectedTemplateId}
                   onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  className="w-full bg-[var(--color-bg-app)] border border-[var(--color-border-subtle)] p-2 text-[var(--color-text-primary)] focus:border-[var(--color-accent-primary)] focus:outline-none text-xs rounded-md"
+                  className="form-select w-full text-xs"
                 >
                   {PIPELINE_TEMPLATES.map((t) => (
                     <option key={t.id} value={t.id}>
@@ -308,11 +300,7 @@ const App: React.FC = () => {
                 </select>
               </div>
               <div className="pt-2">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  className="w-full !text-xs !h-10"
-                >
+                <Button type="submit" variant="primary" className="w-full">
                   Initialize
                 </Button>
               </div>

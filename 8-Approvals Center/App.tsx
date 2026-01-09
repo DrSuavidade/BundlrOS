@@ -10,11 +10,9 @@ import { Dashboard } from "./pages/Dashboard";
 import { ApprovalDetail } from "./pages/ApprovalDetail";
 import { ClientView } from "./pages/ClientView";
 
-import { AppShell } from "@bundlros/ui";
-
 const App: React.FC = () => {
   return (
-    <AppShell moduleName="Approvals Center">
+    <div className="h-full">
       <Layout>
         <Routes>
           <Route index element={<Dashboard />} />
@@ -24,15 +22,19 @@ const App: React.FC = () => {
           <Route
             path="settings"
             element={
-              <div className="p-8 text-center text-slate-400">
-                Settings not implemented in this demo.
+              <div className="empty-state">
+                <div className="empty-state__icon">⚙️</div>
+                <p className="empty-state__title">Settings</p>
+                <p className="empty-state__description">
+                  Not implemented in this demo.
+                </p>
               </div>
             }
           />
           <Route path="*" element={<Navigate to="." replace />} />
         </Routes>
       </Layout>
-    </AppShell>
+    </div>
   );
 };
 
