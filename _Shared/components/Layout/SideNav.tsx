@@ -15,8 +15,13 @@ import {
   Server,
   Key,
 } from "lucide-react";
+import styles from "./AppShell.module.css";
 
-export const SideNav: React.FC = () => {
+interface SideNavProps {
+  isOpen?: boolean;
+}
+
+export const SideNav: React.FC<SideNavProps> = ({ isOpen = true }) => {
   const navItems = [
     { label: "Inbox", icon: <Inbox size={18} />, to: "/inbox" },
     { label: "Core Data", icon: <LayoutGrid size={18} />, to: "/core" },
@@ -32,7 +37,11 @@ export const SideNav: React.FC = () => {
   ];
 
   return (
-    <aside className="w-60 border-r border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] h-full fixed top-12 left-0 pt-4 pb-4 flex flex-col justify-between hidden md:flex">
+    <aside
+      className={`${styles.sideNav} ${
+        isOpen ? styles.sideNavOpen : styles.sideNavClosed
+      }`}
+    >
       <nav className="flex flex-col gap-1 px-2 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink

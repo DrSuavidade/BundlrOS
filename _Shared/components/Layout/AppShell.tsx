@@ -11,6 +11,7 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -24,6 +25,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const handleToggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
+
   return (
     <div className={styles.appShell}>
       {/* Background Glows for Premium Aesthetic */}
@@ -32,12 +37,17 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
 
       <AppBar
         title={moduleName ? `BundlrOS / ${moduleName}` : "BundlrOS"}
+        onMenuClick={handleToggleSidebar}
         onCommandClick={() => setIsCommandPaletteOpen(true)}
       />
 
       <div className={styles.contentWrapper}>
-        <SideNav />
-        <main className={styles.mainContent}>
+        <SideNav isOpen={isSidebarOpen} />
+        <main
+          className={`${styles.mainContent} ${
+            isSidebarOpen ? "" : styles.mainContentExpanded
+          }`}
+        >
           <div className="max-w-7xl mx-auto h-full animate-in fade-in duration-700">
             {children}
           </div>
