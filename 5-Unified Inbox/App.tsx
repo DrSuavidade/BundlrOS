@@ -303,26 +303,20 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Slide Over Panel */}
-      <div
-        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
-          selectedItem ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setSelectedItem(null)}
-      ></div>
-      <div
-        className={`transform transition-transform duration-300 z-50 fixed inset-y-0 right-0 ${
-          selectedItem ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {selectedItem && (
-          <IntakeDetailPanel
-            item={selectedItem}
-            onClose={() => setSelectedItem(null)}
-            onUpdate={handleUpdateItem}
-          />
-        )}
-      </div>
+      {/* Slide Over Panel Overlay */}
+      {selectedItem && (
+        <div
+          className={styles.panelOverlay}
+          onClick={() => setSelectedItem(null)}
+        />
+      )}
+
+      {/* Detail Panel */}
+      <IntakeDetailPanel
+        item={selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onUpdate={handleUpdateItem}
+      />
 
       {/* New Intake Modal */}
       {isNewIntakeOpen && (
@@ -331,15 +325,15 @@ const App: React.FC = () => {
           onClick={() => setIsNewIntakeOpen(false)}
         >
           <div
-            className="modal w-full max-w-lg"
+            className="modal w-full max-w-xl"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Header with gradient accent */}
             <div className="modal__header">
-              <h2 className="modal__title flex items-center gap-2">
-                <PlusCircle
-                  size={18}
-                  className="text-[var(--color-accent-primary)]"
-                />
+              <h2 className="modal__title">
+                <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center">
+                  <PlusCircle size={18} className="text-white" />
+                </div>
                 Create New Intake
               </h2>
               <button
@@ -350,13 +344,10 @@ const App: React.FC = () => {
               </button>
             </div>
 
-            <form
-              onSubmit={handleCreateIntake}
-              className="modal__body space-y-5"
-            >
+            <form onSubmit={handleCreateIntake} className="modal__body">
               {/* Title */}
-              <div>
-                <label className="form-label flex items-center gap-2">
+              <div className="form-group">
+                <label className="form-label">
                   <FileText size={14} />
                   Subject / Title
                 </label>
@@ -373,23 +364,27 @@ const App: React.FC = () => {
               </div>
 
               {/* Description */}
-              <div>
-                <label className="form-label">Description</label>
+              <div className="form-group">
+                <label className="form-label">
+                  <FileText size={14} />
+                  Description
+                </label>
                 <textarea
                   value={newIntake.description}
                   onChange={(e) =>
                     setNewIntake({ ...newIntake, description: e.target.value })
                   }
-                  className="form-input min-h-[100px] resize-none"
+                  className="form-input"
+                  style={{ minHeight: "100px", resize: "vertical" }}
                   placeholder="Provide additional details about this intake..."
                   rows={4}
                 />
               </div>
 
               {/* Client & Priority Row */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4 form-group">
                 <div>
-                  <label className="form-label flex items-center gap-2">
+                  <label className="form-label">
                     <Building2 size={14} />
                     Client
                   </label>
@@ -399,7 +394,7 @@ const App: React.FC = () => {
                     onChange={(e) =>
                       setNewIntake({ ...newIntake, client: e.target.value })
                     }
-                    className="form-select w-full"
+                    className="form-select"
                   >
                     <option value="">Select client...</option>
                     {clients.map((c) => (
@@ -411,7 +406,7 @@ const App: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="form-label flex items-center gap-2">
+                  <label className="form-label">
                     <Zap size={14} />
                     Priority
                   </label>
@@ -423,7 +418,7 @@ const App: React.FC = () => {
                         priority: e.target.value as Priority,
                       })
                     }
-                    className="form-select w-full"
+                    className="form-select"
                   >
                     {Object.values(Priority).map((p) => (
                       <option key={p} value={p}>
@@ -435,8 +430,8 @@ const App: React.FC = () => {
               </div>
 
               {/* Requestor */}
-              <div>
-                <label className="form-label flex items-center gap-2">
+              <div className="form-group">
+                <label className="form-label">
                   <User size={14} />
                   Requestor Email
                 </label>
@@ -452,17 +447,16 @@ const App: React.FC = () => {
               </div>
 
               {/* Info Box */}
-              <div className="bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-xl p-4 flex items-start gap-3">
-                <Clock
-                  size={16}
-                  className="text-[var(--color-text-tertiary)] mt-0.5"
-                />
-                <div>
-                  <p className="text-xs font-medium text-[var(--color-text-secondary)]">
+              <div className="info-box">
+                <Clock size={18} className="info-box__icon" />
+                <div className="info-box__content">
+                  <p className="info-box__title">
                     SLA will be automatically calculated
                   </p>
-                  <p className="text-[10px] text-[var(--color-text-tertiary)] mt-0.5">
-                    Based on client contract and selected priority level
+                  <p className="info-box__description">
+                    Based on the client contract terms and selected priority
+                    level. Critical items have a 4-hour SLA, while Low priority
+                    items have 72 hours.
                   </p>
                 </div>
               </div>

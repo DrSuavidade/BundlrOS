@@ -18,35 +18,39 @@ export const IntakeList: React.FC<IntakeListProps> = ({
   if (items.length === 0) {
     return (
       <div className={styles.emptyState}>
-        <div className="w-16 h-16 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center mb-4 border border-[var(--color-border-subtle)]">
-          <MessageSquare
-            size={32}
-            className="text-[var(--color-text-tertiary)] opacity-50"
-          />
+        <div className={styles.emptyState__icon}>
+          <MessageSquare size={36} />
         </div>
-        <p className="text-sm font-medium text-[var(--color-text-secondary)]">
-          No intake items found
-        </p>
-        <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
-          Try adjusting your filters
+        <p className={styles.emptyState__title}>No intake items found</p>
+        <p className={styles.emptyState__description}>
+          Try adjusting your search or filter criteria to find what you're
+          looking for
         </p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Table */}
+    <div className={styles.intakeTableWrapper}>
       <table className={styles.intakeTable}>
+        <colgroup>
+          <col className={styles.colId} />
+          <col className={styles.colStatus} />
+          <col className={styles.colPriority} />
+          <col className={styles.colSubject} />
+          <col className={styles.colClient} />
+          <col className={styles.colSla} />
+          <col className={styles.colOwner} />
+        </colgroup>
         <thead>
           <tr>
-            <th style={{ width: "80px" }}>ID</th>
-            <th style={{ width: "100px" }}>Status</th>
-            <th style={{ width: "80px" }}>Priority</th>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Priority</th>
             <th>Subject</th>
-            <th style={{ width: "120px" }}>Client</th>
-            <th style={{ width: "130px" }}>SLA Due</th>
-            <th style={{ width: "70px", textAlign: "center" }}>Owner</th>
+            <th>Client</th>
+            <th>SLA Due</th>
+            <th>Owner</th>
           </tr>
         </thead>
         <tbody>
@@ -71,7 +75,7 @@ export const IntakeList: React.FC<IntakeListProps> = ({
                   <Badge type="priority" value={item.priority} />
                 </td>
                 <td>
-                  <div className="min-w-0">
+                  <div className={styles.subjectCell}>
                     <h4 className={styles.rowTitle}>{item.title}</h4>
                     <p className={styles.rowDesc}>{item.description}</p>
                   </div>
@@ -80,7 +84,7 @@ export const IntakeList: React.FC<IntakeListProps> = ({
                   <span className={styles.clientTag}>{item.client}</span>
                 </td>
                 <td>
-                  <div className="flex items-center gap-1.5">
+                  <div className={styles.slaCell}>
                     <Clock
                       size={12}
                       className={
@@ -110,23 +114,15 @@ export const IntakeList: React.FC<IntakeListProps> = ({
                   </div>
                 </td>
                 <td>
-                  <div className="flex justify-center">
-                    {item.assignee ? (
-                      <div
-                        className={styles.assigneeBadge}
-                        title={item.assignee}
-                      >
-                        {item.assignee.substring(0, 2).toUpperCase()}
-                      </div>
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-[var(--color-bg-subtle)] border border-dashed border-[var(--color-border-subtle)] flex items-center justify-center">
-                        <User
-                          size={12}
-                          className="text-[var(--color-text-tertiary)]"
-                        />
-                      </div>
-                    )}
-                  </div>
+                  {item.assignee ? (
+                    <div className={styles.assigneeBadge} title={item.assignee}>
+                      {item.assignee.substring(0, 2).toUpperCase()}
+                    </div>
+                  ) : (
+                    <div className={styles.unassignedBadge}>
+                      <User size={12} />
+                    </div>
+                  )}
                 </td>
               </tr>
             );
