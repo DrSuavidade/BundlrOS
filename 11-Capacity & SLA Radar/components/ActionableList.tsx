@@ -1,6 +1,7 @@
 import React from "react";
 import { IntakeItem, RiskLevel } from "../types";
 import { AlertCircle, CheckCircle2, Clock, ArrowRight } from "lucide-react";
+import styles from "../App.module.css";
 
 interface ActionableListProps {
   items: IntakeItem[];
@@ -12,78 +13,82 @@ const ActionableList: React.FC<ActionableListProps> = ({
   onResolve,
 }) => {
   const getIcon = (type: IntakeItem["type"]) => {
+    const iconStyles = { flexShrink: 0 };
     switch (type) {
       case "capacity_warning":
         return (
           <AlertCircle
-            className="text-[var(--color-status-danger)]"
-            size={16}
+            style={{ ...iconStyles, color: "rgb(244, 63, 94)" }}
+            size={14}
           />
         );
       case "sla_breach":
         return (
-          <Clock className="text-[var(--color-status-warning)]" size={16} />
+          <Clock
+            style={{ ...iconStyles, color: "rgb(245, 158, 11)" }}
+            size={14}
+          />
         );
       case "churn_alert":
         return (
           <AlertCircle
-            className="text-[var(--color-status-danger)]"
-            size={16}
+            style={{ ...iconStyles, color: "rgb(244, 63, 94)" }}
+            size={14}
           />
         );
       case "new_request":
         return (
-          <ArrowRight className="text-[var(--color-status-info)]" size={16} />
+          <ArrowRight
+            style={{ ...iconStyles, color: "rgb(99, 102, 241)" }}
+            size={14}
+          />
         );
       default:
-        return <AlertCircle size={16} />;
+        return <AlertCircle style={iconStyles} size={14} />;
     }
+  };
+
+  const getSeverityClass = (severity: RiskLevel) => {
+    if (severity === RiskLevel.CRITICAL) return styles.critical;
+    if (severity === RiskLevel.HIGH) return styles.high;
+    return "";
   };
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-[var(--color-text-tertiary)] bg-[var(--color-bg-subtle)] border border-dashed border-[var(--color-border-subtle)] rounded-xl">
-        <div className="w-12 h-12 bg-[var(--color-bg-elevated)] rounded-full flex items-center justify-center mb-3">
-          <CheckCircle2 size={24} className="opacity-30" />
+      <div className={styles.emptyState}>
+        <div className={styles.emptyIcon}>
+          <CheckCircle2 size={18} />
         </div>
-        <p className="text-xs font-bold uppercase tracking-widest\">
-          All systems nominal
-        </p>
+        <span className={styles.emptyText}>All systems nominal</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div>
       {items.map((item) => (
         <div
           key={item.id}
-          className={`
-            group flex items-start justify-between p-5 rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)]/30 hover:bg-[var(--color-bg-elevated)]/50 transition-all hover:border-[var(--color-border-default)]
-            ${
-              item.severity === RiskLevel.CRITICAL
-                ? "border-l-4 border-l-[var(--color-status-danger)]"
-                : ""
-            }
-            ${
-              item.severity === RiskLevel.HIGH
-                ? "border-l-4 border-l-[var(--color-status-warning)]"
-                : ""
-            }
-          `}
+          className={`${styles.intakeItem} ${getSeverityClass(item.severity)}`}
         >
-          <div className="flex gap-4">
-            <div className="mt-1 shrink-0">{getIcon(item.type)}</div>
+          <div className={styles.intakeContent}>
+            <div className={styles.intakeIcon}>{getIcon(item.type)}</div>
             <div>
-              <p className="text-sm font-semibold text-[var(--color-text-primary)] leading-tight group-hover:text-[var(--color-accent-primary)] transition-colors">
-                {item.description}
-              </p>
-              <div className="flex items-center gap-3 mt-2">
-                <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-widest font-bold">
+              <p className={styles.intakeTitle}>{item.description}</p>
+              <div className={styles.intakeMeta}>
+                <span className={styles.intakeType}>
                   {item.type.replace("_", " ")}
                 </span>
-                <div className="w-1 h-1 rounded-full bg-[var(--color-border-subtle)]" />
-                <span className="text-[10px] text-[var(--color-text-tertiary)] font-mono">
+                <div
+                  style={{
+                    width: 3,
+                    height: 3,
+                    borderRadius: "50%",
+                    background: "var(--color-border-subtle)",
+                  }}
+                />
+                <span className={styles.intakeTime}>
                   {new Date(item.timestamp).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -94,10 +99,10 @@ const ActionableList: React.FC<ActionableListProps> = ({
           </div>
           <button
             onClick={() => onResolve(item.id)}
-            className="p-2 text-[var(--color-text-tertiary)] hover:text-[var(--color-status-success)] hover:bg-[var(--color-status-success-bg)] rounded-lg transition-all"
+            className={styles.resolveButton}
             title="Mark as Resolved"
           >
-            <CheckCircle2 size={16} />
+            <CheckCircle2 size={14} />
           </button>
         </div>
       ))}

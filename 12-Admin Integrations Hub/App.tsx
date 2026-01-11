@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Client, Integration, HealthStatus, LogEntry } from "./types";
 import { IntegrationCard } from "./components/IntegrationCard";
 import { IntegrationModal } from "./components/IntegrationModal";
-import {
-  LayoutGrid,
-  Search,
-  Plus,
-  Filter,
-  Database,
-  Shield,
-} from "lucide-react";
+import { Search, Plus, Settings2 } from "lucide-react";
+import styles from "./App.module.css";
 
-// MOCK DATA GENERATION
+// MOCK DATA
 const MOCK_CLIENTS: Client[] = [
   { id: "c1", name: "Acme Corp", contactEmail: "admin@acme.com" },
   { id: "c2", name: "Globex Inc", contactEmail: "it@globex.com" },
@@ -89,8 +83,6 @@ const INITIAL_INTEGRATIONS: Integration[] = [
   },
 ];
 
-import { AppShell, Button } from "@bundlros/ui";
-
 export default function App() {
   const [clients] = useState<Client[]>(MOCK_CLIENTS);
   const [integrations, setIntegrations] =
@@ -118,11 +110,9 @@ export default function App() {
   const handleTest = async (integration: Integration) => {
     setTestingId(integration.id);
 
-    // Simulate API call latency
     setTimeout(() => {
       const updated = integrations.map((i) => {
         if (i.id === integration.id) {
-          // Random success/fail for demo purposes
           const isSuccess = Math.random() > 0.3;
           const newStatus = isSuccess
             ? HealthStatus.HEALTHY
@@ -158,40 +148,42 @@ export default function App() {
   );
 
   return (
-    <div className="page-container">
-      {/* Module Sub-Header */}
-      <header className="page-header">
-        <div className="page-header__content">
-          <h1 className="page-header__title">Integration Health</h1>
-          <p className="page-header__subtitle">
+    <div className={styles.pageContainer}>
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.titleSection}>
+          <h1>
+            <Settings2
+              size={22}
+              style={{ color: "var(--color-accent-primary)" }}
+            />
+            Admin Hub
+          </h1>
+          <p>
             Manage client connections and monitor sync status across the
-            ecosystem.
+            ecosystem
           </p>
         </div>
 
-        <div className="page-header__actions">
-          <div className="search-input">
-            <Search className="search-input__icon w-4 h-4" />
+        <div className={styles.headerActions}>
+          <div className={styles.searchInput}>
+            <Search />
             <input
               type="text"
               placeholder="Search integration..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="form-input form-input--sm pl-9 w-full sm:w-64"
             />
           </div>
-          <Button
-            variant="primary"
-            size="sm"
-            leftIcon={<Plus className="w-4 h-4" />}
-          >
+          <button className={styles.actionButton}>
+            <Plus size={14} />
             New Integration
-          </Button>
+          </button>
         </div>
-      </header>
+      </div>
 
       {/* Client Groups */}
-      <div className="space-y-10">
+      <div>
         {clients.map((client) => {
           const clientIntegrations = filteredIntegrations.filter(
             (i) => i.clientId === client.id
@@ -199,21 +191,14 @@ export default function App() {
           if (clientIntegrations.length === 0) return null;
 
           return (
-            <section
-              key={client.id}
-              className="animate-in fade-in slide-in-from-bottom-4 duration-500"
-            >
-              <div className="flex items-center gap-3 mb-6 px-1">
-                <div className="w-1.5 h-6 bg-[var(--color-accent-primary)] rounded-full"></div>
-                <h3 className="text-sm font-bold text-[var(--color-text-primary)] uppercase tracking-wider">
-                  {client.name}
-                </h3>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] border border-[var(--color-border-subtle)] font-mono">
-                  {client.id}
-                </span>
+            <section key={client.id} className={styles.clientSection}>
+              <div className={styles.clientHeader}>
+                <div className={styles.clientIndicator} />
+                <h3 className={styles.clientName}>{client.name}</h3>
+                <span className={styles.clientId}>{client.id}</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className={styles.integrationsGrid}>
                 {clientIntegrations.map((integration) => (
                   <IntegrationCard
                     key={integration.id}
@@ -226,11 +211,11 @@ export default function App() {
                 ))}
 
                 {/* Add New Placeholder Card */}
-                <button className="border-2 border-dashed border-[var(--color-border-subtle)] rounded-xl p-6 flex flex-col items-center justify-center text-[var(--color-text-tertiary)] hover:border-[var(--color-accent-primary)] hover:text-[var(--color-accent-primary)] hover:bg-[var(--color-bg-subtle)] transition-all group h-64 min-h-[200px]">
-                  <div className="w-10 h-10 rounded-full bg-[var(--color-bg-subtle)] flex items-center justify-center mb-3 group-hover:bg-[var(--color-accent-subtle)] transition-colors">
-                    <Plus className="w-5 h-5" />
+                <button className={styles.addCard}>
+                  <div className={styles.addCardIcon}>
+                    <Plus size={16} />
                   </div>
-                  <span className="text-xs font-semibold">
+                  <span className={styles.addCardText}>
                     Connect New Integration
                   </span>
                 </button>

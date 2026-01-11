@@ -1,9 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { MockService } from '../services/mockData';
-import { AutomationRun } from '../types';
-import { StatusBadge } from '../components/StatusBadge';
-import { PlayCircle, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { MockService } from "../services/mockData";
+import { AutomationRun, Status } from "../types";
+import { ArrowRight, Workflow } from "lucide-react";
+import styles from "../App.module.css";
+
+const getStatusClass = (status: Status) => {
+  switch (status) {
+    case Status.SUCCESS:
+      return styles.success;
+    case Status.FAILED:
+      return styles.failed;
+    case Status.WAITING:
+      return styles.waiting;
+    case Status.RUNNING:
+      return styles.running;
+    default:
+      return "";
+  }
+};
+
+const getStatusLabel = (status: Status) => {
+  switch (status) {
+    case Status.SUCCESS:
+      return "Success";
+    case Status.FAILED:
+      return "Failed";
+    case Status.WAITING:
+      return "Waiting";
+    case Status.RUNNING:
+      return "Running";
+    default:
+      return status;
+  }
+};
 
 export const RunsPage: React.FC = () => {
   const [runs, setRuns] = useState<AutomationRun[]>([]);
@@ -12,7 +42,12 @@ export const RunsPage: React.FC = () => {
   useEffect(() => {
     const fetch = async () => {
       const data = await MockService.getRuns();
-      setRuns(data.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()));
+      setRuns(
+        data.sort(
+          (a, b) =>
+            new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()
+        )
+      );
       setLoading(false);
     };
     fetch();
@@ -21,50 +56,92 @@ export const RunsPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white mb-1">Automation Runs</h1>
-        <p className="text-slate-400">Global execution history across all workflows.</p>
+    <div className={styles.pageContainer}>
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.titleSection}>
+          <h1>
+            <Workflow
+              size={22}
+              style={{ color: "var(--color-accent-primary)" }}
+            />
+            Automation Runs
+          </h1>
+          <p>Global execution history across all workflows</p>
+        </div>
       </div>
 
-      <div className="bg-slate-900/40 border border-slate-800 rounded-xl overflow-hidden">
-        <table className="w-full text-left text-sm">
+      {/* Table */}
+      <div className={styles.sectionCard}>
+        <table className={styles.table}>
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400">
-              <th className="px-6 py-4 font-semibold">Run ID</th>
-              <th className="px-6 py-4 font-semibold">Event ID</th>
-              <th className="px-6 py-4 font-semibold">Workflow</th>
-              <th className="px-6 py-4 font-semibold">Started At</th>
-              <th className="px-6 py-4 font-semibold">Status</th>
-              <th className="px-6 py-4 font-semibold text-right">Action</th>
+            <tr>
+              <th>Run ID</th>
+              <th>Event ID</th>
+              <th>Workflow</th>
+              <th>Started At</th>
+              <th>Status</th>
+              <th style={{ textAlign: "right" }}>Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/50">
+          <tbody>
             {loading ? (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-500">Loading runs...</td></tr>
-            ) : runs.map((run) => (
-              <tr key={run.id} className="hover:bg-slate-800/30 transition-colors">
-                <td className="px-6 py-4 font-mono text-slate-300">{run.id}</td>
-                <td className="px-6 py-4 font-mono text-indigo-400 hover:underline">
-                    <Link to={`/events/${run.eventId}`}>{run.eventId}</Link>
-                </td>
-                <td className="px-6 py-4 text-slate-400">{run.workflowId}</td>
-                <td className="px-6 py-4 text-slate-400">
-                  {new Date(run.startedAt).toLocaleString()}
-                </td>
-                <td className="px-6 py-4">
-                  <StatusBadge status={run.status} size="sm" />
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <Link 
-                    to={`/events/${run.eventId}`} // Simplified navigation: go to event to see run details
-                    className="text-slate-500 hover:text-indigo-400 inline-flex items-center gap-1 transition-colors"
-                  >
-                    View <ArrowRight size={14} />
-                  </Link>
+              <tr>
+                <td colSpan={6} className={styles.emptyState}>
+                  Loading runs...
                 </td>
               </tr>
-            ))}
+            ) : runs.length === 0 ? (
+              <tr>
+                <td colSpan={6} className={styles.emptyState}>
+                  No runs found.
+                </td>
+              </tr>
+            ) : (
+              runs.map((run) => (
+                <tr key={run.id}>
+                  <td className={styles.mono}>{run.id}</td>
+                  <td>
+                    <Link to={`/events/${run.eventId}`} className={styles.link}>
+                      {run.eventId}
+                    </Link>
+                  </td>
+                  <td>{run.workflowId}</td>
+                  <td>
+                    {new Date(run.startedAt).toLocaleString(undefined, {
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td>
+                    <span
+                      className={`${styles.statusBadge} ${getStatusClass(
+                        run.status
+                      )}`}
+                    >
+                      {getStatusLabel(run.status)}
+                    </span>
+                  </td>
+                  <td style={{ textAlign: "right" }}>
+                    <Link
+                      to={`/events/${run.eventId}`}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                        color: "var(--color-text-tertiary)",
+                        fontSize: "0.625rem",
+                        textDecoration: "none",
+                      }}
+                    >
+                      View <ArrowRight size={12} />
+                    </Link>
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

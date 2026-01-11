@@ -1,6 +1,7 @@
-import React from 'react';
-import { Client } from '../types';
-import { AlertTriangle, TrendingDown, Activity } from 'lucide-react';
+import React from "react";
+import { Client } from "../types";
+import { AlertTriangle, Activity } from "lucide-react";
+import styles from "../App.module.css";
 
 interface RiskTableProps {
   clients: Client[];
@@ -9,58 +10,82 @@ interface RiskTableProps {
 const RiskTable: React.FC<RiskTableProps> = ({ clients }) => {
   const sortedClients = [...clients].sort((a, b) => b.riskScore - a.riskScore);
 
+  const getRiskColor = (score: number) => {
+    if (score > 70) return "rose";
+    if (score > 40) return "amber";
+    return "emerald";
+  };
+
+  const getSlaColor = (sla: number) => {
+    if (sla < 90) return "rose";
+    if (sla < 95) return "amber";
+    return "emerald";
+  };
+
   return (
-    <div className="overflow-hidden">
-      <table className="min-w-full text-left text-sm whitespace-nowrap">
-        <thead className="uppercase tracking-wider border-b border-slate-700 bg-slate-800/50 text-slate-400 font-medium">
-          <tr>
-            <th scope="col" className="px-6 py-4">Client</th>
-            <th scope="col" className="px-6 py-4 text-center">Risk Score</th>
-            <th scope="col" className="px-6 py-4 text-center">SLA Status</th>
-            <th scope="col" className="px-6 py-4 text-center">Churn Risk</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-700">
-          {sortedClients.map((client) => (
-            <tr key={client.id} className="hover:bg-slate-800/50 transition-colors">
-              <td className="px-6 py-4 font-medium text-slate-200">
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th>Client</th>
+          <th style={{ textAlign: "center" }}>Risk Score</th>
+          <th style={{ textAlign: "center" }}>SLA Status</th>
+          <th style={{ textAlign: "center" }}>Churn Risk</th>
+        </tr>
+      </thead>
+      <tbody>
+        {sortedClients.map((client) => {
+          const riskColor = getRiskColor(client.riskScore);
+          const slaColor = getSlaColor(client.sla);
+
+          return (
+            <tr key={client.id}>
+              <td
+                style={{ fontWeight: 500, color: "var(--color-text-primary)" }}
+              >
                 {client.name}
               </td>
-              <td className="px-6 py-4 text-center">
-                <div className="flex items-center justify-center gap-2">
-                  <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${client.riskScore > 70 ? 'bg-rose-500' : client.riskScore > 40 ? 'bg-amber-500' : 'bg-emerald-500'}`} 
+              <td style={{ textAlign: "center" }}>
+                <div className={styles.progressBar}>
+                  <div className={styles.progressTrack}>
+                    <div
+                      className={`${styles.progressFill} ${styles[riskColor]}`}
                       style={{ width: `${client.riskScore}%` }}
                     />
                   </div>
-                  <span className={`text-xs ${client.riskScore > 70 ? 'text-rose-400' : 'text-slate-400'}`}>
+                  <span
+                    className={styles.progressValue}
+                    style={{
+                      color:
+                        riskColor === "rose"
+                          ? "rgb(244, 63, 94)"
+                          : "var(--color-text-tertiary)",
+                    }}
+                  >
                     {client.riskScore}%
                   </span>
                 </div>
               </td>
-              <td className="px-6 py-4 text-center">
-                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium
-                  ${client.sla < 90 ? 'bg-rose-500/10 text-rose-400' : client.sla < 95 ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400'}`}>
-                   <Activity size={12} />
-                   {client.sla.toFixed(1)}%
-                 </span>
+              <td style={{ textAlign: "center" }}>
+                <span className={`${styles.statusBadge} ${styles[slaColor]}`}>
+                  <Activity size={10} />
+                  {client.sla.toFixed(1)}%
+                </span>
               </td>
-              <td className="px-6 py-4 text-center">
+              <td style={{ textAlign: "center" }}>
                 {client.churnRisk ? (
-                   <span className="inline-flex items-center gap-1 text-rose-400">
-                     <AlertTriangle size={14} />
-                     <span className="text-xs font-bold">HIGH</span>
-                   </span>
+                  <span className={styles.churnRisk}>
+                    <AlertTriangle size={12} />
+                    HIGH
+                  </span>
                 ) : (
-                  <span className="text-slate-600">-</span>
+                  <span style={{ color: "var(--color-text-tertiary)" }}>-</span>
                 )}
               </td>
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          );
+        })}
+      </tbody>
+    </table>
   );
 };
 
