@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import {
   Category,
   Tier,
@@ -348,12 +349,6 @@ const App: React.FC = () => {
             <Languages size={12} />
             {lang.toUpperCase()}
           </button>
-          <button
-            className={styles.settingsButton}
-            onClick={() => setShowOptions(!showOptions)}
-          >
-            <Settings size={12} />
-          </button>
         </div>
       </div>
 
@@ -398,35 +393,68 @@ const App: React.FC = () => {
 
         {/* Right Column: Preview */}
         <div className={styles.rightColumn}>
-          {/* Preview Toggle */}
-          <div className={styles.tabNav}>
-            <button
-              onClick={() => setActiveTab("proposal")}
-              className={`${styles.tabButton} ${
-                activeTab === "proposal" ? styles.active : ""
-              }`}
-            >
-              <Layout size={14} />
-              {labels.proposalView}
-            </button>
-            <button
-              onClick={() => setActiveTab("json")}
-              className={`${styles.tabButton} ${
-                activeTab === "json" ? styles.active : ""
-              }`}
-            >
-              <Code size={14} />
-              {labels.jsonSpec}
-            </button>
-            <button
-              onClick={() => setActiveTab("template")}
-              className={`${styles.tabButton} ${
-                activeTab === "template" ? styles.active : ""
-              }`}
-            >
-              <FileText size={14} />
-              {labels.templateView ?? "Template"}
-            </button>
+          {/* Tab Navigation with Fullscreen Button */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: "0.875rem",
+            }}
+          >
+            <div className={styles.tabNav}>
+              <button
+                onClick={() => setActiveTab("proposal")}
+                className={`${styles.tabButton} ${
+                  activeTab === "proposal" ? styles.active : ""
+                }`}
+              >
+                <Layout size={14} />
+                {labels.proposalView}
+              </button>
+              <button
+                onClick={() => setActiveTab("json")}
+                className={`${styles.tabButton} ${
+                  activeTab === "json" ? styles.active : ""
+                }`}
+              >
+                <Code size={14} />
+                {labels.jsonSpec}
+              </button>
+              <button
+                onClick={() => setActiveTab("template")}
+                className={`${styles.tabButton} ${
+                  activeTab === "template" ? styles.active : ""
+                }`}
+              >
+                <FileText size={14} />
+                {labels.templateView ?? "Template"}
+              </button>
+            </div>
+
+            {activeTab === "template" && (
+              <button
+                type="button"
+                onClick={() => setIsTemplateFullscreen(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.375rem",
+                  padding: "0.375rem 0.625rem",
+                  background: "var(--color-bg-subtle)",
+                  border: "1px solid var(--color-border-subtle)",
+                  borderRadius: "0.375rem",
+                  fontSize: "0.625rem",
+                  fontWeight: 600,
+                  color: "var(--color-text-secondary)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                <Maximize2 size={12} />
+                Fullscreen
+              </button>
+            )}
           </div>
 
           <div className={styles.previewContainer}>
@@ -440,104 +468,217 @@ const App: React.FC = () => {
 
             {activeTab === "json" && <JsonView budget={budget} />}
 
-            {activeTab === "template" && (
-              <div className="relative h-full">
-                <button
-                  type="button"
-                  onClick={() => setIsTemplateFullscreen(true)}
-                  className="absolute right-4 top-2 z-10 inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] bg-[var(--color-bg-card)] px-2 py-1 text-xs font-medium text-[var(--color-text-secondary)] shadow-sm hover:bg-[var(--color-bg-elevated)] hover:text-[var(--color-text-primary)] transition-all"
-                >
-                  <Maximize2 size={14} />
-                  <span className="hidden sm:inline">Maximizar</span>
-                </button>
-
-                <TemplatePreview budget={budget} />
-              </div>
-            )}
+            {activeTab === "template" && <TemplatePreview budget={budget} />}
           </div>
         </div>
       </div>
-      {isTemplateFullscreen && (
-        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex flex-col">
-          {/* Top bar */}
-          <div className="flex items-center justify-between px-4 py-3 text-[var(--color-text-primary)] border-b border-[var(--color-border-subtle)]">
-            <div className="flex items-center gap-2">
-              <FileText size={18} />
-              <span className="text-sm font-medium">
-                {labels.templateView ?? "Template de Preço"}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setShowTemplateJsonEditor((prev) => !prev)}
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--color-bg-elevated)] transition-all"
+      {isTemplateFullscreen &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              zIndex: 99999,
+              background: "rgba(0, 0, 0, 0.95)",
+              backdropFilter: "blur(8px)",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Top bar */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0.75rem 1.25rem",
+                background: "var(--color-bg-card)",
+                borderBottom: "1px solid var(--color-border-subtle)",
+              }}
+            >
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
               >
-                <Code size={14} />
-                <span>
-                  {showTemplateJsonEditor ? "Fechar JSON" : "Ver JSON"}
+                <FileText
+                  size={16}
+                  style={{ color: "var(--color-accent-primary)" }}
+                />
+                <span
+                  style={{
+                    fontSize: "0.8125rem",
+                    fontWeight: 600,
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  {labels.templateView ?? "Template de Preço"}
                 </span>
-              </button>
+              </div>
 
-              <button
-                type="button"
-                onClick={handleDownloadTemplatePdf}
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--color-bg-elevated)] transition-all"
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
               >
-                <span>Download PDF</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowTemplateJsonEditor((prev) => !prev)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                    padding: "0.375rem 0.75rem",
+                    background: "var(--color-bg-subtle)",
+                    border: "1px solid var(--color-border-subtle)",
+                    borderRadius: "0.375rem",
+                    fontSize: "0.6875rem",
+                    fontWeight: 600,
+                    color: "var(--color-text-secondary)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <Code size={12} />
+                  {showTemplateJsonEditor ? "Fechar JSON" : "Ver JSON"}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setIsTemplateFullscreen(false);
-                  setShowTemplateJsonEditor(false);
+                <button
+                  type="button"
+                  onClick={handleDownloadTemplatePdf}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                    padding: "0.375rem 0.75rem",
+                    background: "var(--color-accent-primary)",
+                    border: "none",
+                    borderRadius: "0.375rem",
+                    fontSize: "0.6875rem",
+                    fontWeight: 600,
+                    color: "white",
+                    cursor: "pointer",
+                  }}
+                >
+                  Download PDF
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTemplateFullscreen(false);
+                    setShowTemplateJsonEditor(false);
+                  }}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.375rem",
+                    padding: "0.375rem 0.75rem",
+                    background: "var(--color-bg-subtle)",
+                    border: "1px solid var(--color-border-subtle)",
+                    borderRadius: "0.375rem",
+                    fontSize: "0.6875rem",
+                    fontWeight: 600,
+                    color: "var(--color-text-secondary)",
+                    cursor: "pointer",
+                  }}
+                >
+                  <X size={12} />
+                  Fechar
+                </button>
+              </div>
+            </div>
+
+            {/* Content: template + optional side JSON editor */}
+            <div
+              style={{
+                flex: 1,
+                padding: "1.5rem",
+                display: "flex",
+                gap: "1rem",
+                overflow: "hidden",
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  overflow: "auto",
                 }}
-                className="inline-flex items-center gap-1 rounded-md border border-[var(--color-border-subtle)] px-3 py-1.5 text-xs font-medium hover:bg-[var(--color-bg-elevated)] transition-all"
               >
-                <X size={14} />
-                <span>Voltar</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Content: template + optional side JSON editor */}
-          <div className="flex-1 p-4 flex gap-4 overflow-hidden">
-            <div className="flex-1 flex justify-center items-center overflow-hidden">
-              <TemplatePreview
-                budget={budget}
-                exportRef={templatePdfRef}
-                mode="fullscreen"
-                templateOverride={templateBudgetOverride ?? templateBase}
-              />
-            </div>
-
-            {showTemplateJsonEditor && (
-              <div className="w-[420px] bg-[var(--color-bg-card)] border border-[var(--color-border-subtle)] rounded-xl flex flex-col overflow-hidden">
-                <div className="px-3 py-2 border-b border-[var(--color-border-subtle)] flex items-center justify-between">
-                  <span className="text-xs font-mono text-[var(--color-text-secondary)]">
-                    template_budget.json
-                  </span>
-                  {templateJsonError && (
-                    <span className="text-[10px] text-[var(--color-status-danger)]">
-                      {templateJsonError}
-                    </span>
-                  )}
-                </div>
-                <textarea
-                  className="flex-1 w-full bg-transparent text-[11px] font-mono text-[var(--color-text-primary)] p-3 outline-none resize-none"
-                  value={
-                    templateJsonText ?? JSON.stringify(templateBase, null, 2)
-                  }
-                  onChange={(e) => handleTemplateJsonChange(e.target.value)}
-                  spellCheck={false}
+                <TemplatePreview
+                  budget={budget}
+                  exportRef={templatePdfRef}
+                  mode="fullscreen"
+                  templateOverride={templateBudgetOverride ?? templateBase}
                 />
               </div>
-            )}
-          </div>
-        </div>
-      )}
+
+              {showTemplateJsonEditor && (
+                <div
+                  style={{
+                    width: "380px",
+                    background: "var(--color-bg-card)",
+                    border: "1px solid var(--color-border-subtle)",
+                    borderRadius: "0.625rem",
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "0.625rem 0.875rem",
+                      borderBottom: "1px solid var(--color-border-subtle)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      background: "var(--color-bg-subtle)",
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: "0.625rem",
+                        fontFamily: "monospace",
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
+                      template_budget.json
+                    </span>
+                    {templateJsonError && (
+                      <span
+                        style={{
+                          fontSize: "0.5625rem",
+                          color: "rgb(239, 68, 68)",
+                        }}
+                      >
+                        {templateJsonError}
+                      </span>
+                    )}
+                  </div>
+                  <textarea
+                    style={{
+                      flex: 1,
+                      width: "100%",
+                      background: "var(--color-bg-elevated)",
+                      fontSize: "0.625rem",
+                      fontFamily: "monospace",
+                      color: "rgb(52, 211, 153)",
+                      padding: "0.875rem",
+                      border: "none",
+                      outline: "none",
+                      resize: "none",
+                      lineHeight: 1.6,
+                    }}
+                    value={
+                      templateJsonText ?? JSON.stringify(templateBase, null, 2)
+                    }
+                    onChange={(e) => handleTemplateJsonChange(e.target.value)}
+                    spellCheck={false}
+                  />
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
       {/* Offscreen proposal previews for PDF export */}
       <div
         style={{
