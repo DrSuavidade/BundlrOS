@@ -539,7 +539,16 @@ const App: React.FC = () => {
         </div>
       )}
       {/* Offscreen proposal previews for PDF export */}
-      <div className="fixed -left-[2000px] top-0 w-[1024px] pointer-events-none select-none">
+      <div
+        style={{
+          position: "absolute",
+          left: "-9999px",
+          top: "-9999px",
+          visibility: "hidden",
+          width: "1024px",
+        }}
+        aria-hidden="true"
+      >
         {(["fast", "standard", "pro"] as Tier[]).map((tier) => (
           <div
             key={tier}
