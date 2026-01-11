@@ -28,7 +28,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
       <div className={styles.backgroundGlow2} />
 
       <AppBar
-        title={moduleName ? `BundlrOS / ${moduleName}` : "BundlrOS"}
+        title="BundlrOS"
         onMenuClick={handleToggleSidebar}
         onLogoClick={handleLogoClick}
       />

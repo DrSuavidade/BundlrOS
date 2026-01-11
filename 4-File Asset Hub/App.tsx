@@ -27,7 +27,12 @@ const useDebounce = (value: string, delay: number) => {
   return debouncedValue;
 };
 
+import styles from "./components/Assets.module.css";
+
+// ... existing imports ...
+
 const App: React.FC = () => {
+  // ... existing state ...
   // State
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -93,83 +98,128 @@ const App: React.FC = () => {
     setAssets(a);
   };
 
-  return (
-    <div className="page-container">
-      {/* Module Sub-Header / Toolbar */}
-      <header className="page-header">
-        <div className="page-header__actions flex-1">
-          <div className="search-input w-80">
-            <Search className="search-input__icon h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search assets..."
-              className="form-input pl-10"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+  // Calculate simple stats
+  const totalSize = (
+    assets.reduce((acc, curr) => acc + curr.size, 0) /
+    (1024 * 1024)
+  ).toFixed(1);
+  const totalAssets = assets.length;
+  const recentUploads = assets.filter((a) => {
+    const date = new Date(a.createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+  }).length;
 
-          <div className="hidden lg:flex items-center gap-2">
-            <Filter className="text-[var(--color-text-tertiary)] h-3 w-3" />
+  return (
+    <div className={styles.pageContainer}>
+      {/* Module Header */}
+      <div className={styles.header}>
+        <div className={styles.titleSection}>
+          <h1>File Asset Hub</h1>
+          <p>Centralized digital asset management and storage</p>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div className={styles.statsGrid}>
+        <div className={styles.statCard}>
+          <div>
+            <p className={styles.statLabel}>Total Assets</p>
+            <p className={styles.statValue}>{totalAssets}</p>
+          </div>
+          <div className={styles.statIconWrapper}>
+            <ImageIcon size={20} />
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div>
+            <p className={styles.statLabel}>Storage Used</p>
+            <p className={styles.statValue}>{totalSize} MB</p>
+          </div>
+          <div className={styles.statIconWrapper}>
+            <LayoutGrid size={20} />
+          </div>
+        </div>
+        <div className={styles.statCard}>
+          <div>
+            <p className={styles.statLabel}>New (7d)</p>
+            <p className={styles.statValue}>{recentUploads}</p>
+          </div>
+          <div className={styles.statIconWrapper}>
+            <Upload size={20} />
+          </div>
+        </div>
+      </div>
+
+      {/* Toolbar */}
+      <div className={styles.toolbar}>
+        <div className={styles.searchContainer}>
+          <Search className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Search assets (name, tags)..."
+            className={styles.searchInput}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div className={styles.filterControls}>
+          {/* Client Filter */}
+          <select
+            className={styles.select}
+            value={selectedClient}
+            onChange={(e) => {
+              setSelectedClient(e.target.value);
+              setSelectedDeliverable("");
+            }}
+          >
+            <option value="">All Clients</option>
+            {clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Deliverable Filter (Conditional) */}
+          {selectedClient && (
             <select
-              className="form-select text-[10px]"
-              value={selectedClient}
-              onChange={(e) => {
-                setSelectedClient(e.target.value);
-                setSelectedDeliverable(""); // Reset deliverable when client changes
-              }}
+              className={styles.select}
+              value={selectedDeliverable}
+              onChange={(e) => setSelectedDeliverable(e.target.value)}
             >
-              <option value="">All Clients</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              <option value="">All Deliverables</option>
+              {filteredDeliverables.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
                 </option>
               ))}
             </select>
-          </div>
-
-          {selectedClient && (
-            <div className="flex items-center gap-2 animate-fade-in">
-              <span className="text-[var(--color-text-tertiary)]">/</span>
-              <select
-                className="form-select text-[10px] max-w-[200px]"
-                value={selectedDeliverable}
-                onChange={(e) => setSelectedDeliverable(e.target.value)}
-              >
-                <option value="">All Deliverables</option>
-                {filteredDeliverables.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
           )}
-        </div>
 
-        <div className="page-header__actions">
-          <div className="flex bg-[var(--color-bg-subtle)] p-1 rounded-lg border border-[var(--color-border-subtle)]">
+          {/* View Toggle */}
+          <div className={styles.viewToggle}>
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded transition-all ${
-                viewMode === "grid"
-                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
-                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              className={`${styles.viewButton} ${
+                viewMode === "grid" ? styles.viewButtonActive : ""
               }`}
             >
               <LayoutGrid size={14} />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded transition-all ${
-                viewMode === "list"
-                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
-                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              className={`${styles.viewButton} ${
+                viewMode === "list" ? styles.viewButtonActive : ""
               }`}
             >
               <List size={14} />
             </button>
           </div>
+
           <Button
             variant="primary"
             size="sm"
@@ -179,24 +229,24 @@ const App: React.FC = () => {
             Upload
           </Button>
         </div>
-      </header>
+      </div>
 
       {/* Content Area */}
-      <div className="flex-1">
+      <div className={styles.contentArea}>
         {filteredAssets.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-[var(--color-text-tertiary)]">
-            <div className="w-12 h-12 bg-[var(--color-bg-subtle)] rounded-full flex items-center justify-center mb-4 border border-[var(--color-border-subtle)]">
-              <Search size={20} className="opacity-50" />
+          <div className={styles.emptyState}>
+            <div className={styles.emptyStateIcon}>
+              <Search size={24} />
             </div>
-            <p className="text-sm font-semibold">No assets found</p>
-            <p className="text-[10px]">
-              Try adjusting your filters or upload new assets.
+            <h3>No assets found</h3>
+            <p>
+              Try adjusting your filters or upload new assets to get started.
             </p>
           </div>
         ) : (
-          <div className="animate-in fade-in duration-500">
+          <>
             {viewMode === "grid" ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              <div className={styles.gridContainer}>
                 {filteredAssets.map((asset) => (
                   <AssetCard
                     key={asset.id}
@@ -206,12 +256,14 @@ const App: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <AssetList
-                assets={filteredAssets}
-                onAssetClick={setSelectedAsset}
-              />
+              <div className={styles.listContainer}>
+                <AssetList
+                  assets={filteredAssets}
+                  onAssetClick={setSelectedAsset}
+                />
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
