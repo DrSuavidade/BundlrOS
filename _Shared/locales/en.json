@@ -381,6 +381,32 @@
     "thisYear": "This Year",
     "custom": "Custom"
   },
+  "capacity": {
+    "title": "Capacity Radar",
+    "subtitle": "Real-time monitoring of client capacity and SLA compliance",
+    "aiAnalysis": "AI Analysis",
+    "strategicInsight": "Strategic Insight",
+    "avgSla": "Avg SLA Performance",
+    "totalCapacity": "Total Capacity Load",
+    "highRiskClients": "High Risk Clients",
+    "actionRequired": "Action Required",
+    "capacity": "Capacity",
+    "sla": "SLA",
+    "riskScore": "Risk Score",
+    "trend": "Trend",
+    "teamCapacity": "Team Capacity",
+    "slaCompliance": "SLA Compliance",
+    "utilization": "Utilization",
+    "available": "Available",
+    "overloaded": "Overloaded",
+    "atRisk": "At Risk",
+    "healthy": "Healthy",
+    "riskTable": "Risk Table",
+    "actionableItems": "Actionable Items",
+    "allSystemsNominal": "All systems nominal",
+    "slaStatus": "SLA Status",
+    "churnRisk": "Churn Risk"
+  },
   "budgets": {
     "title": "Bundlr Budgets",
     "subtitle": "Budget management",
@@ -464,35 +490,34 @@
       "waiting": "Waiting"
     }
   },
-  "capacity": {
-    "title": "Capacity & SLA Radar",
-    "subtitle": "Capacity monitoring",
-    "overview": "Overview",
-    "teamCapacity": "Team Capacity",
-    "slaCompliance": "SLA Compliance",
-    "utilization": "Utilization",
-    "available": "Available",
-    "overloaded": "Overloaded",
-    "atRisk": "At Risk",
-    "healthy": "Healthy",
-    "riskTable": "Risk Table",
-    "actionableItems": "Actionable Items"
-  },
+
   "admin": {
     "title": "Admin Hub",
     "subtitle": "Integrations management",
+    "clients": "Clients",
     "integrations": "Integrations",
     "newIntegration": "New Integration",
+    "searchPlaceholder": "Search integrations...",
     "connected": "Connected",
     "disconnected": "Disconnected",
     "configure": "Configure",
     "test": "Test",
+    "manualTest": "Manual Test",
+    "logs": "Logs",
     "lastSync": "Last Sync",
     "syncNow": "Sync Now",
     "apiKey": "API Key",
     "endpoint": "Endpoint",
     "fieldMapping": "Field Mapping",
-    "healthLogs": "Health & Logs"
+    "healthLogs": "Health & Logs",
+    "status": {
+      "healthy": "Healthy",
+      "failed": "Failed",
+      "degraded": "Degraded",
+      "inactive": "Inactive"
+    },
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes"
   },
   "assets": {
     "title": "File Asset Hub",

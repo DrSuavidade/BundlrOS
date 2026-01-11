@@ -6,11 +6,13 @@ import styles from "../App.module.css";
 interface ActionableListProps {
   items: IntakeItem[];
   onResolve: (id: string) => void;
+  t: (key: string) => string;
 }
 
 const ActionableList: React.FC<ActionableListProps> = ({
   items,
   onResolve,
+  t,
 }) => {
   const getIcon = (type: IntakeItem["type"]) => {
     const iconStyles = { flexShrink: 0 };
@@ -60,7 +62,9 @@ const ActionableList: React.FC<ActionableListProps> = ({
         <div className={styles.emptyIcon}>
           <CheckCircle2 size={18} />
         </div>
-        <span className={styles.emptyText}>All systems nominal</span>
+        <span className={styles.emptyText}>
+          {t("capacity.allSystemsNominal")}
+        </span>
       </div>
     );
   }

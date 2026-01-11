@@ -16,10 +16,14 @@ import {
   ArrowLeft,
   Plus,
 } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
 
 // KPI Card Component
-const KPICard: React.FC<{ kpi: KPIRecord }> = ({ kpi }) => {
+const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
+  kpi,
+  t,
+}) => {
   const isUp = kpi.delta >= 0;
 
   return (
@@ -36,7 +40,9 @@ const KPICard: React.FC<{ kpi: KPIRecord }> = ({ kpi }) => {
         </span>
       </div>
       <div className={styles.kpiCard__value}>{kpi.formatted}</div>
-      <div className={styles.kpiCard__footer}>vs last period</div>
+      <div className={styles.kpiCard__footer}>
+        {t("reporting.vsLastPeriod")}
+      </div>
     </div>
   );
 };
@@ -46,17 +52,19 @@ const DashboardView: React.FC<{
   kpis: KPIRecord[];
   periods: string[];
   selectedPeriod: string;
+  selectedPeriod: string;
   onSelectPeriod: (p: string) => void;
-}> = ({ kpis, periods, selectedPeriod, onSelectPeriod }) => {
+  t: (key: string) => string;
+}> = ({ kpis, periods, selectedPeriod, onSelectPeriod, t }) => {
   const filteredKPIs = kpis.filter((k) => k.period === selectedPeriod);
 
   return (
     <>
       <div className={styles.dashboardHeader}>
         <div className={styles.dashboardTitle}>
-          <h2>Intelligence Dashboard</h2>
+          <h2>{t("reporting.dashboardTitle")}</h2>
           <p>
-            Real-time performance metrics for{" "}
+            {t("reporting.dashboardSubtitle")}{" "}
             <span className={styles.accentText}>{selectedPeriod}</span>
           </p>
         </div>
@@ -84,7 +92,7 @@ const DashboardView: React.FC<{
       {filteredKPIs.length > 0 ? (
         <div className={styles.kpiGrid}>
           {filteredKPIs.map((kpi) => (
-            <KPICard key={kpi.id} kpi={kpi} />
+            <KPICard key={kpi.id} kpi={kpi} t={t} />
           ))}
         </div>
       ) : (
@@ -93,7 +101,7 @@ const DashboardView: React.FC<{
             <Calendar size={24} />
           </div>
           <p className={styles.emptyState__text}>
-            No telemetry data for this period
+            {t("reporting.noTelemetry")}
           </p>
         </div>
       )}
@@ -107,7 +115,8 @@ const ReportListView: React.FC<{
   onSelectReport: (r: Report) => void;
   onRequestReport: () => void;
   isGenerating: boolean;
-}> = ({ reports, onSelectReport, onRequestReport, isGenerating }) => {
+  t: (key: string) => string;
+}> = ({ reports, onSelectReport, onRequestReport, isGenerating, t }) => {
   const getStatusClass = (status: ReportStatus) => {
     switch (status) {
       case ReportStatus.GENERATED:
@@ -125,8 +134,8 @@ const ReportListView: React.FC<{
     <>
       <div className={styles.dashboardHeader}>
         <div className={styles.dashboardTitle}>
-          <h2>Analytic Reports</h2>
-          <p>AI-generated executive summaries and insights</p>
+          <h2>{t("reporting.analyticReports")}</h2>
+          <p>{t("reporting.analyticReportsSubtitle")}</p>
         </div>
         <button
           onClick={onRequestReport}
@@ -136,12 +145,12 @@ const ReportListView: React.FC<{
           {isGenerating ? (
             <>
               <Sparkles size={12} className="animate-spin" />
-              Generating...
+              {t("reporting.generating")}
             </>
           ) : (
             <>
               <Plus size={12} />
-              Generate Report
+              {t("reporting.generateReport")}
             </>
           )}
         </button>
@@ -173,7 +182,7 @@ const ReportListView: React.FC<{
                   <CheckCircle size={10} />
                 )}
                 {report.status === ReportStatus.SENT && <Send size={10} />}
-                {report.status}
+                {t(`reporting.status.${report.status.toLowerCase()}`)}
               </span>
             </div>
           ))}
@@ -196,7 +205,8 @@ const ReportDetailView: React.FC<{
   onBack: () => void;
   onApprove: (id: string) => void;
   onSend: (id: string) => void;
-}> = ({ report, onBack, onApprove, onSend }) => (
+  t: (key: string) => string;
+}> = ({ report, onBack, onApprove, onSend, t }) => (
   <div className={styles.reportDetail}>
     <button
       onClick={onBack}
@@ -218,7 +228,7 @@ const ReportDetailView: React.FC<{
               : styles.generated
           }`}
         >
-          {report.status}
+          {t(`reporting.status.${report.status.toLowerCase()}`)}
         </span>
       </div>
       <div className={styles.reportDetailBody}>
@@ -248,6 +258,7 @@ const ReportDetailView: React.FC<{
 
 // Main App
 const App: React.FC = () => {
+  const { t } = useLanguage();
   const [view, setView] = useState<ViewState>("DASHBOARD");
   const [selectedPeriod, setSelectedPeriod] = useState<string>(PERIODS[0]);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -322,12 +333,12 @@ const App: React.FC = () => {
               className="text-[var(--color-accent-primary)]"
             />
             {view === "DASHBOARD"
-              ? "KPI Overview"
+              ? t("reporting.dashboardTitle")
               : view === "REPORTS"
-              ? "Analytics Reports"
+              ? t("reporting.analyticReports")
               : "Report Details"}
           </h1>
-          <p>Executive reporting and performance intelligence</p>
+          <p>{t("reporting.dashboardSubtitle")}</p>
         </div>
       </header>
 
@@ -360,6 +371,7 @@ const App: React.FC = () => {
           periods={PERIODS}
           selectedPeriod={selectedPeriod}
           onSelectPeriod={setSelectedPeriod}
+          t={t}
         />
       )}
       {view === "REPORTS" && (
@@ -368,6 +380,7 @@ const App: React.FC = () => {
           onSelectReport={handleSelectReport}
           onRequestReport={handleRequestReport}
           isGenerating={isGenerating}
+          t={t}
         />
       )}
       {view === "REPORT_DETAIL" && activeReport && (
@@ -376,6 +389,7 @@ const App: React.FC = () => {
           onBack={() => setView("REPORTS")}
           onApprove={handleApproveReport}
           onSend={handleSendReport}
+          t={t}
         />
       )}
     </div>

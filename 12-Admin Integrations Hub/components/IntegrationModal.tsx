@@ -12,6 +12,7 @@ interface IntegrationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (updated: Integration) => void;
+  t: (key: string) => string;
 }
 
 export const IntegrationModal: React.FC<IntegrationModalProps> = ({
@@ -19,6 +20,7 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  t,
 }) => {
   const [activeTab, setActiveTab] = useState<"settings" | "mapping" | "logs">(
     "settings"
@@ -207,10 +209,10 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
               }}
             >
               {tab === "settings"
-                ? "Configuration"
+                ? t("admin.configure")
                 : tab === "mapping"
-                ? "Field Mapping"
-                : "Health & Logs"}
+                ? t("admin.fieldMapping")
+                : t("admin.healthLogs")}
             </button>
           ))}
         </div>
@@ -760,7 +762,7 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
               cursor: "pointer",
             }}
           >
-            Cancel
+            {t("admin.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -779,7 +781,7 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
             }}
           >
             <Save size={14} />
-            Save Changes
+            {t("admin.saveChanges")}
           </button>
         </div>
       </div>

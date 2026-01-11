@@ -17,6 +17,7 @@ interface IntegrationCardProps {
   onToggle: (integration: Integration) => void;
   onTest: (integration: Integration) => void;
   isTesting: boolean;
+  t: (key: string) => string;
 }
 
 export const IntegrationCard: React.FC<IntegrationCardProps> = ({
@@ -25,6 +26,7 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = ({
   onToggle,
   onTest,
   isTesting,
+  t,
 }) => {
   const provider = PROVIDERS[integration.providerId];
 
@@ -70,19 +72,19 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = ({
         </div>
         <div className={`${styles.badge} ${getBadgeClass(integration.status)}`}>
           {getStatusIcon(integration.status)}
-          <span>{integration.status}</span>
+          <span>{t(`admin.status.${integration.status.toLowerCase()}`)}</span>
         </div>
       </div>
 
       <div className={styles.stats}>
         <div className={styles.statRow}>
-          <span>Last Sync</span>
+          <span>{t("admin.lastSync")}</span>
           <span className={styles.statValue}>
             {integration.lastSync || "Never"}
           </span>
         </div>
         <div className={styles.statRow}>
-          <span>Mappings</span>
+          <span>{t("admin.fieldMapping")}</span>
           <span className={styles.statValue}>
             {integration.mappings.length} active
           </span>
@@ -105,7 +107,7 @@ export const IntegrationCard: React.FC<IntegrationCardProps> = ({
           className={`${styles.actionButton} ${styles.actionButtonBrand}`}
         >
           <Settings className="w-3 h-3" />
-          Configure
+          {t("admin.configure")}
         </button>
 
         <button

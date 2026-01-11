@@ -15,9 +15,11 @@ import StatCard from "./components/StatCard";
 import CapacityChart from "./components/CapacityChart";
 import RiskTable from "./components/RiskTable";
 import ActionableList from "./components/ActionableList";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
 
 function App() {
+  const { t } = useLanguage();
   const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
   const [intakeItems, setIntakeItems] = useState<IntakeItem[]>(MOCK_INTAKE);
   const [events, setEvents] = useState<SystemEvent[]>([]);
@@ -102,9 +104,9 @@ function App() {
         <div className={styles.titleSection}>
           <h1>
             <Gauge size={22} style={{ color: "var(--color-accent-primary)" }} />
-            Capacity Radar
+            {t("capacity.title")}
           </h1>
-          <p>Real-time monitoring of client capacity and SLA compliance</p>
+          <p>{t("capacity.subtitle")}</p>
         </div>
 
         <div className={styles.headerActions}>
@@ -127,7 +129,7 @@ function App() {
             ) : (
               <BrainCircuit size={14} />
             )}
-            AI Analysis
+            {t("capacity.aiAnalysis")}
           </button>
         </div>
       </div>
@@ -137,7 +139,7 @@ function App() {
         <div className={styles.aiAnalysis}>
           <h3 className={styles.aiAnalysisTitle}>
             <BrainCircuit size={16} />
-            Strategic Insight
+            {t("capacity.strategicInsight")}
           </h3>
           <pre className={styles.aiAnalysisContent}>{aiAnalysis}</pre>
         </div>
@@ -146,14 +148,14 @@ function App() {
       {/* Stats Grid */}
       <div className={styles.statsGrid}>
         <StatCard
-          label="Avg SLA Performance"
+          label={t("capacity.avgSla")}
           value={`${avgSla.toFixed(1)}%`}
           subtext="Target: 95.0%"
           icon={Activity}
           color={avgSla < 95 ? "amber" : "emerald"}
         />
         <StatCard
-          label="Team Capacity"
+          label={t("capacity.teamCapacity")}
           value={`${totalCapacity.toFixed(0)}%`}
           subtext="Optimal range: 70-85%"
           icon={BarChart3}
@@ -166,14 +168,14 @@ function App() {
           }
         />
         <StatCard
-          label="Clients at Risk"
+          label={t("capacity.highRiskClients")}
           value={highRiskCount}
           subtext="Requires immediate attention"
           icon={AlertTriangle}
           color={highRiskCount > 0 ? "rose" : "emerald"}
         />
         <StatCard
-          label="Actionable Items"
+          label={t("capacity.actionableItems")}
           value={intakeItems.length}
           subtext="Auto-generated intake"
           icon={Zap}
@@ -201,9 +203,11 @@ function App() {
           {/* Risk Table */}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
-              <span className={styles.sectionTitle}>Client Risk Monitor</span>
+              <span className={styles.sectionTitle}>
+                {t("capacity.riskTable")}
+              </span>
             </div>
-            <RiskTable clients={clients} />
+            <RiskTable clients={clients} t={t} />
           </div>
         </div>
 
@@ -224,6 +228,7 @@ function App() {
               <ActionableList
                 items={intakeItems}
                 onResolve={handleResolveIntake}
+                t={t}
               />
             </div>
           </div>

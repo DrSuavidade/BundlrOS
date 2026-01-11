@@ -5,9 +5,10 @@ import styles from "../App.module.css";
 
 interface RiskTableProps {
   clients: Client[];
+  t: (key: string) => string;
 }
 
-const RiskTable: React.FC<RiskTableProps> = ({ clients }) => {
+const RiskTable: React.FC<RiskTableProps> = ({ clients, t }) => {
   const sortedClients = [...clients].sort((a, b) => b.riskScore - a.riskScore);
 
   const getRiskColor = (score: number) => {
@@ -26,10 +27,10 @@ const RiskTable: React.FC<RiskTableProps> = ({ clients }) => {
     <table className={styles.table}>
       <thead>
         <tr>
-          <th>Client</th>
-          <th style={{ textAlign: "center" }}>Risk Score</th>
-          <th style={{ textAlign: "center" }}>SLA Status</th>
-          <th style={{ textAlign: "center" }}>Churn Risk</th>
+          <th>{t("approvals.client")}</th>
+          <th style={{ textAlign: "center" }}>{t("capacity.riskScore")}</th>
+          <th style={{ textAlign: "center" }}>{t("capacity.slaStatus")}</th>
+          <th style={{ textAlign: "center" }}>{t("capacity.churnRisk")}</th>
         </tr>
       </thead>
       <tbody>

@@ -3,6 +3,7 @@ import { Client, Integration, HealthStatus, LogEntry } from "./types";
 import { IntegrationCard } from "./components/IntegrationCard";
 import { IntegrationModal } from "./components/IntegrationModal";
 import { Search, Plus, Settings2 } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
 
 // MOCK DATA
@@ -84,6 +85,7 @@ const INITIAL_INTEGRATIONS: Integration[] = [
 ];
 
 export default function App() {
+  const { t } = useLanguage();
   const [clients] = useState<Client[]>(MOCK_CLIENTS);
   const [integrations, setIntegrations] =
     useState<Integration[]>(INITIAL_INTEGRATIONS);
@@ -157,12 +159,9 @@ export default function App() {
               size={22}
               style={{ color: "var(--color-accent-primary)" }}
             />
-            Admin Hub
+            {t("admin.title")}
           </h1>
-          <p>
-            Manage client connections and monitor sync status across the
-            ecosystem
-          </p>
+          <p>{t("admin.subtitle")}</p>
         </div>
 
         <div className={styles.headerActions}>
@@ -170,14 +169,14 @@ export default function App() {
             <Search />
             <input
               type="text"
-              placeholder="Search integration..."
+              placeholder={t("admin.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button className={styles.actionButton}>
             <Plus size={14} />
-            New Integration
+            {t("admin.newIntegration")}
           </button>
         </div>
       </div>
@@ -207,6 +206,7 @@ export default function App() {
                     onToggle={handleToggle}
                     onTest={handleTest}
                     isTesting={testingId === integration.id}
+                    t={t}
                   />
                 ))}
 
@@ -216,7 +216,7 @@ export default function App() {
                     <Plus size={16} />
                   </div>
                   <span className={styles.addCardText}>
-                    Connect New Integration
+                    {t("admin.newIntegration")}
                   </span>
                 </button>
               </div>
@@ -232,6 +232,7 @@ export default function App() {
           integration={selectedIntegration}
           onClose={() => setSelectedIntegration(null)}
           onSave={handleSaveIntegration}
+          t={t}
         />
       )}
     </div>
