@@ -90,13 +90,13 @@
 }
 
 .rightColumn {
-    position: sticky;
-    top: 1rem;
-    height: fit-content;
-    max-height: calc(100vh - 8rem);
-    overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+/* Preview Container */
+.previewContainer {
+    flex: 1;
 }
 
 /* Section Card */

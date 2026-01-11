@@ -49,7 +49,6 @@ export const ProposalPreview: React.FC<ProposalPreviewProps> = ({
         border: "1px solid var(--color-border-subtle)",
         borderRadius: "0.75rem",
         overflow: "hidden",
-        minHeight: "500px",
         display: "flex",
         flexDirection: "column",
       }}

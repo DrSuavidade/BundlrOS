@@ -83,7 +83,6 @@ export const JsonView: React.FC<JsonViewProps> = ({ budget }) => {
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        height: "500px",
       }}
     >
       {/* Header */}
@@ -133,15 +132,15 @@ export const JsonView: React.FC<JsonViewProps> = ({ budget }) => {
       {/* Code Content */}
       <pre
         style={{
-          flex: 1,
           padding: "1rem",
           margin: 0,
-          overflow: "auto",
           fontSize: "0.6875rem",
           fontFamily: "monospace",
           color: "rgb(52, 211, 153)",
           background: "var(--color-bg-elevated)",
           lineHeight: 1.6,
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
         }}
       >
         {JSON.stringify(output, null, 2)}
