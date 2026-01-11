@@ -1,0 +1,344 @@
+/* ==========================================
+   APPROVALS CENTER - Premium Module Styles
+   ========================================== */
+
+/* Page Container */
+.pageContainer {
+    padding: 1rem 1.5rem 2rem;
+    min-height: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+}
+
+.titleSection h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    margin: 0;
+    letter-spacing: -0.02em;
+}
+
+.titleSection p {
+    font-size: 0.8125rem;
+    color: var(--color-text-tertiary);
+    margin: 0.375rem 0 0 0;
+}
+
+/* Stats Grid */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.875rem;
+    margin-bottom: 1.25rem;
+}
+
+@media (max-width: 768px) {
+    .statsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Stat Card */
+.statCard {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 100px;
+}
+
+.statCard__label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.statCard__value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.statCard__footer {
+    font-size: 0.6875rem;
+    color: var(--color-text-tertiary);
+    margin-top: 0.5rem;
+}
+
+/* Distribution Card */
+.distributionCard {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+}
+
+.distributionCard__label {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+}
+
+.barChart {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.barItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.barItem__label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    min-width: 60px;
+}
+
+.barItem__track {
+    flex: 1;
+    height: 6px;
+    background: var(--color-bg-subtle);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.barItem__fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease-out;
+}
+
+.barItem__value {
+    font-size: 0.625rem;
+    font-family: var(--font-mono, monospace);
+    color: var(--color-text-tertiary);
+    min-width: 24px;
+    text-align: right;
+}
+
+/* Requests List */
+.requestsCard {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.requestsHeader {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--color-bg-subtle);
+}
+
+.requestsTitle {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.viewAllButton {
+    font-size: 0.625rem;
+    font-weight: 600;
+    color: var(--color-accent-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+
+.viewAllButton:hover {
+    color: var(--color-text-primary);
+}
+
+/* Request Item */
+.requestItem {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--color-border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s;
+}
+
+.requestItem:last-child {
+    border-bottom: none;
+}
+
+.requestItem:hover {
+    background: var(--color-bg-subtle);
+}
+
+.requestItem__main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.requestItem__icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 0.5rem;
+    background: var(--color-bg-subtle);
+    border: 1px solid var(--color-border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+}
+
+.requestItem__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.requestItem__title {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--color-accent-primary);
+    text-decoration: none;
+    transition: color 0.15s;
+}
+
+.requestItem__title:hover {
+    color: var(--color-text-primary);
+}
+
+.requestItem__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    font-size: 0.6875rem;
+    color: var(--color-text-tertiary);
+}
+
+.requestItem__meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.dot {
+    width: 3px;
+    height: 3px;
+    background: var(--color-border-default);
+    border-radius: 50%;
+}
+
+.requestItem__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.arrowButton {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: transparent;
+    border: none;
+    color: var(--color-text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.arrowButton:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--color-accent-primary);
+}
+
+/* Status Badge */
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 1rem;
+    font-size: 0.5625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.statusBadge.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: rgb(245, 158, 11);
+}
+
+.statusBadge.approved {
+    background: rgba(16, 185, 129, 0.1);
+    color: rgb(16, 185, 129);
+}
+
+.statusBadge.rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: rgb(239, 68, 68);
+}
+
+.statusBadge.expired {
+    background: rgba(107, 114, 128, 0.1);
+    color: rgb(107, 114, 128);
+}
+
+/* Empty State */
+.emptyState {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--color-text-tertiary);
+    font-size: 0.8125rem;
+}
+
+/* Loading */
+.loadingContainer {
+    display: flex;
+    height: 50vh;
+    align-items: center;
+    justify-content: center;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--color-accent-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

@@ -78,6 +78,8 @@ const buildTemplateBudget = (
 };
 
 import { AppShell, Button } from "@bundlros/ui";
+import styles from "./App.module.css";
+import { Wallet } from "lucide-react";
 
 const App: React.FC = () => {
   // Config State
@@ -325,41 +327,40 @@ const App: React.FC = () => {
   const selectedCount = itemsCount(selections);
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Module Sub-Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-[var(--color-text-primary)]">
+    <div className={styles.pageContainer}>
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.titleSection}>
+          <h1>
+            <Wallet size={22} className="text-[var(--color-accent-primary)]" />
             Proposal Builder
           </h1>
-          <p className="text-xs text-[var(--color-text-tertiary)] font-medium">
+          <p>
             {selectedCount} {labels.servicesSelected}
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="sm"
+        <div className={styles.headerActions}>
+          <button
+            className={styles.langButton}
             onClick={() => setLang(lang === "en" ? "pt" : "en")}
           >
-            <Languages size={14} className="mr-2" />
+            <Languages size={12} />
             {lang.toUpperCase()}
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
+          </button>
+          <button
+            className={styles.settingsButton}
             onClick={() => setShowOptions(!showOptions)}
           >
-            <Settings size={14} />
-          </Button>
+            <Settings size={12} />
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 md:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className={styles.mainGrid}>
         {/* Left Column: Builder */}
-        <div className="lg:col-span-5 space-y-6 overflow-y-auto h-full pb-20">
+        <div className={styles.leftColumn}>
           <ClientForm
             clientName={clientName}
             projectName={projectName}
@@ -368,16 +369,12 @@ const App: React.FC = () => {
             labels={labels}
           />
 
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-bold text-[var(--color-text-primary)]">
-              {labels.serviceBuilder}
-            </h2>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-[var(--color-text-tertiary)]">
-                {labels.presetLabel}
-              </span>
+          <div className={styles.builderHeader}>
+            <span className={styles.builderTitle}>{labels.serviceBuilder}</span>
+            <div className={styles.presetRow}>
+              <span className={styles.presetLabel}>{labels.presetLabel}</span>
               <select
-                className="form-select text-xs"
+                className={styles.presetSelect}
                 value={selectedPresetId}
                 onChange={(e) => handlePresetSelect(e.target.value)}
               >
@@ -400,45 +397,39 @@ const App: React.FC = () => {
         </div>
 
         {/* Right Column: Preview */}
-        <div className="lg:col-span-7 flex flex-col sticky top-24 h-[calc(100vh-8rem)]">
+        <div className={styles.rightColumn}>
           {/* Preview Toggle */}
-          <div className="flex gap-2 mb-4 bg-[var(--color-bg-subtle)] p-1 rounded-lg self-start border border-[var(--color-border-subtle)]">
+          <div className={styles.tabNav}>
             <button
               onClick={() => setActiveTab("proposal")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === "proposal"
-                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
-                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              className={`${styles.tabButton} ${
+                activeTab === "proposal" ? styles.active : ""
               }`}
             >
-              <Layout size={16} />
+              <Layout size={14} />
               {labels.proposalView}
             </button>
             <button
               onClick={() => setActiveTab("json")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === "json"
-                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
-                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              className={`${styles.tabButton} ${
+                activeTab === "json" ? styles.active : ""
               }`}
             >
-              <Code size={16} />
+              <Code size={14} />
               {labels.jsonSpec}
             </button>
             <button
               onClick={() => setActiveTab("template")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                activeTab === "template"
-                  ? "bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-sm"
-                  : "text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]"
+              className={`${styles.tabButton} ${
+                activeTab === "template" ? styles.active : ""
               }`}
             >
-              <FileText size={16} />
+              <FileText size={14} />
               {labels.templateView ?? "Template"}
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto pr-1 pb-10">
+          <div className={styles.previewContainer}>
             {activeTab === "proposal" && (
               <ProposalPreview
                 budget={budget}
@@ -465,7 +456,7 @@ const App: React.FC = () => {
             )}
           </div>
         </div>
-      </main>
+      </div>
       {isTemplateFullscreen && (
         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex flex-col">
           {/* Top bar */}

@@ -387,6 +387,7 @@ const App: React.FC = () => {
                   placeholder="ACME Corp"
                 />
               </div>
+              <br />
               <div>
                 <label className="form-label">Contract ID</label>
                 <input
@@ -398,6 +399,7 @@ const App: React.FC = () => {
                   placeholder="CTR-2023-001"
                 />
               </div>
+              <br />
               <div>
                 <label className="form-label">Pipeline Template</label>
                 <select
@@ -412,6 +414,7 @@ const App: React.FC = () => {
                   ))}
                 </select>
               </div>
+              <br />
               <div className="pt-3">
                 <Button type="submit" variant="primary" className="w-full">
                   Initialize

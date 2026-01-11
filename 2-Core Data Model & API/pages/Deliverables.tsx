@@ -318,7 +318,7 @@ export const Deliverables: React.FC = () => {
                   placeholder="e.g., Q3 Financial Report"
                 />
               </div>
-              <br></br>
+              <br />
               <div>
                 <label className="form-label">Project</label>
                 <select

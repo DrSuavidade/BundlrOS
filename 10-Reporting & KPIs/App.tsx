@@ -1,34 +1,264 @@
-import React, { useState, useEffect } from "react";
-import Sidebar from "./components/Sidebar";
-import Dashboard from "./components/Dashboard";
-import ReportList from "./components/ReportList";
-import ReportDetail from "./components/ReportDetail";
+import React, { useState } from "react";
 import { ViewState, KPIRecord, Report, ReportStatus } from "./types";
 import { MOCK_KPIS, PERIODS } from "./data/mockData";
 import { generateReportNarrative } from "./services/geminiService";
+import {
+  BarChart3,
+  Calendar,
+  Filter,
+  TrendingUp,
+  TrendingDown,
+  FileText,
+  Sparkles,
+  Send,
+  CheckCircle,
+  Clock,
+  ArrowLeft,
+  Plus,
+} from "lucide-react";
+import styles from "./App.module.css";
 
-import { AppShell } from "@bundlros/ui";
+// KPI Card Component
+const KPICard: React.FC<{ kpi: KPIRecord }> = ({ kpi }) => {
+  const isUp = kpi.delta >= 0;
 
+  return (
+    <div className={styles.kpiCard}>
+      <div className={styles.kpiCard__header}>
+        <span className={styles.kpiCard__label}>{kpi.name}</span>
+        <span
+          className={`${styles.kpiCard__trend} ${
+            isUp ? styles.up : styles.down
+          }`}
+        >
+          {isUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+          {Math.abs(kpi.delta)}%
+        </span>
+      </div>
+      <div className={styles.kpiCard__value}>{kpi.formatted}</div>
+      <div className={styles.kpiCard__footer}>vs last period</div>
+    </div>
+  );
+};
+
+// Dashboard View
+const DashboardView: React.FC<{
+  kpis: KPIRecord[];
+  periods: string[];
+  selectedPeriod: string;
+  onSelectPeriod: (p: string) => void;
+}> = ({ kpis, periods, selectedPeriod, onSelectPeriod }) => {
+  const filteredKPIs = kpis.filter((k) => k.period === selectedPeriod);
+
+  return (
+    <>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.dashboardTitle}>
+          <h2>Intelligence Dashboard</h2>
+          <p>
+            Real-time performance metrics for{" "}
+            <span className={styles.accentText}>{selectedPeriod}</span>
+          </p>
+        </div>
+        <div className={styles.periodControls}>
+          <div className={styles.periodSelect}>
+            <Calendar size={12} className={styles.periodSelect__icon} />
+            <select
+              value={selectedPeriod}
+              onChange={(e) => onSelectPeriod(e.target.value)}
+            >
+              {periods.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <div className={styles.periodSelect__arrow} />
+          </div>
+          <button className={styles.filterButton}>
+            <Filter size={14} />
+          </button>
+        </div>
+      </div>
+
+      {filteredKPIs.length > 0 ? (
+        <div className={styles.kpiGrid}>
+          {filteredKPIs.map((kpi) => (
+            <KPICard key={kpi.id} kpi={kpi} />
+          ))}
+        </div>
+      ) : (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyState__icon}>
+            <Calendar size={24} />
+          </div>
+          <p className={styles.emptyState__text}>
+            No telemetry data for this period
+          </p>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Report List View
+const ReportListView: React.FC<{
+  reports: Report[];
+  onSelectReport: (r: Report) => void;
+  onRequestReport: () => void;
+  isGenerating: boolean;
+}> = ({ reports, onSelectReport, onRequestReport, isGenerating }) => {
+  const getStatusClass = (status: ReportStatus) => {
+    switch (status) {
+      case ReportStatus.GENERATED:
+        return styles.generated;
+      case ReportStatus.APPROVED:
+        return styles.approved;
+      case ReportStatus.SENT:
+        return styles.sent;
+      default:
+        return "";
+    }
+  };
+
+  return (
+    <>
+      <div className={styles.dashboardHeader}>
+        <div className={styles.dashboardTitle}>
+          <h2>Analytic Reports</h2>
+          <p>AI-generated executive summaries and insights</p>
+        </div>
+        <button
+          onClick={onRequestReport}
+          disabled={isGenerating}
+          className={styles.generateButton}
+        >
+          {isGenerating ? (
+            <>
+              <Sparkles size={12} className="animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Plus size={12} />
+              Generate Report
+            </>
+          )}
+        </button>
+      </div>
+
+      {reports.length > 0 ? (
+        <div className={styles.reportList}>
+          {reports.map((report) => (
+            <div
+              key={report.id}
+              onClick={() => onSelectReport(report)}
+              className={styles.reportItem}
+            >
+              <div className={styles.reportItem__info}>
+                <h3 className={styles.reportItem__title}>{report.title}</h3>
+                <span className={styles.reportItem__meta}>
+                  {new Date(report.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              <span
+                className={`${styles.reportItem__status} ${getStatusClass(
+                  report.status
+                )}`}
+              >
+                {report.status === ReportStatus.GENERATED && (
+                  <Clock size={10} />
+                )}
+                {report.status === ReportStatus.APPROVED && (
+                  <CheckCircle size={10} />
+                )}
+                {report.status === ReportStatus.SENT && <Send size={10} />}
+                {report.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.emptyState}>
+          <div className={styles.emptyState__icon}>
+            <FileText size={24} />
+          </div>
+          <p className={styles.emptyState__text}>No reports generated yet</p>
+        </div>
+      )}
+    </>
+  );
+};
+
+// Report Detail View
+const ReportDetailView: React.FC<{
+  report: Report;
+  onBack: () => void;
+  onApprove: (id: string) => void;
+  onSend: (id: string) => void;
+}> = ({ report, onBack, onApprove, onSend }) => (
+  <div className={styles.reportDetail}>
+    <button
+      onClick={onBack}
+      className={styles.backButton}
+      title="Back to Reports"
+    >
+      <ArrowLeft size={16} />
+    </button>
+
+    <div className={styles.reportDetailCard}>
+      <div className={styles.reportDetailHeader}>
+        <h2 className={styles.reportDetailTitle}>{report.title}</h2>
+        <span
+          className={`${styles.reportItem__status} ${
+            report.status === ReportStatus.SENT
+              ? styles.sent
+              : report.status === ReportStatus.APPROVED
+              ? styles.approved
+              : styles.generated
+          }`}
+        >
+          {report.status}
+        </span>
+      </div>
+      <div className={styles.reportDetailBody}>
+        <div className={styles.reportContent}>{report.content}</div>
+      </div>
+      <div className={styles.reportActions}>
+        <button
+          onClick={() => onApprove(report.id)}
+          disabled={report.status !== ReportStatus.GENERATED}
+          className={`${styles.actionButton} ${styles.approve}`}
+        >
+          <CheckCircle size={12} className="mr-1.5" />
+          Approve
+        </button>
+        <button
+          onClick={() => onSend(report.id)}
+          disabled={report.status !== ReportStatus.APPROVED}
+          className={`${styles.actionButton} ${styles.send}`}
+        >
+          <Send size={12} className="mr-1.5" />
+          Send to Stakeholders
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// Main App
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>("DASHBOARD");
   const [selectedPeriod, setSelectedPeriod] = useState<string>(PERIODS[0]);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-
-  // Simulated Backend State
   const [kpis] = useState<KPIRecord[]>(MOCK_KPIS);
   const [reports, setReports] = useState<Report[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  // Derived state
   const activeReport = reports.find((r) => r.id === selectedReportId);
 
-  // Handlers
   const handleRequestReport = async () => {
     setIsGenerating(true);
-
-    // Simulate Event: report.requested
-    console.log(`Event: report.requested for period ${selectedPeriod}`);
-
     const relevantKpis = kpis.filter((k) => k.period === selectedPeriod);
 
     try {
@@ -36,7 +266,6 @@ const App: React.FC = () => {
         selectedPeriod,
         relevantKpis
       );
-
       const newReport: Report = {
         id: crypto.randomUUID(),
         title: `Executive Summary - ${selectedPeriod}`,
@@ -47,12 +276,9 @@ const App: React.FC = () => {
         generatedAt: new Date().toISOString(),
         kpiSnapshot: relevantKpis,
       };
-
       setReports((prev) => [newReport, ...prev]);
-      console.log(`Event: report.generated`, newReport.id);
     } catch (e) {
       console.error("Failed to generate report", e);
-      alert("Failed to generate report using Gemini API. Check console.");
     } finally {
       setIsGenerating(false);
     }
@@ -64,8 +290,6 @@ const App: React.FC = () => {
         r.id === id ? { ...r, status: ReportStatus.APPROVED } : r
       )
     );
-    // Simulate sending back to backend
-    console.log(`Event: report.approved`, id);
   };
 
   const handleSendReport = (id: string) => {
@@ -80,9 +304,6 @@ const App: React.FC = () => {
           : r
       )
     );
-    // Simulate integration with email/n8n
-    console.log(`Event: report.sent`, id);
-    alert("Report sent to stakeholders successfully!");
   };
 
   const handleSelectReport = (report: Report) => {
@@ -90,64 +311,73 @@ const App: React.FC = () => {
     setView("REPORT_DETAIL");
   };
 
-  // View Routing
-  const renderContent = () => {
-    switch (view) {
-      case "DASHBOARD":
-        return (
-          <Dashboard
-            kpis={kpis}
-            periods={PERIODS}
-            selectedPeriod={selectedPeriod}
-            onSelectPeriod={setSelectedPeriod}
-          />
-        );
-      case "REPORTS":
-        return (
-          <ReportList
-            reports={reports}
-            onSelectReport={handleSelectReport}
-            onRequestReport={handleRequestReport}
-            isGenerating={isGenerating}
-          />
-        );
-      case "REPORT_DETAIL":
-        if (!activeReport) return <div>Report not found</div>;
-        return (
-          <ReportDetail
-            report={activeReport}
-            onBack={() => setView("REPORTS")}
-            onApprove={handleApproveReport}
-            onSend={handleSendReport}
-          />
-        );
-      default:
-        return <div>Unknown View</div>;
-    }
-  };
-
   return (
-    <div className="flex h-full">
-      <Sidebar currentView={view} onChangeView={setView} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="page-container p-8">
-          <header className="page-header">
-            <div className="page-header__content">
-              <h1 className="page-header__title">
-                {view === "DASHBOARD"
-                  ? "KPI Overview"
-                  : view === "REPORTS"
-                  ? "Analytic Reports"
-                  : "Report Details"}
-              </h1>
-              <p className="page-header__subtitle">
-                Executive reporting and performance intelligence
-              </p>
-            </div>
-          </header>
-          {renderContent()}
+    <div className={styles.pageContainer}>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.titleSection}>
+          <h1>
+            <BarChart3
+              size={22}
+              className="text-[var(--color-accent-primary)]"
+            />
+            {view === "DASHBOARD"
+              ? "KPI Overview"
+              : view === "REPORTS"
+              ? "Analytics Reports"
+              : "Report Details"}
+          </h1>
+          <p>Executive reporting and performance intelligence</p>
         </div>
-      </main>
+      </header>
+
+      {/* Tab Navigation */}
+      {view !== "REPORT_DETAIL" && (
+        <div className={styles.tabNav}>
+          <button
+            onClick={() => setView("DASHBOARD")}
+            className={`${styles.tabButton} ${
+              view === "DASHBOARD" ? styles.active : ""
+            }`}
+          >
+            Dashboard
+          </button>
+          <button
+            onClick={() => setView("REPORTS")}
+            className={`${styles.tabButton} ${
+              view === "REPORTS" ? styles.active : ""
+            }`}
+          >
+            Reports
+          </button>
+        </div>
+      )}
+
+      {/* Content */}
+      {view === "DASHBOARD" && (
+        <DashboardView
+          kpis={kpis}
+          periods={PERIODS}
+          selectedPeriod={selectedPeriod}
+          onSelectPeriod={setSelectedPeriod}
+        />
+      )}
+      {view === "REPORTS" && (
+        <ReportListView
+          reports={reports}
+          onSelectReport={handleSelectReport}
+          onRequestReport={handleRequestReport}
+          isGenerating={isGenerating}
+        />
+      )}
+      {view === "REPORT_DETAIL" && activeReport && (
+        <ReportDetailView
+          report={activeReport}
+          onBack={() => setView("REPORTS")}
+          onApprove={handleApproveReport}
+          onSend={handleSendReport}
+        />
+      )}
     </div>
   );
 };
