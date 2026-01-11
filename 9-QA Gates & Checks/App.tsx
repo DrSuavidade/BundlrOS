@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Shield,
 } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
 
 // Dashboard Component (inline for CSS module usage)
@@ -17,7 +18,8 @@ const Dashboard: React.FC<{
   deliverables: Deliverable[];
   onSelect: (deliverable: Deliverable) => void;
   isRunningId: string | null;
-}> = ({ deliverables, onSelect, isRunningId }) => {
+  t: (key: string) => string;
+}> = ({ deliverables, onSelect, isRunningId, t }) => {
   const passedCount = deliverables.filter(
     (d) => d.lastResult.status === "passed"
   ).length;
@@ -48,7 +50,7 @@ const Dashboard: React.FC<{
           </div>
           <div className={styles.statCard__content}>
             <div className={styles.statCard__value}>{passedCount}</div>
-            <div className={styles.statCard__label}>Passed</div>
+            <div className={styles.statCard__label}>{t("qa.passed")}</div>
           </div>
         </div>
 
@@ -58,7 +60,7 @@ const Dashboard: React.FC<{
           </div>
           <div className={styles.statCard__content}>
             <div className={styles.statCard__value}>{failedCount}</div>
-            <div className={styles.statCard__label}>Failed Gates</div>
+            <div className={styles.statCard__label}>{t("qa.failedGates")}</div>
           </div>
         </div>
 
@@ -68,7 +70,7 @@ const Dashboard: React.FC<{
           </div>
           <div className={styles.statCard__content}>
             <div className={styles.statCard__value}>{deliverables.length}</div>
-            <div className={styles.statCard__label}>Active Assets</div>
+            <div className={styles.statCard__label}>{t("qa.activeAssets")}</div>
           </div>
         </div>
       </div>
@@ -76,7 +78,7 @@ const Dashboard: React.FC<{
       {/* Deliverables List */}
       <div className={styles.deliverablesList}>
         <div className={styles.listHeader}>
-          <span className={styles.listTitle}>Active Deliverables</span>
+          <span className={styles.listTitle}>{t("qa.activeDeliverables")}</span>
           <span className={styles.listMeta}>n8n:gatekeeper_active</span>
         </div>
 
@@ -124,12 +126,12 @@ const Dashboard: React.FC<{
                       } ${getStatusClass(currentStatus)}`}
                     >
                       {currentStatus === "running"
-                        ? "Running..."
+                        ? t("qa.running") + "..."
                         : currentStatus.toUpperCase()}
                     </div>
                     {currentStatus === "failed" && issueCount > 0 && (
                       <div className={styles.resultStatus__issues}>
-                        {issueCount} issues found
+                        {issueCount} {t("qa.issuesFound")}
                       </div>
                     )}
                   </div>
@@ -146,6 +148,7 @@ const Dashboard: React.FC<{
 
 // Main App
 const App: React.FC = () => {
+  const { t } = useLanguage();
   const [deliverables, setDeliverables] =
     useState<Deliverable[]>(initialDeliverables);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -190,6 +193,7 @@ const App: React.FC = () => {
           deliverables={deliverables}
           onSelect={(d) => setSelectedId(d.id)}
           isRunningId={runningId}
+          t={t}
         />
       )}
     </div>

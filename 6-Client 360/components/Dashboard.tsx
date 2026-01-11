@@ -26,7 +26,7 @@ import {
 import { ClientData } from "../types";
 import { fetchClientData } from "../services/mockData";
 import { generateClientInsight } from "../services/geminiService";
-import { Button, Badge } from "@bundlros/ui";
+import { Button, Badge, useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
 
 // --- Timeline Item Component ---
@@ -59,6 +59,7 @@ const TimelineItem: React.FC<{ event: any; isLast?: boolean }> = ({
 
 // --- Main Dashboard Component ---
 const Dashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [data, setData] = useState<ClientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -89,13 +90,13 @@ const Dashboard: React.FC = () => {
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--color-accent-primary)]"
             />
           </div>
-          <p className={styles.loadingText}>Loading Client 360...</p>
+          <p className={styles.loadingText}>{t("clients.loading")}</p>
         </div>
       </div>
     );
   }
 
-  if (!data) return <div>Error loading data.</div>;
+  if (!data) return <div>{t("clients.errorLoading")}</div>;
 
   return (
     <div className={styles.pageContainer}>
@@ -111,7 +112,7 @@ const Dashboard: React.FC = () => {
             <div className={styles.clientMeta}>
               <span>{data.industry}</span>
               <span>•</span>
-              <span>Client Overview</span>
+              <span>{t("clients.overview")}</span>
             </div>
           </div>
         </div>
@@ -129,7 +130,7 @@ const Dashboard: React.FC = () => {
               <Sparkles size={16} className="text-yellow-300" />
             </div>
             <div>
-              <h2>AI Cockpit Assistant</h2>
+              <h2>{t("clients.aiInsights")}</h2>
               <p>Powered by Gemini</p>
             </div>
           </div>
@@ -138,7 +139,9 @@ const Dashboard: React.FC = () => {
             disabled={insightLoading}
             className={styles.aiButton}
           >
-            {insightLoading ? "Analyzing..." : "Refresh Insight"}
+            {insightLoading
+              ? t("clients.generating")
+              : t("clients.generateInsight")}
           </button>
         </div>
         <div className={styles.aiContent}>
@@ -147,10 +150,7 @@ const Dashboard: React.FC = () => {
           ) : (
             <div className={styles.aiPlaceholder}>
               <PlayCircle size={16} />
-              <span>
-                Click "Refresh Insight" to generate a health summary using
-                Gemini AI.
-              </span>
+              <span>{t("clients.askAI")}</span>
             </div>
           )}
         </div>
@@ -192,10 +192,10 @@ const Dashboard: React.FC = () => {
                     size={14}
                     className="text-[var(--color-accent-primary)]"
                   />
-                  Contracts
+                  {t("clients.contracts")}
                 </div>
                 <a href="#" className={styles.sectionAction}>
-                  View All <ArrowUpRight size={10} />
+                  {t("clients.viewAll")} <ArrowUpRight size={10} />
                 </a>
               </div>
               <div className={styles.sectionBody}>
@@ -232,7 +232,7 @@ const Dashboard: React.FC = () => {
                     size={14}
                     className="text-[var(--color-accent-primary)]"
                   />
-                  Deliverables
+                  {t("clients.deliverables")}
                 </div>
                 <a href="#" className={styles.sectionAction}>
                   Roadmap <ArrowUpRight size={10} />
@@ -364,7 +364,7 @@ const Dashboard: React.FC = () => {
                   size={14}
                   className="text-[var(--color-accent-primary)]"
                 />
-                Timeline
+                {t("clients.recentActivity")}
               </div>
             </div>
             <div className={styles.sectionBody}>

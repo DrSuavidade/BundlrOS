@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MockService } from "../services/mockData";
 import { SystemEvent, Status } from "../types";
 import { Search, Filter, RefreshCw, ChevronRight, Zap } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "../App.module.css";
 
 const getStatusClass = (status: Status) => {
@@ -20,26 +21,27 @@ const getStatusClass = (status: Status) => {
   }
 };
 
-const getStatusLabel = (status: Status) => {
-  switch (status) {
-    case Status.SUCCESS:
-      return "Success";
-    case Status.FAILED:
-      return "Failed";
-    case Status.WAITING:
-      return "Waiting";
-    case Status.RUNNING:
-      return "Running";
-    default:
-      return status;
-  }
-};
-
 export const EventsPage: React.FC = () => {
+  const { t } = useLanguage();
   const [events, setEvents] = useState<SystemEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<Status | "all">("all");
+
+  const getStatusLabel = (status: Status) => {
+    switch (status) {
+      case Status.SUCCESS:
+        return t("events.status.success");
+      case Status.FAILED:
+        return t("events.status.failed");
+      case Status.WAITING:
+        return t("events.status.waiting");
+      case Status.RUNNING:
+        return t("events.status.running");
+      default:
+        return status;
+    }
+  };
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -70,14 +72,14 @@ export const EventsPage: React.FC = () => {
         <div className={styles.titleSection}>
           <h1>
             <Zap size={22} style={{ color: "var(--color-accent-primary)" }} />
-            Event Streams
+            {t("events.eventsPage.title")}
           </h1>
-          <p>Real-time event stream and processing status</p>
+          <p>{t("events.eventsPage.subtitle")}</p>
         </div>
         <div className={styles.headerActions}>
           <button className={styles.refreshButton} onClick={fetchEvents}>
             <RefreshCw size={12} />
-            Refresh
+            {t("common.refresh")}
           </button>
         </div>
       </div>
@@ -88,7 +90,7 @@ export const EventsPage: React.FC = () => {
           <Search size={14} />
           <input
             type="text"
-            placeholder="Search events, clients or types..."
+            placeholder={t("events.eventsPage.searchPlaceholder")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -99,11 +101,11 @@ export const EventsPage: React.FC = () => {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as Status | "all")}
           >
-            <option value="all">All Statuses</option>
-            <option value={Status.SUCCESS}>Success</option>
-            <option value={Status.FAILED}>Failed</option>
-            <option value={Status.WAITING}>Waiting</option>
-            <option value={Status.RUNNING}>Running</option>
+            <option value="all">{t("events.eventsPage.allStatuses")}</option>
+            <option value={Status.SUCCESS}>{t("events.status.success")}</option>
+            <option value={Status.FAILED}>{t("events.status.failed")}</option>
+            <option value={Status.WAITING}>{t("events.status.waiting")}</option>
+            <option value={Status.RUNNING}>{t("events.status.running")}</option>
           </select>
         </div>
       </div>
@@ -113,11 +115,11 @@ export const EventsPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Event ID</th>
-              <th>Type</th>
+              <th>{t("events.eventsPage.event")} ID</th>
+              <th>{t("events.eventsPage.type")}</th>
               <th>Client</th>
-              <th>Created At</th>
-              <th>Status</th>
+              <th>{t("events.eventsPage.timestamp")}</th>
+              <th>{t("events.eventsPage.status")}</th>
               <th style={{ width: 40 }}></th>
             </tr>
           </thead>
@@ -125,13 +127,13 @@ export const EventsPage: React.FC = () => {
             {loading && events.length === 0 ? (
               <tr>
                 <td colSpan={6} className={styles.emptyState}>
-                  Loading events...
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : filteredEvents.length === 0 ? (
               <tr>
                 <td colSpan={6} className={styles.emptyState}>
-                  No events found matching your filters.
+                  {t("events.noEvents")}
                 </td>
               </tr>
             ) : (
@@ -174,13 +176,15 @@ export const EventsPage: React.FC = () => {
           </tbody>
         </table>
         <div className={styles.tableFooter}>
-          <span>Showing {filteredEvents.length} events</span>
+          <span>
+            Showing {filteredEvents.length} {t("events.events")}
+          </span>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button disabled style={{ opacity: 0.5 }}>
-              Previous
+              {t("common.back")}
             </button>
             <button disabled style={{ opacity: 0.5 }}>
-              Next
+              {t("common.next")}
             </button>
           </div>
         </div>

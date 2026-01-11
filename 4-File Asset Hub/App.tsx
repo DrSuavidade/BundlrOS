@@ -15,7 +15,7 @@ import { AssetCard } from "./components/AssetCard";
 import { AssetList } from "./components/AssetList";
 import { AssetDetailModal } from "./components/AssetDetailModal";
 import { UploadOverlay } from "./components/UploadOverlay";
-import { AppShell, Button } from "@bundlros/ui";
+import { AppShell, Button, useLanguage } from "@bundlros/ui";
 
 // Mock simple debounce for search
 const useDebounce = (value: string, delay: number) => {
@@ -29,10 +29,9 @@ const useDebounce = (value: string, delay: number) => {
 
 import styles from "./components/Assets.module.css";
 
-// ... existing imports ...
-
 const App: React.FC = () => {
-  // ... existing state ...
+  const { t } = useLanguage();
+
   // State
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -117,8 +116,8 @@ const App: React.FC = () => {
       {/* Module Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h1>File Asset Hub</h1>
-          <p>Centralized digital asset management and storage</p>
+          <h1>{t("assets.title")}</h1>
+          <p>{t("assets.subtitle")}</p>
         </div>
       </div>
 
@@ -126,7 +125,7 @@ const App: React.FC = () => {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div>
-            <p className={styles.statLabel}>Total Assets</p>
+            <p className={styles.statLabel}>{t("assets.totalAssets")}</p>
             <p className={styles.statValue}>{totalAssets}</p>
           </div>
           <div className={styles.statIconWrapper}>
@@ -135,7 +134,7 @@ const App: React.FC = () => {
         </div>
         <div className={styles.statCard}>
           <div>
-            <p className={styles.statLabel}>Storage Used</p>
+            <p className={styles.statLabel}>{t("assets.storageUsed")}</p>
             <p className={styles.statValue}>{totalSize} MB</p>
           </div>
           <div className={styles.statIconWrapper}>
@@ -144,7 +143,7 @@ const App: React.FC = () => {
         </div>
         <div className={styles.statCard}>
           <div>
-            <p className={styles.statLabel}>New (7d)</p>
+            <p className={styles.statLabel}>{t("assets.newUploads7d")}</p>
             <p className={styles.statValue}>{recentUploads}</p>
           </div>
           <div className={styles.statIconWrapper}>
@@ -159,7 +158,7 @@ const App: React.FC = () => {
           <Search className={styles.searchIcon} />
           <input
             type="text"
-            placeholder="Search assets (name, tags)..."
+            placeholder={t("assets.searchPlaceholder")}
             className={styles.searchInput}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -176,7 +175,7 @@ const App: React.FC = () => {
               setSelectedDeliverable("");
             }}
           >
-            <option value="">All Clients</option>
+            <option value="">{t("assets.allClients")}</option>
             {clients.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -191,7 +190,7 @@ const App: React.FC = () => {
               value={selectedDeliverable}
               onChange={(e) => setSelectedDeliverable(e.target.value)}
             >
-              <option value="">All Deliverables</option>
+              <option value="">{t("assets.allDeliverables")}</option>
               {filteredDeliverables.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -207,6 +206,7 @@ const App: React.FC = () => {
               className={`${styles.viewButton} ${
                 viewMode === "grid" ? styles.viewButtonActive : ""
               }`}
+              title={t("assets.gridView")}
             >
               <LayoutGrid size={14} />
             </button>
@@ -215,6 +215,7 @@ const App: React.FC = () => {
               className={`${styles.viewButton} ${
                 viewMode === "list" ? styles.viewButtonActive : ""
               }`}
+              title={t("assets.listView")}
             >
               <List size={14} />
             </button>
@@ -226,7 +227,7 @@ const App: React.FC = () => {
             leftIcon={<Upload size={14} />}
             onClick={() => setIsUploadOpen(true)}
           >
-            Upload
+            {t("assets.upload")}
           </Button>
         </div>
       </div>
@@ -238,10 +239,8 @@ const App: React.FC = () => {
             <div className={styles.emptyStateIcon}>
               <Search size={24} />
             </div>
-            <h3>No assets found</h3>
-            <p>
-              Try adjusting your filters or upload new assets to get started.
-            </p>
+            <h3>{t("assets.noAssets")}</h3>
+            <p>{t("assets.noAssetsDesc")}</p>
           </div>
         ) : (
           <>

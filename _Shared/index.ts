@@ -3,3 +3,6 @@ import './styles/global.css';
 
 // Export components
 export * from './components';
+
+// Export contexts
+export * from './contexts/LanguageContext';

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { MockService } from "../services/mockData";
 import { AutomationRun, Status } from "../types";
 import { ArrowRight, Workflow } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "../App.module.css";
 
 const getStatusClass = (status: Status) => {
@@ -20,24 +21,25 @@ const getStatusClass = (status: Status) => {
   }
 };
 
-const getStatusLabel = (status: Status) => {
-  switch (status) {
-    case Status.SUCCESS:
-      return "Success";
-    case Status.FAILED:
-      return "Failed";
-    case Status.WAITING:
-      return "Waiting";
-    case Status.RUNNING:
-      return "Running";
-    default:
-      return status;
-  }
-};
-
 export const RunsPage: React.FC = () => {
+  const { t } = useLanguage();
   const [runs, setRuns] = useState<AutomationRun[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const getStatusLabel = (status: Status) => {
+    switch (status) {
+      case Status.SUCCESS:
+        return t("events.status.success");
+      case Status.FAILED:
+        return t("events.status.failed");
+      case Status.WAITING:
+        return t("events.status.waiting");
+      case Status.RUNNING:
+        return t("events.status.running");
+      default:
+        return status;
+    }
+  };
 
   useEffect(() => {
     const fetch = async () => {
@@ -65,9 +67,9 @@ export const RunsPage: React.FC = () => {
               size={22}
               style={{ color: "var(--color-accent-primary)" }}
             />
-            Automation Runs
+            {t("events.runsPage.title")}
           </h1>
-          <p>Global execution history across all workflows</p>
+          <p>{t("events.runsPage.subtitle")}</p>
         </div>
       </div>
 
@@ -76,25 +78,25 @@ export const RunsPage: React.FC = () => {
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Run ID</th>
-              <th>Event ID</th>
+              <th>{t("events.runsPage.run")} ID</th>
+              <th>{t("events.runsPage.event")} ID</th>
               <th>Workflow</th>
-              <th>Started At</th>
-              <th>Status</th>
-              <th style={{ textAlign: "right" }}>Action</th>
+              <th>{t("events.runsPage.timestamp")}</th>
+              <th>{t("events.runsPage.status")}</th>
+              <th style={{ textAlign: "right" }}></th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
                 <td colSpan={6} className={styles.emptyState}>
-                  Loading runs...
+                  {t("common.loading")}
                 </td>
               </tr>
             ) : runs.length === 0 ? (
               <tr>
                 <td colSpan={6} className={styles.emptyState}>
-                  No runs found.
+                  {t("events.noEvents")}
                 </td>
               </tr>
             ) : (
@@ -136,7 +138,7 @@ export const RunsPage: React.FC = () => {
                         textDecoration: "none",
                       }}
                     >
-                      View <ArrowRight size={12} />
+                      {t("events.eventsPage.viewRuns")} <ArrowRight size={12} />
                     </Link>
                   </td>
                 </tr>

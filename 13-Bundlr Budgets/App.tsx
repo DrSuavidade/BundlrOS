@@ -78,13 +78,13 @@ const buildTemplateBudget = (
   };
 };
 
-import { AppShell, Button } from "@bundlros/ui";
+import { AppShell, Button, useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
 import { Wallet } from "lucide-react";
 
 const App: React.FC = () => {
-  // Config State
-  const [lang, setLang] = useState<"en" | "pt">("pt");
+  // Config State - use global language
+  const { language: lang } = useLanguage();
   const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark for BundlrOS
   const [showOptions, setShowOptions] = useState(false);
 
@@ -341,15 +341,7 @@ const App: React.FC = () => {
           </p>
         </div>
 
-        <div className={styles.headerActions}>
-          <button
-            className={styles.langButton}
-            onClick={() => setLang(lang === "en" ? "pt" : "en")}
-          >
-            <Languages size={12} />
-            {lang.toUpperCase()}
-          </button>
-        </div>
+        {/* Language is now controlled from the global navbar */}
       </div>
 
       {/* Main Content */}

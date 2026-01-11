@@ -20,7 +20,7 @@ import {
   CheckCircle,
   X,
 } from "lucide-react";
-import { Button } from "@bundlros/ui";
+import { Button, useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
 
 // --- Factory List Component ---
@@ -29,21 +29,22 @@ const FactoryList: React.FC<{
   selectedFactoryId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
-}> = ({ factories, selectedFactoryId, onSelect, onCreate }) => (
+  t: (key: string) => string;
+}> = ({ factories, selectedFactoryId, onSelect, onCreate, t }) => (
   <div className={styles.sidebar}>
     <div className={styles.sidebarHeader}>
       <h2 className={styles.sidebarTitle}>
         <Box size={14} className="text-[var(--color-accent-primary)]" />
-        Factories
+        {t("factories.factories")}
       </h2>
     </div>
 
     <div className={styles.sidebarContent}>
       {factories.length === 0 && (
         <div className={styles.emptyState}>
-          No active factories.
+          {t("factories.noActiveFactories")}
           <br />
-          Bootstrap one to begin.
+          {t("factories.bootstrapToBegin")}
         </div>
       )}
       {factories.map((factory) => (
@@ -79,7 +80,7 @@ const FactoryList: React.FC<{
 
     <div className={styles.sidebarFooter}>
       <button onClick={onCreate} className={styles.bootstrapButton}>
-        Bootstrap Factory
+        {t("factories.bootstrap")}
       </button>
     </div>
   </div>
@@ -92,7 +93,8 @@ const StageColumn: React.FC<{
   isActive: boolean;
   isPast: boolean;
   onUpdateDeliverable: (id: string) => void;
-}> = ({ stage, factory, isActive, isPast, onUpdateDeliverable }) => {
+  t: (key: string) => string;
+}> = ({ stage, factory, isActive, isPast, onUpdateDeliverable, t }) => {
   const isBlocked = isActive && factory.status === Status.BLOCKED;
   const relevantDeliverables = factory.deliverables.filter((d) =>
     stage.requiredDeliverables.includes(d.id)
@@ -122,7 +124,7 @@ const StageColumn: React.FC<{
       <div className={styles.stageColumn__body}>
         {relevantDeliverables.length === 0 && (
           <div className={styles.emptyDeliverables}>
-            No deliverables required.
+            {t("factories.noDeliverables")}
           </div>
         )}
         {relevantDeliverables.map((d) => (
@@ -160,6 +162,7 @@ const StageColumn: React.FC<{
 
 // --- Main App Component ---
 const App: React.FC = () => {
+  const { t } = useLanguage();
   const [factories, setFactories] = useState<Factory[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -249,6 +252,7 @@ const App: React.FC = () => {
         selectedFactoryId={selectedId}
         onSelect={setSelectedId}
         onCreate={() => setIsBootstrapOpen(true)}
+        t={t}
       />
 
       {/* Main Content */}
@@ -294,7 +298,7 @@ const App: React.FC = () => {
                     selectedFactory.status === Status.COMPLETED
                   }
                 >
-                  Advance Stage
+                  {t("factories.advanceStage")}
                   <ArrowRight size={12} className="ml-1.5" />
                 </Button>
               </>
@@ -310,7 +314,7 @@ const App: React.FC = () => {
                 <Terminal size={24} />
               </div>
               <p className={styles.emptyBoard__text}>
-                Select a factory to view pipeline
+                {t("factories.selectOrBootstrap")}
               </p>
             </div>
           ) : (
@@ -353,6 +357,7 @@ const App: React.FC = () => {
                       isActive={isActive}
                       isPast={isPast}
                       onUpdateDeliverable={handleDeliverableUpdate}
+                      t={t}
                     />
                   );
                 })}
@@ -367,7 +372,7 @@ const App: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal w-96">
             <div className="modal__header">
-              <h3 className="modal__title">Bootstrap Factory</h3>
+              <h3 className="modal__title">{t("factories.bootstrap")}</h3>
               <button
                 onClick={() => setIsBootstrapOpen(false)}
                 className="modal__close"
@@ -377,7 +382,9 @@ const App: React.FC = () => {
             </div>
             <form onSubmit={handleBootstrap} className="modal__body space-y-5">
               <div>
-                <label className="form-label">Client Name</label>
+                <label className="form-label">
+                  {t("factories.clientName")}
+                </label>
                 <input
                   type="text"
                   required
@@ -389,7 +396,9 @@ const App: React.FC = () => {
               </div>
               <br />
               <div>
-                <label className="form-label">Contract ID</label>
+                <label className="form-label">
+                  {t("factories.contractId")}
+                </label>
                 <input
                   type="text"
                   required
@@ -401,7 +410,7 @@ const App: React.FC = () => {
               </div>
               <br />
               <div>
-                <label className="form-label">Pipeline Template</label>
+                <label className="form-label">{t("factories.template")}</label>
                 <select
                   value={selectedTemplateId}
                   onChange={(e) => setSelectedTemplateId(e.target.value)}
@@ -417,7 +426,7 @@ const App: React.FC = () => {
               <br />
               <div className="pt-3">
                 <Button type="submit" variant="primary" className="w-full">
-                  Initialize
+                  {t("factories.createFactory")}
                 </Button>
               </div>
             </form>

@@ -3,6 +3,7 @@ import { GlassCard } from "./ui/GlassCard";
 import { UserService, AuditService } from "../services/store";
 import { User } from "../types";
 import { Layers } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./Login.module.css";
 
 interface LoginProps {
@@ -10,14 +11,15 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const { t } = useLanguage();
   const [email, setEmail] = useState("admin@nexus.com"); // Pre-fill for demo
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
   // Auto-set title for SEO and UX
   useEffect(() => {
-    document.title = "Login | BundlrOS Identity";
-  }, []);
+    document.title = t("identity.login.pageTitle");
+  }, [t]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       );
       onLogin(user);
     } else {
-      setError("Invalid credentials or inactive account.");
+      setError(t("identity.login.invalidCredentials"));
     }
   };
 
@@ -50,32 +52,36 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <div className={styles.logoWrapper}>
             <Layers className="w-6 h-6 text-white" />
           </div>
-          <h1 className={styles.title}>Nexus Identity</h1>
-          <p className={styles.subtitle}>Sign in to your BundlrOS dashboard</p>
+          <h1 className={styles.title}>{t("identity.login.title")}</h1>
+          <p className={styles.subtitle}>{t("identity.login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.field}>
-            <label className={styles.label}>Email Address</label>
+            <label className={styles.label}>
+              {t("identity.login.emailLabel")}
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className={styles.input}
-              placeholder="name@company.com"
+              placeholder={t("identity.login.emailPlaceholder")}
               autoComplete="email"
               required
             />
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label}>Password</label>
+            <label className={styles.label}>
+              {t("identity.login.passwordLabel")}
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className={styles.input}
-              placeholder="••••••••"
+              placeholder={t("identity.login.passwordPlaceholder")}
               autoComplete="current-password"
               required
             />
@@ -84,13 +90,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {error && <p className={styles.errorText}>{error}</p>}
 
           <button type="submit" className={styles.submitButton}>
-            Sign In
+            {t("identity.login.signIn")}
           </button>
         </form>
 
         <div className={styles.demoInfo}>
           <p className={styles.demoText}>
-            Demo access:{" "}
+            {t("identity.login.demoAccess")}{" "}
             <span className={styles.demoEmail}>admin@nexus.com</span>
           </p>
         </div>

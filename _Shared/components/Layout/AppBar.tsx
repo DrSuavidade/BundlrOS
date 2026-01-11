@@ -20,6 +20,7 @@ import {
   Gauge,
   Settings2,
 } from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 import styles from "./AppShell.module.css";
 
 export interface AppBarProps {
@@ -28,74 +29,12 @@ export interface AppBarProps {
   onLogoClick?: () => void;
 }
 
-// Navigation items
-const navItems = [
-  { id: "inbox", title: "Unified Inbox", icon: Inbox, path: "/inbox" },
-  { id: "core", title: "Core Data", icon: Database, path: "/core" },
-  { id: "clients", title: "Client 360", icon: Users, path: "/clients" },
-  {
-    id: "factories",
-    title: "Service Factories",
-    icon: Factory,
-    path: "/factories",
-  },
-  {
-    id: "approvals",
-    title: "Approvals",
-    icon: CheckSquare,
-    path: "/approvals",
-  },
-  { id: "qa", title: "QA Gates", icon: Shield, path: "/qa" },
-  {
-    id: "reporting",
-    title: "Reporting & KPIs",
-    icon: BarChart3,
-    path: "/reporting",
-  },
-  {
-    id: "budgets",
-    title: "Bundlr Budgets",
-    icon: CreditCard,
-    path: "/budgets",
-  },
-  { id: "events", title: "Event Bus", icon: Zap, path: "/events" },
-  { id: "capacity", title: "Capacity Radar", icon: Gauge, path: "/capacity" },
-  { id: "admin", title: "Admin Hub", icon: Settings2, path: "/admin" },
-];
-
-// Mock notifications
-const mockNotifications = [
-  {
-    id: 1,
-    title: "New client intake received",
-    time: "2 min ago",
-    unread: true,
-  },
-  {
-    id: 2,
-    title: "Budget approved: Acme Corp",
-    time: "15 min ago",
-    unread: true,
-  },
-  {
-    id: 3,
-    title: "QA check passed for Project X",
-    time: "1 hour ago",
-    unread: false,
-  },
-  {
-    id: 4,
-    title: "Factory stage completed",
-    time: "3 hours ago",
-    unread: false,
-  },
-];
-
 export const AppBar: React.FC<AppBarProps> = ({
   title = "BundlrOS",
   onMenuClick,
   onLogoClick,
 }) => {
+  const { language, setLanguage, t } = useLanguage();
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -108,9 +47,77 @@ export const AppBar: React.FC<AppBarProps> = ({
   const profileRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  // Navigation items with translations
+  const navItems = [
+    { id: "inbox", titleKey: "nav.inbox", icon: Inbox, path: "/inbox" },
+    { id: "core", titleKey: "nav.coreData", icon: Database, path: "/core" },
+    { id: "clients", titleKey: "nav.client360", icon: Users, path: "/clients" },
+    {
+      id: "factories",
+      titleKey: "nav.factories",
+      icon: Factory,
+      path: "/factories",
+    },
+    {
+      id: "approvals",
+      titleKey: "nav.approvals",
+      icon: CheckSquare,
+      path: "/approvals",
+    },
+    { id: "qa", titleKey: "nav.qaGates", icon: Shield, path: "/qa" },
+    {
+      id: "reporting",
+      titleKey: "nav.reporting",
+      icon: BarChart3,
+      path: "/reporting",
+    },
+    {
+      id: "budgets",
+      titleKey: "nav.budgets",
+      icon: CreditCard,
+      path: "/budgets",
+    },
+    { id: "events", titleKey: "nav.events", icon: Zap, path: "/events" },
+    {
+      id: "capacity",
+      titleKey: "nav.capacity",
+      icon: Gauge,
+      path: "/capacity",
+    },
+    { id: "admin", titleKey: "nav.admin", icon: Settings2, path: "/admin" },
+  ];
+
+  // Mock notifications
+  const mockNotifications = [
+    {
+      id: 1,
+      titleKey: "notif.newIntake",
+      time: `2 ${t("notif.timeAgo.min")}`,
+      unread: true,
+    },
+    {
+      id: 2,
+      titleKey: "notif.budgetApproved",
+      time: `15 ${t("notif.timeAgo.min")}`,
+      unread: true,
+    },
+    {
+      id: 3,
+      titleKey: "notif.qaCheck",
+      time: `1 ${t("notif.timeAgo.hour")}`,
+      unread: false,
+    },
+    {
+      id: 4,
+      titleKey: "notif.factoryStage",
+      time: `3 ${t("notif.timeAgo.hours")}`,
+      unread: false,
+    },
+  ];
+
   // Filter nav items based on search
   const filteredItems = navItems.filter((item) =>
-    item.title.toLowerCase().includes(searchQuery.toLowerCase())
+    t(item.titleKey).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Close dropdowns when clicking outside
@@ -173,6 +180,10 @@ export const AppBar: React.FC<AppBarProps> = ({
     setSearchQuery("");
   };
 
+  const toggleLanguage = () => {
+    setLanguage(language === "pt" ? "en" : "pt");
+  };
+
   const unreadCount = mockNotifications.filter((n) => n.unread).length;
 
   return (
@@ -217,7 +228,7 @@ export const AppBar: React.FC<AppBarProps> = ({
           className={styles.searchBar}
         >
           <Search size={14} className={styles.searchIcon} />
-          <span className={styles.searchPlaceholder}>Search modules...</span>
+          <span className={styles.searchPlaceholder}>{t("common.search")}</span>
           <div className={styles.searchKbd}>
             <kbd>⌘K</kbd>
           </div>
@@ -256,7 +267,7 @@ export const AppBar: React.FC<AppBarProps> = ({
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search modules..."
+                placeholder={t("common.search")}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -291,7 +302,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                     fontSize: "0.6875rem",
                   }}
                 >
-                  No modules found
+                  {t("common.noResults")}
                 </div>
               ) : (
                 filteredItems.map((item, idx) => {
@@ -348,7 +359,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                               : "var(--color-text-secondary)",
                         }}
                       >
-                        {item.title}
+                        {t(item.titleKey)}
                       </span>
                     </button>
                   );
@@ -368,9 +379,9 @@ export const AppBar: React.FC<AppBarProps> = ({
                 color: "var(--color-text-tertiary)",
               }}
             >
-              <span>↑↓ navigate</span>
-              <span>↵ select</span>
-              <span>esc close</span>
+              <span>↑↓ {t("common.navigate")}</span>
+              <span>↵ {t("common.select")}</span>
+              <span>esc {t("common.close")}</span>
             </div>
           </div>
         )}
@@ -426,7 +437,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                     color: "var(--color-text-primary)",
                   }}
                 >
-                  Notifications
+                  {t("common.notifications")}
                 </span>
                 <span
                   style={{
@@ -438,7 +449,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                     borderRadius: "999px",
                   }}
                 >
-                  {unreadCount} new
+                  {unreadCount} {t("common.new")}
                 </span>
               </div>
               <div style={{ maxHeight: "240px", overflow: "auto" }}>
@@ -477,7 +488,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                           lineHeight: 1.4,
                         }}
                       >
-                        {notif.title}
+                        {t(notif.titleKey)}
                       </p>
                       <p
                         style={{
@@ -509,7 +520,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                     cursor: "pointer",
                   }}
                 >
-                  View all notifications
+                  {t("common.viewAll")}
                 </button>
               </div>
             </div>
@@ -543,7 +554,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                 position: "absolute",
                 top: "calc(100% + 8px)",
                 right: 0,
-                width: "180px",
+                width: "200px",
                 background: "var(--color-bg-card)",
                 border: "1px solid var(--color-border-subtle)",
                 borderRadius: "0.625rem",
@@ -552,32 +563,89 @@ export const AppBar: React.FC<AppBarProps> = ({
                 zIndex: 1000,
               }}
             >
+              {/* Header with user info and language flag */}
               <div
                 style={{
                   padding: "0.75rem 0.875rem",
                   borderBottom: "1px solid var(--color-border-subtle)",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
                 }}
               >
-                <p
+                <div>
+                  <p
+                    style={{
+                      fontSize: "0.6875rem",
+                      fontWeight: 600,
+                      color: "var(--color-text-primary)",
+                      margin: 0,
+                    }}
+                  >
+                    John Doe
+                  </p>
+                  <p
+                    style={{
+                      fontSize: "0.5rem",
+                      color: "var(--color-text-tertiary)",
+                      margin: "0.125rem 0 0 0",
+                    }}
+                  >
+                    admin@bundlr.io
+                  </p>
+                </div>
+                {/* Language Toggle Flag */}
+                <button
+                  onClick={toggleLanguage}
+                  title={
+                    language === "pt"
+                      ? "Mudar para Inglês"
+                      : "Switch to Portuguese"
+                  }
                   style={{
-                    fontSize: "0.6875rem",
-                    fontWeight: 600,
-                    color: "var(--color-text-primary)",
-                    margin: 0,
+                    background: "var(--color-bg-subtle)",
+                    border: "1px solid var(--color-border-subtle)",
+                    borderRadius: "0.375rem",
+                    padding: "0.25rem 0.375rem",
+                    cursor: "pointer",
+                    fontSize: "0.875rem",
+                    lineHeight: 1,
+                    transition: "all 0.15s",
                   }}
                 >
-                  John Doe
-                </p>
-                <p
-                  style={{
-                    fontSize: "0.5rem",
-                    color: "var(--color-text-tertiary)",
-                    margin: "0.125rem 0 0 0",
-                  }}
-                >
-                  admin@bundlr.io
-                </p>
+                  {language === "pt" ? (
+                    <img
+                      src="https://flagcdn.com/w40/pt.png"
+                      width="20"
+                      height="15"
+                      alt="PT"
+                      style={{
+                        display: "block",
+                        borderRadius: "2px",
+                        width: "20px",
+                        height: "15px",
+                        objectFit: "cover",
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src="https://flagcdn.com/w40/gb.png"
+                      width="20"
+                      height="15"
+                      alt="GB"
+                      style={{
+                        display: "block",
+                        borderRadius: "2px",
+                        width: "20px",
+                        height: "15px",
+                        objectFit: "cover",
+                      }}
+                    />
+                  )}
+                </button>
               </div>
+
+              {/* Menu Items */}
               <div style={{ padding: "0.25rem" }}>
                 <button
                   style={{
@@ -595,7 +663,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                     textAlign: "left",
                   }}
                 >
-                  <Settings size={12} /> Settings
+                  <Settings size={12} /> {t("common.settings")}
                 </button>
                 <button
                   style={{
@@ -613,9 +681,11 @@ export const AppBar: React.FC<AppBarProps> = ({
                     textAlign: "left",
                   }}
                 >
-                  <HelpCircle size={12} /> Help & Support
+                  <HelpCircle size={12} /> {t("common.help")}
                 </button>
               </div>
+
+              {/* Logout */}
               <div
                 style={{
                   padding: "0.25rem",
@@ -638,7 +708,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                     textAlign: "left",
                   }}
                 >
-                  <LogOut size={12} /> Sign Out
+                  <LogOut size={12} /> {t("common.signOut")}
                 </button>
               </div>
             </div>

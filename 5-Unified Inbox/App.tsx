@@ -16,7 +16,7 @@ import {
   FileText,
   Clock,
 } from "lucide-react";
-import { AppShell, Button } from "@bundlros/ui";
+import { AppShell, Button, useLanguage } from "@bundlros/ui";
 import styles from "./components/Inbox.module.css";
 
 // Mock Data Generator (Keep existing)
@@ -71,6 +71,7 @@ const generateMockData = (): IntakeItem[] => {
 };
 
 const App: React.FC = () => {
+  const { t } = useLanguage();
   const [items, setItems] = useState<IntakeItem[]>(generateMockData());
   const [selectedItem, setSelectedItem] = useState<IntakeItem | null>(null);
   const [isNewIntakeOpen, setIsNewIntakeOpen] = useState(false);
@@ -182,8 +183,8 @@ const App: React.FC = () => {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.titleSection}>
-            <h1>Unified Inbox</h1>
-            <p>Centralized operations triage and intake management</p>
+            <h1>{t("inbox.title")}</h1>
+            <p>{t("inbox.subtitle")}</p>
           </div>
         </div>
 
@@ -191,7 +192,7 @@ const App: React.FC = () => {
         <div className={styles.statsGrid}>
           <div className={`${styles.statCard} ${styles.open}`}>
             <div>
-              <p className={styles.statLabel}>Open Items</p>
+              <p className={styles.statLabel}>{t("inbox.openItems")}</p>
               <p className={styles.statValue}>{stats.total}</p>
             </div>
             <div className={styles.statIconWrapper}>
@@ -201,7 +202,7 @@ const App: React.FC = () => {
 
           <div className={`${styles.statCard} ${styles.breached}`}>
             <div>
-              <p className={styles.statLabel}>SLA Breached</p>
+              <p className={styles.statLabel}>{t("inbox.slaBreach")}</p>
               <p className={styles.statValue}>{stats.breached}</p>
             </div>
             <div className={styles.statIconWrapper}>
@@ -211,7 +212,7 @@ const App: React.FC = () => {
 
           <div className={`${styles.statCard} ${styles.critical}`}>
             <div>
-              <p className={styles.statLabel}>Critical Priority</p>
+              <p className={styles.statLabel}>{t("inbox.criticalHigh")}</p>
               <p className={styles.statValue}>{stats.critical}</p>
             </div>
             <div className={styles.statIconWrapper}>
@@ -236,7 +237,7 @@ const App: React.FC = () => {
             <Search className={styles.searchIcon} />
             <input
               type="text"
-              placeholder="Search intake items (ID, Title, Client)..."
+              placeholder={t("inbox.searchPlaceholder")}
               value={filters.search}
               onChange={(e) =>
                 setFilters({ ...filters, search: e.target.value })
@@ -256,7 +257,7 @@ const App: React.FC = () => {
                 })
               }
             >
-              <option value="All">Priority: All</option>
+              <option value="All">{t("inbox.allPriorities")}</option>
               {Object.values(Priority).map((p) => (
                 <option key={p} value={p}>
                   {p}
@@ -274,7 +275,7 @@ const App: React.FC = () => {
                 })
               }
             >
-              <option value="All">Status: All</option>
+              <option value="All">{t("inbox.allStatuses")}</option>
               {Object.values(Status).map((s) => (
                 <option key={s} value={s}>
                   {s}
@@ -288,7 +289,7 @@ const App: React.FC = () => {
               leftIcon={<PlusCircle size={14} />}
               onClick={() => setIsNewIntakeOpen(true)}
             >
-              New Intake
+              {t("inbox.newIntake")}
             </Button>
           </div>
         </div>
@@ -334,7 +335,7 @@ const App: React.FC = () => {
                 <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center">
                   <PlusCircle size={18} className="text-white" />
                 </div>
-                Create New Intake
+                {t("inbox.newIntake")}
               </h2>
               <button
                 onClick={() => setIsNewIntakeOpen(false)}
@@ -349,7 +350,7 @@ const App: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">
                   <FileText size={14} />
-                  Subject / Title
+                  {t("inbox.form.title")}
                 </label>
                 <input
                   type="text"
@@ -359,7 +360,7 @@ const App: React.FC = () => {
                     setNewIntake({ ...newIntake, title: e.target.value })
                   }
                   className="form-input"
-                  placeholder="Brief description of the issue or request"
+                  placeholder={t("inbox.form.titlePlaceholder")}
                 />
               </div>
 
@@ -367,7 +368,7 @@ const App: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">
                   <FileText size={14} />
-                  Description
+                  {t("inbox.form.description")}
                 </label>
                 <textarea
                   value={newIntake.description}
@@ -376,7 +377,7 @@ const App: React.FC = () => {
                   }
                   className="form-input"
                   style={{ minHeight: "100px", resize: "vertical" }}
-                  placeholder="Provide additional details about this intake..."
+                  placeholder={t("inbox.form.descriptionPlaceholder")}
                   rows={4}
                 />
               </div>
@@ -386,7 +387,7 @@ const App: React.FC = () => {
                 <div>
                   <label className="form-label">
                     <Building2 size={14} />
-                    Client
+                    {t("inbox.form.client")}
                   </label>
                   <select
                     required
@@ -396,7 +397,7 @@ const App: React.FC = () => {
                     }
                     className="form-select"
                   >
-                    <option value="">Select client...</option>
+                    <option value="">{t("inbox.form.selectClient")}</option>
                     {clients.map((c) => (
                       <option key={c} value={c}>
                         {c}
@@ -408,7 +409,7 @@ const App: React.FC = () => {
                 <div>
                   <label className="form-label">
                     <Zap size={14} />
-                    Priority
+                    {t("inbox.form.priority")}
                   </label>
                   <select
                     value={newIntake.priority}
@@ -433,7 +434,7 @@ const App: React.FC = () => {
               <div className="form-group">
                 <label className="form-label">
                   <User size={14} />
-                  Requestor Email
+                  {t("inbox.form.requestor")}
                 </label>
                 <input
                   type="email"
@@ -442,7 +443,7 @@ const App: React.FC = () => {
                     setNewIntake({ ...newIntake, requestor: e.target.value })
                   }
                   className="form-input"
-                  placeholder="requestor@company.com"
+                  placeholder={t("inbox.form.requestorPlaceholder")}
                 />
               </div>
 
@@ -468,7 +469,7 @@ const App: React.FC = () => {
                 size="sm"
                 onClick={() => setIsNewIntakeOpen(false)}
               >
-                Cancel
+                {t("inbox.form.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -476,7 +477,7 @@ const App: React.FC = () => {
                 onClick={handleCreateIntake}
                 leftIcon={<PlusCircle size={14} />}
               >
-                Create Intake
+                {t("inbox.form.create")}
               </Button>
             </div>
           </div>

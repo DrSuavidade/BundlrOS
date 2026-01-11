@@ -13,10 +13,13 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
 
 // Status Badge Component
 const StatusBadge: React.FC<{ status: ApprovalStatus }> = ({ status }) => {
+  const { t } = useLanguage();
+
   const getVariant = () => {
     switch (status) {
       case ApprovalStatus.APPROVED:
@@ -46,13 +49,13 @@ const StatusBadge: React.FC<{ status: ApprovalStatus }> = ({ status }) => {
   const getLabel = () => {
     switch (status) {
       case ApprovalStatus.APPROVED:
-        return "Approved";
+        return t("approvals.approved");
       case ApprovalStatus.REJECTED:
-        return "Rejected";
+        return t("approvals.rejected");
       case ApprovalStatus.EXPIRED:
-        return "Expired";
+        return t("approvals.expired");
       default:
-        return "Pending";
+        return t("approvals.pending");
     }
   };
 
@@ -65,12 +68,27 @@ const StatusBadge: React.FC<{ status: ApprovalStatus }> = ({ status }) => {
 };
 
 // Distribution Bar Chart
-const DistributionChart: React.FC<{ stats: Stats }> = ({ stats }) => {
+const DistributionChart: React.FC<{
+  stats: Stats;
+  t: (key: string) => string;
+}> = ({ stats, t }) => {
   const total = stats.total || 1;
   const data = [
-    { label: "Pending", value: stats.pending, color: "rgb(245, 158, 11)" },
-    { label: "Approved", value: stats.approved, color: "rgb(16, 185, 129)" },
-    { label: "Rejected", value: stats.rejected, color: "rgb(239, 68, 68)" },
+    {
+      label: t("approvals.pending"),
+      value: stats.pending,
+      color: "rgb(245, 158, 11)",
+    },
+    {
+      label: t("approvals.approved"),
+      value: stats.approved,
+      color: "rgb(16, 185, 129)",
+    },
+    {
+      label: t("approvals.rejected"),
+      value: stats.rejected,
+      color: "rgb(239, 68, 68)",
+    },
   ];
 
   return (
@@ -95,6 +113,7 @@ const DistributionChart: React.FC<{ stats: Stats }> = ({ stats }) => {
 };
 
 export const Dashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,9 +153,9 @@ export const Dashboard: React.FC = () => {
               size={22}
               className="text-[var(--color-accent-primary)]"
             />
-            Approvals Center
+            {t("approvals.title")}
           </h1>
-          <p>Manage and track approval requests across your organization</p>
+          <p>{t("approvals.subtitle")}</p>
         </div>
       </div>
 
@@ -144,7 +163,9 @@ export const Dashboard: React.FC = () => {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div>
-            <div className={styles.statCard__label}>Pending Action</div>
+            <div className={styles.statCard__label}>
+              {t("approvals.pendingApprovals")}
+            </div>
             <div className={styles.statCard__value}>{stats?.pending || 0}</div>
           </div>
           <div className={styles.statCard__footer}>Require your attention</div>
@@ -152,7 +173,7 @@ export const Dashboard: React.FC = () => {
 
         <div className={styles.statCard}>
           <div>
-            <div className={styles.statCard__label}>Total Processed</div>
+            <div className={styles.statCard__label}>{t("approvals.total")}</div>
             <div className={styles.statCard__value}>
               {(stats?.approved || 0) + (stats?.rejected || 0)}
             </div>
@@ -161,16 +182,22 @@ export const Dashboard: React.FC = () => {
         </div>
 
         <div className={styles.distributionCard}>
-          <div className={styles.distributionCard__label}>Distribution</div>
-          {stats && <DistributionChart stats={stats} />}
+          <div className={styles.distributionCard__label}>
+            {t("approvals.distribution")}
+          </div>
+          {stats && <DistributionChart stats={stats} t={t} />}
         </div>
       </div>
 
       {/* Recent Requests */}
       <div className={styles.requestsCard}>
         <div className={styles.requestsHeader}>
-          <span className={styles.requestsTitle}>Recent Requests</span>
-          <button className={styles.viewAllButton}>View All</button>
+          <span className={styles.requestsTitle}>
+            {t("approvals.recentApprovals")}
+          </span>
+          <button className={styles.viewAllButton}>
+            {t("approvals.viewDetails")}
+          </button>
         </div>
 
         <div>

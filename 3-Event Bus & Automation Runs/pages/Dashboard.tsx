@@ -11,9 +11,11 @@ import {
   Cell,
 } from "recharts";
 import { Activity, AlertTriangle, CheckCircle, Clock, Zap } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "../App.module.css";
 
 export const Dashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [stats, setStats] = useState({
     total: 0,
     success: 0,
@@ -55,9 +57,9 @@ export const Dashboard: React.FC = () => {
         <div className={styles.titleSection}>
           <h1>
             <Zap size={22} style={{ color: "var(--color-accent-primary)" }} />
-            Event Bus
+            {t("events.title")}
           </h1>
-          <p>System overview and health metrics</p>
+          <p>{t("events.subtitle")}</p>
         </div>
       </div>
 
@@ -65,7 +67,7 @@ export const Dashboard: React.FC = () => {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Total Events</span>
+            <span className={styles.statLabel}>{t("events.totalEvents")}</span>
             <span className={styles.statValue}>{stats.total}</span>
           </div>
           <div className={`${styles.statIcon} ${styles.indigo}`}>
@@ -75,7 +77,9 @@ export const Dashboard: React.FC = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Successful Runs</span>
+            <span className={styles.statLabel}>
+              {t("events.successfulRuns")}
+            </span>
             <span className={styles.statValue}>{stats.success}</span>
           </div>
           <div className={`${styles.statIcon} ${styles.emerald}`}>
@@ -85,7 +89,7 @@ export const Dashboard: React.FC = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Failed Events</span>
+            <span className={styles.statLabel}>{t("events.failedEvents")}</span>
             <span className={styles.statValue}>{stats.failed}</span>
           </div>
           <div className={`${styles.statIcon} ${styles.rose}`}>
@@ -95,7 +99,9 @@ export const Dashboard: React.FC = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Pending / Active</span>
+            <span className={styles.statLabel}>
+              {t("events.pendingActive")}
+            </span>
             <span className={styles.statValue}>{stats.waiting}</span>
           </div>
           <div className={`${styles.statIcon} ${styles.amber}`}>
@@ -110,7 +116,7 @@ export const Dashboard: React.FC = () => {
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
             <span className={styles.sectionTitle}>
-              Event Volume (Last 6 Hours)
+              {t("events.eventActivity")}
             </span>
           </div>
           <div className={styles.sectionBody}>
@@ -152,7 +158,7 @@ export const Dashboard: React.FC = () => {
                   />
                   <Bar
                     dataKey="events"
-                    name="Total Events"
+                    name={t("events.totalEvents")}
                     radius={[3, 3, 0, 0]}
                   >
                     {stats.hourlyData.map((_, index) => (
@@ -161,7 +167,7 @@ export const Dashboard: React.FC = () => {
                   </Bar>
                   <Bar
                     dataKey="failed"
-                    name="Failed"
+                    name={t("events.status.failed")}
                     radius={[3, 3, 0, 0]}
                     fill="rgb(244, 63, 94)"
                   />
@@ -174,7 +180,9 @@ export const Dashboard: React.FC = () => {
         {/* System Health */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
-            <span className={styles.sectionTitle}>System Health</span>
+            <span className={styles.sectionTitle}>
+              {t("events.successRate")}
+            </span>
           </div>
           <div className={styles.sectionBody}>
             <div className={styles.healthList}>
@@ -194,7 +202,9 @@ export const Dashboard: React.FC = () => {
                 </span>
               </div>
               <div className={styles.healthItem}>
-                <span className={styles.healthLabel}>Success Rate</span>
+                <span className={styles.healthLabel}>
+                  {t("events.successRate")}
+                </span>
                 <span className={`${styles.healthValue} ${styles.good}`}>
                   98.2%
                 </span>

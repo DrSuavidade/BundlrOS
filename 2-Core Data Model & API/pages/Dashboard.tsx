@@ -14,6 +14,7 @@ import {
   Layers,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
 
 // Event Type Badge Component
@@ -58,6 +59,7 @@ const getStatusColor = (status: string): string => {
 };
 
 export const Dashboard: React.FC = () => {
+  const { t } = useLanguage();
   const [clients, setClients] = useState<Client[]>([]);
   const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
   const [events, setEvents] = useState<SystemEvent[]>([]);
@@ -77,12 +79,15 @@ export const Dashboard: React.FC = () => {
   ).length;
 
   const statusData = [
-    { status: "draft", label: "Draft" },
-    { status: "awaiting_approval", label: "Awaiting Approval" },
-    { status: "approved", label: "Approved" },
-    { status: "in_qa", label: "In QA" },
-    { status: "ready", label: "Ready" },
-    { status: "published", label: "Published" },
+    { status: "draft", labelKey: "coreData.status.draft" },
+    {
+      status: "awaiting_approval",
+      labelKey: "coreData.status.awaitingApproval",
+    },
+    { status: "approved", labelKey: "coreData.status.approved" },
+    { status: "in_qa", labelKey: "coreData.status.inQa" },
+    { status: "ready", labelKey: "coreData.status.ready" },
+    { status: "published", labelKey: "coreData.status.published" },
   ];
 
   return (
@@ -95,13 +100,13 @@ export const Dashboard: React.FC = () => {
               size={22}
               className="text-[var(--color-accent-primary)]"
             />
-            System Overview
+            {t("coreData.title")}
           </h1>
-          <p>Real-time dashboard of your core data model and system activity</p>
+          <p>{t("coreData.subtitle")}</p>
         </div>
         <div className={styles.statusBadge}>
           <div className={styles.statusDot} />
-          All Systems Operational
+          {t("coreData.allSystemsOp")}
         </div>
       </div>
 
@@ -114,11 +119,13 @@ export const Dashboard: React.FC = () => {
             style={{ background: "rgb(59, 130, 246)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Total Clients</p>
+            <p className={styles.statCard__label}>
+              {t("coreData.totalClients")}
+            </p>
             <p className={styles.statCard__value}>{clients.length}</p>
             <div className={`${styles.statCard__trend} ${styles.up}`}>
               <TrendingUp size={10} />
-              <span>+12% this month</span>
+              <span>{t("coreData.thisMonth")}</span>
             </div>
           </div>
           <div
@@ -139,7 +146,9 @@ export const Dashboard: React.FC = () => {
             style={{ background: "rgb(245, 158, 11)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Active Work Items</p>
+            <p className={styles.statCard__label}>
+              {t("coreData.activeWorkItems")}
+            </p>
             <p className={styles.statCard__value}>{pendingDeliverables}</p>
             <div
               className={`${styles.statCard__trend} ${
@@ -148,7 +157,9 @@ export const Dashboard: React.FC = () => {
             >
               <TrendingUp size={10} />
               <span>
-                {pendingDeliverables > 0 ? "Needs attention" : "All clear"}
+                {pendingDeliverables > 0
+                  ? t("coreData.needsAttention")
+                  : t("coreData.allClear")}
               </span>
             </div>
           </div>
@@ -170,7 +181,9 @@ export const Dashboard: React.FC = () => {
             style={{ background: "rgb(16, 185, 129)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Published Items</p>
+            <p className={styles.statCard__label}>
+              {t("coreData.publishedItems")}
+            </p>
             <p className={styles.statCard__value}>{publishedDeliverables}</p>
           </div>
           <div
@@ -191,7 +204,9 @@ export const Dashboard: React.FC = () => {
             style={{ background: "rgb(168, 85, 247)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Recent Events</p>
+            <p className={styles.statCard__label}>
+              {t("coreData.recentEvents")}
+            </p>
             <p className={styles.statCard__value}>{events.length}</p>
           </div>
           <div
@@ -216,9 +231,11 @@ export const Dashboard: React.FC = () => {
                 size={14}
                 className="text-[var(--color-accent-primary)]"
               />
-              Activity Log
+              {t("coreData.activityLog")}
             </div>
-            <span className={styles.sectionCard__badge}>Last 100 Events</span>
+            <span className={styles.sectionCard__badge}>
+              {t("coreData.last100Events")}
+            </span>
           </div>
 
           <div className={styles.sectionCard__body}>
@@ -227,18 +244,24 @@ export const Dashboard: React.FC = () => {
                 <div className={styles.emptyState__icon}>
                   <AlertCircle size={20} />
                 </div>
-                <p className={styles.emptyState__title}>No Activity Yet</p>
+                <p className={styles.emptyState__title}>
+                  {t("coreData.noActivityYet")}
+                </p>
                 <p className={styles.emptyState__description}>
-                  Events will appear here as you interact with the system
+                  {t("coreData.noActivityDesc")}
                 </p>
               </div>
             ) : (
               <table className={styles.activityTable}>
                 <thead>
                   <tr>
-                    <th style={{ width: "140px" }}>Timestamp</th>
-                    <th style={{ width: "180px" }}>Event Type</th>
-                    <th>Details</th>
+                    <th style={{ width: "140px" }}>
+                      {t("coreData.timestamp")}
+                    </th>
+                    <th style={{ width: "180px" }}>
+                      {t("coreData.eventType")}
+                    </th>
+                    <th>{t("coreData.details")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -275,12 +298,12 @@ export const Dashboard: React.FC = () => {
                 size={14}
                 className="text-[var(--color-accent-primary)]"
               />
-              Deliverable Pipeline
+              {t("coreData.deliverablePipeline")}
             </div>
           </div>
 
           <div className={styles.sectionCard__body}>
-            {statusData.map(({ status, label }) => {
+            {statusData.map(({ status, labelKey }) => {
               const count = deliverables.filter(
                 (d) => d.status === status
               ).length;
@@ -297,7 +320,9 @@ export const Dashboard: React.FC = () => {
                         className={styles.pipelineItem__dot}
                         style={{ background: color }}
                       />
-                      <span className={styles.pipelineItem__name}>{label}</span>
+                      <span className={styles.pipelineItem__name}>
+                        {t(labelKey)}
+                      </span>
                     </div>
                     <div className={styles.pipelineItem__stats}>
                       <span className={styles.pipelineItem__percentage}>
@@ -321,11 +346,13 @@ export const Dashboard: React.FC = () => {
             {/* Quick Stats */}
             <div className={styles.quickStats}>
               <div className={styles.quickStat}>
-                <p className={styles.quickStat__label}>Total</p>
+                <p className={styles.quickStat__label}>{t("coreData.total")}</p>
                 <p className={styles.quickStat__value}>{deliverables.length}</p>
               </div>
               <div className={styles.quickStat}>
-                <p className={styles.quickStat__label}>Completion</p>
+                <p className={styles.quickStat__label}>
+                  {t("coreData.completion")}
+                </p>
                 <p className={`${styles.quickStat__value} ${styles.success}`}>
                   {deliverables.length
                     ? Math.round(
@@ -340,7 +367,7 @@ export const Dashboard: React.FC = () => {
 
           <div className={styles.sectionCard__footer}>
             <Link to="deliverables" className={styles.viewAllLink}>
-              View All Deliverables
+              {t("coreData.viewAllDeliverables")}
               <ArrowUpRight size={12} />
             </Link>
           </div>

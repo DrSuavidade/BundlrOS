@@ -5,10 +5,10 @@ import {
   Users,
   UserCircle,
   LogOut,
-  Layers,
   ShieldCheck,
 } from "lucide-react";
 import { Role } from "../types";
+import { useLanguage } from "@bundlros/ui";
 
 interface SidebarProps {
   currentUserRole: Role;
@@ -19,6 +19,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentUserRole,
   onLogout,
 }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -39,33 +40,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <aside className="w-64 h-full bg-[var(--color-bg-subtle)] border-r border-[var(--color-border-subtle)] flex flex-col hidden lg:flex">
       <div className="p-4 border-b border-[var(--color-border-subtle)]">
         <span className="text-[var(--color-text-tertiary)] text-[10px] font-bold uppercase tracking-widest">
-          IAM Context
+          {t("identity.iamContext")}
         </span>
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
         <NavLink to="/dashboard" className={linkClass}>
           <LayoutDashboard size={14} />
-          <span>IAM Dashboard</span>
+          <span>{t("identity.iamDashboard")}</span>
         </NavLink>
 
         {currentUserRole === Role.ADMIN && (
           <NavLink to="/users" className={linkClass}>
             <Users size={14} />
-            <span>User Directory</span>
+            <span>{t("identity.userDirectory")}</span>
           </NavLink>
         )}
 
         {currentUserRole === Role.ADMIN && (
           <NavLink to="/audit" className={linkClass}>
             <ShieldCheck size={14} />
-            <span>Security Logs</span>
+            <span>{t("identity.securityLogs")}</span>
           </NavLink>
         )}
 
         <NavLink to="/me" className={linkClass}>
           <UserCircle size={14} />
-          <span>My Identity</span>
+          <span>{t("identity.myIdentity")}</span>
         </NavLink>
       </nav>
 
@@ -75,7 +76,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           className="flex items-center gap-3 px-4 py-2 w-full rounded-lg text-[var(--color-text-tertiary)] hover:text-[var(--color-status-danger)] hover:bg-[var(--color-status-danger)]/10 transition-colors text-left text-xs font-medium"
         >
           <LogOut size={14} />
-          <span>Terminate Session</span>
+          <span>{t("identity.terminateSession")}</span>
         </button>
       </div>
     </aside>

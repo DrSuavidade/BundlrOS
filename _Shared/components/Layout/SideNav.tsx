@@ -15,6 +15,7 @@ import {
   Server,
   Key,
 } from "lucide-react";
+import { useLanguage } from "../../contexts/LanguageContext";
 import styles from "./AppShell.module.css";
 
 interface SideNavProps {
@@ -22,46 +23,80 @@ interface SideNavProps {
 }
 
 export const SideNav: React.FC<SideNavProps> = ({ isOpen = true }) => {
+  const { t } = useLanguage();
+
   const navGroups = [
     {
-      title: "Sales & Clients",
+      titleKey: "sidebar.salesClients",
       items: [
-        { label: "Inbox", icon: <Inbox size={18} />, to: "/inbox" },
-        { label: "Client 360", icon: <Users size={18} />, to: "/clients" },
-        { label: "Budgets", icon: <CreditCard size={18} />, to: "/budgets" },
+        { labelKey: "sidebar.inbox", icon: <Inbox size={18} />, to: "/inbox" },
+        {
+          labelKey: "sidebar.client360",
+          icon: <Users size={18} />,
+          to: "/clients",
+        },
+        {
+          labelKey: "sidebar.budgets",
+          icon: <CreditCard size={18} />,
+          to: "/budgets",
+        },
       ],
     },
     {
-      title: "Strategy",
-      items: [
-        { label: "Core Data", icon: <LayoutGrid size={18} />, to: "/core" },
-        { label: "Capacity", icon: <Activity size={18} />, to: "/capacity" },
-      ],
-    },
-    {
-      title: "Production",
-      items: [
-        { label: "Factories", icon: <Server size={18} />, to: "/factories" },
-        { label: "Assets", icon: <FileText size={18} />, to: "/assets" },
-        { label: "Events", icon: <Zap size={18} />, to: "/events" },
-      ],
-    },
-    {
-      title: "Delivery",
+      titleKey: "sidebar.strategy",
       items: [
         {
-          label: "Approvals",
+          labelKey: "sidebar.coreData",
+          icon: <LayoutGrid size={18} />,
+          to: "/core",
+        },
+        {
+          labelKey: "sidebar.capacity",
+          icon: <Activity size={18} />,
+          to: "/capacity",
+        },
+      ],
+    },
+    {
+      titleKey: "sidebar.production",
+      items: [
+        {
+          labelKey: "sidebar.factories",
+          icon: <Server size={18} />,
+          to: "/factories",
+        },
+        {
+          labelKey: "sidebar.assets",
+          icon: <FileText size={18} />,
+          to: "/assets",
+        },
+        { labelKey: "sidebar.events", icon: <Zap size={18} />, to: "/events" },
+      ],
+    },
+    {
+      titleKey: "sidebar.delivery",
+      items: [
+        {
+          labelKey: "sidebar.approvals",
           icon: <CheckSquare size={18} />,
           to: "/approvals",
         },
-        { label: "QA Gates", icon: <ShieldCheck size={18} />, to: "/qa" },
+        {
+          labelKey: "sidebar.qaGates",
+          icon: <ShieldCheck size={18} />,
+          to: "/qa",
+        },
       ],
     },
     {
-      title: "Management",
+      titleKey: "sidebar.management",
       items: [
-        { label: "Reporting", icon: <BarChart2 size={18} />, to: "/reporting" },
-        { label: "Admin", icon: <Key size={18} />, to: "/admin" },
+        {
+          labelKey: "sidebar.reporting",
+          icon: <BarChart2 size={18} />,
+          to: "/reporting",
+        },
+        { labelKey: "sidebar.admin", icon: <Key size={18} />, to: "/admin" },
       ],
     },
   ];
@@ -74,13 +109,13 @@ export const SideNav: React.FC<SideNavProps> = ({ isOpen = true }) => {
     >
       <nav className="flex flex-col gap-4 px-2 overflow-y-auto py-2">
         {navGroups.map((group) => (
-          <div key={group.title} className="flex flex-col gap-1">
+          <div key={group.titleKey} className="flex flex-col gap-1">
             <div className="px-3 mb-1 text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider opacity-80">
-              {group.title}
+              {t(group.titleKey)}
             </div>
             {group.items.map((item) => (
               <NavLink
-                key={item.label}
+                key={item.labelKey}
                 to={item.to}
                 className={({ isActive }) =>
                   `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
@@ -91,7 +126,7 @@ export const SideNav: React.FC<SideNavProps> = ({ isOpen = true }) => {
                 }
               >
                 {item.icon}
-                {item.label}
+                {t(item.labelKey)}
               </NavLink>
             ))}
           </div>
@@ -110,7 +145,7 @@ export const SideNav: React.FC<SideNavProps> = ({ isOpen = true }) => {
           }
         >
           <Settings size={18} />
-          Account
+          {t("sidebar.account")}
         </NavLink>
       </div>
     </aside>

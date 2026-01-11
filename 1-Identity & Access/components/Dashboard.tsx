@@ -11,9 +11,11 @@ import {
 } from "recharts";
 import { Users, UserPlus, Activity, ShieldAlert, Shield } from "lucide-react";
 import { Role } from "../types";
+import { useLanguage } from "@bundlros/ui";
 import styles from "../App.module.css";
 
 export const Dashboard: React.FC = () => {
+  const { t } = useLanguage();
   const users = UserService.getAll();
   const logs = AuditService.getAll();
 
@@ -49,9 +51,9 @@ export const Dashboard: React.FC = () => {
               size={22}
               style={{ color: "var(--color-accent-primary)" }}
             />
-            Identity Dashboard
+            {t("identity.title")}
           </h1>
-          <p>System overview and statistics</p>
+          <p>{t("identity.overview")}</p>
         </div>
       </div>
 
@@ -62,7 +64,7 @@ export const Dashboard: React.FC = () => {
             <Users size={18} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Total Users</span>
+            <span className={styles.statLabel}>{t("identity.totalUsers")}</span>
             <span className={styles.statValue}>{users.length}</span>
           </div>
         </div>
@@ -72,7 +74,7 @@ export const Dashboard: React.FC = () => {
             <UserPlus size={18} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Active Now</span>
+            <span className={styles.statLabel}>{t("identity.activeNow")}</span>
             <span className={styles.statValue}>{activeUsers}</span>
           </div>
         </div>
@@ -82,7 +84,9 @@ export const Dashboard: React.FC = () => {
             <Activity size={18} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Total Events</span>
+            <span className={styles.statLabel}>
+              {t("identity.totalEvents")}
+            </span>
             <span className={styles.statValue}>{logs.length}</span>
           </div>
         </div>
@@ -92,7 +96,9 @@ export const Dashboard: React.FC = () => {
             <ShieldAlert size={18} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>Security Alerts</span>
+            <span className={styles.statLabel}>
+              {t("identity.securityAlerts")}
+            </span>
             <span className={styles.statValue}>0</span>
           </div>
         </div>
@@ -103,7 +109,9 @@ export const Dashboard: React.FC = () => {
         {/* Chart */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>User Distribution by Role</h3>
+            <h3 className={styles.sectionTitle}>
+              {t("identity.userDistribution")}
+            </h3>
           </div>
           <div className={styles.sectionBody}>
             <div className={styles.chartContainer}>
@@ -141,7 +149,11 @@ export const Dashboard: React.FC = () => {
                     }}
                     cursor={{ fill: "rgba(255,255,255,0.02)" }}
                   />
-                  <Bar dataKey="value" name="Users" radius={[4, 4, 0, 0]}>
+                  <Bar
+                    dataKey="value"
+                    name={t("identity.users")}
+                    radius={[4, 4, 0, 0]}
+                  >
                     {roleDistribution.map((_, index) => (
                       <Cell
                         key={`cell-${index}`}
@@ -158,7 +170,9 @@ export const Dashboard: React.FC = () => {
         {/* Recent Activity */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>Recent Activity</h3>
+            <h3 className={styles.sectionTitle}>
+              {t("identity.recentActivity")}
+            </h3>
           </div>
           <div className={styles.sectionBody}>
             <div className={styles.activityList}>
@@ -185,7 +199,7 @@ export const Dashboard: React.FC = () => {
                     padding: "1rem",
                   }}
                 >
-                  No recent activity
+                  {t("identity.noRecentActivity")}
                 </p>
               )}
             </div>
