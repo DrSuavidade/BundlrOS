@@ -45,7 +45,7 @@ function App() {
   // For now, we wrap the content.
 
   const ProtectedLayout = () => {
-    if (!currentUser) return <Navigate to="login" replace />;
+    if (!currentUser) return <Navigate to="/identity/login" replace />;
 
     return (
       <AppShell moduleName="Identity & Access">
@@ -103,7 +103,10 @@ function App() {
           }
         />
 
-        <Route path="*" element={<Navigate to="dashboard" />} />
+        <Route
+          path="*"
+          element={<Navigate to="/identity/dashboard" replace />}
+        />
       </Route>
     </Routes>
   );

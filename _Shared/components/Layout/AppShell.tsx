@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppBar } from "./AppBar";
 import { SideNav } from "./SideNav";
-import { CommandPalette } from "../CommandPalette";
 import styles from "./AppShell.module.css";
 
 interface AppShellProps {
@@ -10,23 +10,15 @@ interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
-  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        setIsCommandPaletteOpen((prev) => !prev);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  const navigate = useNavigate();
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
+  };
+
+  const handleLogoClick = () => {
+    navigate("/identity/dashboard");
   };
 
   return (
@@ -38,7 +30,7 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
       <AppBar
         title={moduleName ? `BundlrOS / ${moduleName}` : "BundlrOS"}
         onMenuClick={handleToggleSidebar}
-        onCommandClick={() => setIsCommandPaletteOpen(true)}
+        onLogoClick={handleLogoClick}
       />
 
       <div className={styles.contentWrapper}>
@@ -53,11 +45,6 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
           </div>
         </main>
       </div>
-
-      <CommandPalette
-        isOpen={isCommandPaletteOpen}
-        onClose={() => setIsCommandPaletteOpen(false)}
-      />
     </div>
   );
 };
