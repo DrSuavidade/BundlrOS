@@ -240,6 +240,9 @@ importers:
 
   3-Event Bus & Automation Runs:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
@@ -274,6 +277,9 @@ importers:
 
   4-File Asset Hub:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
@@ -308,6 +314,9 @@ importers:
 
   5-Unified Inbox:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared

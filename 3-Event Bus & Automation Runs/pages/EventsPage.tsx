@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MockService } from "../services/mockData";
+import { EventBusService } from "../services";
 import { SystemEvent, Status } from "../types";
 import { Search, Filter, RefreshCw, ChevronRight, Zap } from "lucide-react";
 import { useLanguage } from "@bundlros/ui";
@@ -45,7 +45,7 @@ export const EventsPage: React.FC = () => {
 
   const fetchEvents = async () => {
     setLoading(true);
-    const data = await MockService.getEvents();
+    const data = await EventBusService.getEvents();
     setEvents(data);
     setLoading(false);
   };

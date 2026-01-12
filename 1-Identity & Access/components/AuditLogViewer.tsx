@@ -1,17 +1,36 @@
 import React, { useState, useEffect } from "react";
-import { AuditService } from "../services/store";
+import { AuditService } from "../services";
 import { AuditLog } from "../types";
 import { GlassCard } from "./ui/GlassCard";
-import { Terminal } from "lucide-react";
+import { Terminal, Loader2 } from "lucide-react";
 import { useLanguage } from "@bundlros/ui";
 
 export const AuditLogViewer: React.FC = () => {
   const { t } = useLanguage();
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLogs(AuditService.getAll());
+    const fetchLogs = async () => {
+      try {
+        const logsData = await AuditService.getAll();
+        setLogs(logsData);
+      } catch (error) {
+        console.error("Failed to fetch audit logs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLogs();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="p-8 h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 h-screen flex flex-col">
@@ -59,6 +78,11 @@ export const AuditLogViewer: React.FC = () => {
               </span>
             </div>
           ))}
+          {logs.length === 0 && (
+            <div className="text-center py-8 text-zinc-500">
+              No audit logs found
+            </div>
+          )}
         </div>
       </GlassCard>
     </div>

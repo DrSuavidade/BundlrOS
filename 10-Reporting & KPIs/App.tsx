@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ViewState, KPIRecord, Report, ReportStatus } from "./types";
+import { ViewState, KPIRecord, KPIUnit, Report, ReportStatus } from "./types";
 import { MOCK_KPIS, PERIODS } from "./data/mockData";
 import { generateReportNarrative } from "./services/geminiService";
 import {
@@ -24,7 +24,27 @@ const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
   kpi,
   t,
 }) => {
-  const isUp = kpi.delta >= 0;
+  // Calculate delta percentage from value and previousValue
+  const delta =
+    kpi.previousValue !== 0
+      ? ((kpi.value - kpi.previousValue) / kpi.previousValue) * 100
+      : 0;
+  const isUp = delta >= 0;
+
+  // Format value based on unit
+  const formatValue = (value: number, unit: KPIUnit): string => {
+    switch (unit) {
+      case KPIUnit.CURRENCY:
+        return `€${value.toLocaleString()}`;
+      case KPIUnit.PERCENTAGE:
+        return `${value.toFixed(1)}%`;
+      case KPIUnit.NUMBER:
+      default:
+        return value.toLocaleString();
+    }
+  };
+
+  const formatted = formatValue(kpi.value, kpi.unit);
 
   return (
     <div className={styles.kpiCard}>
@@ -36,10 +56,10 @@ const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
           }`}
         >
           {isUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-          {Math.abs(kpi.delta)}%
+          {Math.abs(delta).toFixed(1)}%
         </span>
       </div>
-      <div className={styles.kpiCard__value}>{kpi.formatted}</div>
+      <div className={styles.kpiCard__value}>{formatted}</div>
       <div className={styles.kpiCard__footer}>
         {t("reporting.vsLastPeriod")}
       </div>
@@ -51,7 +71,6 @@ const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
 const DashboardView: React.FC<{
   kpis: KPIRecord[];
   periods: string[];
-  selectedPeriod: string;
   selectedPeriod: string;
   onSelectPeriod: (p: string) => void;
   t: (key: string) => string;

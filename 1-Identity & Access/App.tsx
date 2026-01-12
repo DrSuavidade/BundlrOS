@@ -7,7 +7,7 @@ import { UsersList } from "./components/UsersList";
 import { UserProfile } from "./components/UserProfile";
 import { AuditLogViewer } from "./components/AuditLogViewer";
 import { User, Role } from "./types";
-import { AuditService } from "./services/store";
+import { AuditService } from "./services";
 import { AppShell, useAuth } from "@bundlros/ui";
 
 function App() {

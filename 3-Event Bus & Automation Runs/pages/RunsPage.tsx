@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { MockService } from "../services/mockData";
+import { EventBusService } from "../services";
 import { AutomationRun, Status } from "../types";
 import { ArrowRight, Workflow } from "lucide-react";
 import { useLanguage } from "@bundlros/ui";
@@ -43,7 +43,7 @@ export const RunsPage: React.FC = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const data = await MockService.getRuns();
+      const data = await EventBusService.getRuns();
       setRuns(
         data.sort(
           (a, b) =>

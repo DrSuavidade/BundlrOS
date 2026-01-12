@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { UploadCloud, X, Check, File as FileIcon } from "lucide-react";
 import { AppShell, Button } from "@bundlros/ui";
-import { backend } from "../services/mockBackend";
+import { backend } from "../services";
 import { UploadProgress } from "../types";
 import styles from "./Assets.module.css";
 

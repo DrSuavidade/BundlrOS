@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { UserService, AuditService } from "../services/store";
+import React, { useState, useEffect, useMemo } from "react";
+import { UserService, AuditService } from "../services";
 import {
   BarChart,
   Bar,
@@ -10,14 +10,33 @@ import {
   Cell,
 } from "recharts";
 import { Users, UserPlus, Activity, ShieldAlert, Shield } from "lucide-react";
-import { Role } from "../types";
+import { Role, User, AuditLog } from "../types";
 import { useLanguage } from "@bundlros/ui";
 import styles from "../App.module.css";
 
 export const Dashboard: React.FC = () => {
   const { t } = useLanguage();
-  const users = UserService.getAll();
-  const logs = AuditService.getAll();
+  const [users, setUsers] = useState<User[]>([]);
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersData, logsData] = await Promise.all([
+          UserService.getAll(),
+          AuditService.getAll(),
+        ]);
+        setUsers(usersData);
+        setLogs(logsData);
+      } catch (error) {
+        console.error("Failed to fetch dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const activeUsers = users.filter((u) => u.status === "active").length;
   const recentLogs = logs.slice(0, 5);
@@ -40,6 +59,34 @@ export const Dashboard: React.FC = () => {
     "#ec4899",
     "#3b82f6",
   ];
+
+  if (loading) {
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.header}>
+          <div className={styles.titleSection}>
+            <h1>
+              <Shield
+                size={22}
+                style={{ color: "var(--color-accent-primary)" }}
+              />
+              {t("identity.title")}
+            </h1>
+            <p>{t("identity.overview")}</p>
+          </div>
+        </div>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "2rem",
+            color: "var(--color-text-tertiary)",
+          }}
+        >
+          Loading...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>

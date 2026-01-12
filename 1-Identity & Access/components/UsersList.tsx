@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { UserService } from "../services/store";
+import { UserService } from "../services";
 import { Role, User, UserStatus } from "../types";
 import { GlassCard } from "./ui/GlassCard";
 import { RoleBadge } from "./ui/RoleBadge";
@@ -12,6 +12,7 @@ import {
   Edit2,
   Ban,
   CheckCircle,
+  Loader2,
 } from "lucide-react";
 import { useLanguage } from "@bundlros/ui";
 
@@ -21,6 +22,8 @@ export const UsersList: React.FC = () => {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -31,29 +34,43 @@ export const UsersList: React.FC = () => {
   });
 
   useEffect(() => {
-    setUsers(UserService.getAll());
+    refreshUsers();
   }, []);
 
-  const refreshUsers = () => {
-    setUsers(UserService.getAll());
+  const refreshUsers = async () => {
+    try {
+      const usersData = await UserService.getAll();
+      setUsers(usersData);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCreateOrUpdate = (e: React.FormEvent) => {
+  const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingUser) {
-      UserService.update({ ...editingUser, ...formData });
-    } else {
-      UserService.create({ ...formData, status: UserStatus.ACTIVE });
+    setSaving(true);
+    try {
+      if (editingUser) {
+        await UserService.update({ ...editingUser, ...formData });
+      } else {
+        await UserService.create({ ...formData, status: UserStatus.ACTIVE });
+      }
+      setIsModalOpen(false);
+      setEditingUser(null);
+      setFormData({
+        name: "",
+        email: "",
+        role: Role.DEV,
+        organizationId: "org_main",
+      });
+      await refreshUsers();
+    } catch (error) {
+      console.error("Failed to save user:", error);
+    } finally {
+      setSaving(false);
     }
-    setIsModalOpen(false);
-    setEditingUser(null);
-    setFormData({
-      name: "",
-      email: "",
-      role: Role.DEV,
-      organizationId: "org_main",
-    });
-    refreshUsers();
   };
 
   const openEdit = (user: User) => {
@@ -67,13 +84,13 @@ export const UsersList: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const toggleStatus = (user: User) => {
+  const toggleStatus = async (user: User) => {
     const newStatus =
       user.status === UserStatus.ACTIVE
         ? UserStatus.INACTIVE
         : UserStatus.ACTIVE;
-    UserService.setStatus(user.id, newStatus);
-    refreshUsers();
+    await UserService.setStatus(user.id, newStatus);
+    await refreshUsers();
   };
 
   const filteredUsers = users.filter(
@@ -81,6 +98,14 @@ export const UsersList: React.FC = () => {
       u.name.toLowerCase().includes(search.toLowerCase()) ||
       u.email.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="p-8 h-screen flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 h-screen flex flex-col">
@@ -296,8 +321,10 @@ export const UsersList: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-zinc-200"
+                  disabled={saving}
+                  className="px-4 py-2 bg-white text-black text-sm font-medium rounded-lg hover:bg-zinc-200 disabled:opacity-50 flex items-center gap-2"
                 >
+                  {saving && <Loader2 size={14} className="animate-spin" />}
                   {editingUser
                     ? t("identity.usersList.saveChanges")
                     : t("identity.usersList.createAccount")}

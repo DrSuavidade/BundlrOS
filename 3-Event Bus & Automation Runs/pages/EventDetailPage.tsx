@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { MockService } from "../services/mockData";
+import { EventBusService } from "../services";
 import { SystemEvent, AutomationRun, Status } from "../types";
 import {
   ArrowLeft,
@@ -55,8 +55,8 @@ export const EventDetailPage: React.FC = () => {
     if (!id) return;
     const load = async () => {
       setLoading(true);
-      const e = await MockService.getEvent(id);
-      const r = await MockService.getRunsByEvent(id);
+      const e = await EventBusService.getEvent(id);
+      const r = await EventBusService.getRunsByEvent(id);
       setEvent(e);
       setRuns(r);
       if (r.length > 0 && !selectedRunId) {

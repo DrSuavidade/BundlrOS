@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@bundlros/supabase": "workspace:*",
     "@bundlros/ui": "workspace:*",
     "@google/genai": "^1.34.0",
     "date-fns": "^4.1.0",

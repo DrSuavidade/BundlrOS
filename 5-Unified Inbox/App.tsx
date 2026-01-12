@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { IntakeItem, Priority, Status, FilterState } from "./types";
+import { InboxService } from "./services";
 import { IntakeList } from "./components/IntakeList";
 import { IntakeDetailPanel } from "./components/IntakeDetailPanel";
 import {
@@ -72,9 +73,11 @@ const generateMockData = (): IntakeItem[] => {
 
 const App: React.FC = () => {
   const { t } = useLanguage();
-  const [items, setItems] = useState<IntakeItem[]>(generateMockData());
+  const [items, setItems] = useState<IntakeItem[]>([]);
+  const [clients, setClients] = useState<string[]>([]);
   const [selectedItem, setSelectedItem] = useState<IntakeItem | null>(null);
   const [isNewIntakeOpen, setIsNewIntakeOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
     search: "",
     status: "All",
@@ -91,13 +94,24 @@ const App: React.FC = () => {
     requestor: "",
   });
 
-  const clients = [
-    "Acme Corp",
-    "Globex",
-    "Soylent Corp",
-    "Initech",
-    "Massive Dynamic",
-  ];
+  // Load data on mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [itemsData, clientsData] = await Promise.all([
+          InboxService.getAll(),
+          InboxService.getClients(),
+        ]);
+        setItems(itemsData);
+        setClients(clientsData);
+      } catch (error) {
+        console.error("Failed to load inbox data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const handleUpdateItem = (updated: IntakeItem) => {
     setItems((prev) =>

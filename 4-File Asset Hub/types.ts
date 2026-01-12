@@ -24,7 +24,7 @@ export interface Deliverable {
   clientId: string;
   name: string;
   dueDate: string;
-  status: 'active' | 'archived' | 'completed';
+  status: 'active' | 'archived' | 'completed' | 'cancelled';
 }
 
 export interface AssetVersion {
@@ -44,22 +44,22 @@ export interface Asset {
   uploadedAt: string;
   updatedAt: string;
   status: ProcessingStatus;
-  
+
   // Relations
   clientId?: string;
   deliverableId?: string;
-  
+
   // Versioning
   currentVersion: number;
   versions: AssetVersion[];
-  
+
   // Metadata
   width?: number;
   height?: number;
   duration?: number; // seconds
   tags: string[];
   description?: string;
-  
+
   // Mock Storage
   previewUrl: string; // Presigned URL simulation
   checksum: string;

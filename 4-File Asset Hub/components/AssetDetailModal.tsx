@@ -12,7 +12,7 @@ import {
 import { AppShell, Button } from "@bundlros/ui";
 import { format } from "date-fns";
 import { geminiService } from "../services/geminiService";
-import { backend } from "../services/mockBackend";
+import { backend } from "../services";
 import styles from "./Assets.module.css";
 
 interface AssetDetailModalProps {

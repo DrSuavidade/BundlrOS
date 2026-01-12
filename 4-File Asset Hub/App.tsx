@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 import { Asset, Client, Deliverable } from "./types";
-import { backend } from "./services/mockBackend";
+import { backend } from "./services";
 import { AssetCard } from "./components/AssetCard";
 import { AssetList } from "./components/AssetList";
 import { AssetDetailModal } from "./components/AssetDetailModal";

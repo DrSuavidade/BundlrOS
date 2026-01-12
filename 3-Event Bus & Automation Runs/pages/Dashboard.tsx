@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MockService } from "../services/mockData";
+import { EventBusService } from "../services";
 import { Status } from "../types";
 import {
   BarChart,
@@ -26,7 +26,7 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const loadStats = async () => {
-      const events = await MockService.getEvents();
+      const events = await EventBusService.getEvents();
       const total = events.length;
       const success = events.filter((e) => e.status === Status.SUCCESS).length;
       const failed = events.filter((e) => e.status === Status.FAILED).length;
