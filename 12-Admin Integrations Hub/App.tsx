@@ -1,153 +1,99 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Client, Integration, HealthStatus, LogEntry } from "./types";
 import { IntegrationCard } from "./components/IntegrationCard";
 import { IntegrationModal } from "./components/IntegrationModal";
 import { Search, Plus, Settings2 } from "lucide-react";
 import { useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
-
-// MOCK DATA
-const MOCK_CLIENTS: Client[] = [
-  { id: "c1", name: "Acme Corp", contactEmail: "admin@acme.com" },
-  { id: "c2", name: "Globex Inc", contactEmail: "it@globex.com" },
-];
-
-const INITIAL_INTEGRATIONS: Integration[] = [
-  {
-    id: "i1",
-    clientId: "c1",
-    providerId: "salesforce",
-    name: "Salesforce CRM (Main)",
-    status: HealthStatus.HEALTHY,
-    enabled: true,
-    lastSync: "2023-10-27 14:30:00",
-    config: { endpointUrl: "https://acme.my.salesforce.com" },
-    mappings: [{ sourceField: "user_email", destinationField: "Email" }],
-    logs: [
-      {
-        id: "l1",
-        timestamp: "2023-10-27 14:30:00",
-        level: "success",
-        message: "Sync completed successfully. 45 records updated.",
-      },
-      {
-        id: "l2",
-        timestamp: "2023-10-27 13:30:00",
-        level: "info",
-        message: "Sync started.",
-      },
-    ],
-  },
-  {
-    id: "i2",
-    clientId: "c1",
-    providerId: "slack",
-    name: "Alerts Channel",
-    status: HealthStatus.FAILED,
-    enabled: true,
-    lastSync: "2023-10-26 09:15:00",
-    config: {},
-    mappings: [],
-    logs: [
-      {
-        id: "l3",
-        timestamp: "2023-10-27 14:35:00",
-        level: "error",
-        message: "Auth token expired or invalid_grant returned from Slack API.",
-      },
-      {
-        id: "l4",
-        timestamp: "2023-10-26 09:15:00",
-        level: "success",
-        message: "Message sent.",
-      },
-    ],
-  },
-  {
-    id: "i3",
-    clientId: "c2",
-    providerId: "shopify",
-    name: "Shopify Storefront",
-    status: HealthStatus.DEGRADED,
-    enabled: true,
-    lastSync: "2023-10-27 10:00:00",
-    config: { endpointUrl: "https://globex.myshopify.com" },
-    mappings: [],
-    logs: [
-      {
-        id: "l5",
-        timestamp: "2023-10-27 10:00:00",
-        level: "warn",
-        message: "Rate limit approaching. Backing off for 5s.",
-      },
-    ],
-  },
-];
+import { AdminService } from "./services";
 
 export default function App() {
   const { t } = useLanguage();
-  const [clients] = useState<Client[]>(MOCK_CLIENTS);
-  const [integrations, setIntegrations] =
-    useState<Integration[]>(INITIAL_INTEGRATIONS);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [integrations, setIntegrations] = useState<Integration[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIntegration, setSelectedIntegration] =
     useState<Integration | null>(null);
   const [testingId, setTestingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load data from service
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const clientsData = await AdminService.getClients();
+        setClients(clientsData);
+
+        const integrationsData = await AdminService.getIntegrations();
+        setIntegrations(integrationsData);
+      } catch (error) {
+        console.error("[Admin] Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const handleToggle = (integration: Integration) => {
-    const updated = integrations.map((i) => {
-      if (i.id === integration.id) {
-        const newState = !i.enabled;
-        return {
-          ...i,
-          enabled: newState,
-          status: newState ? HealthStatus.HEALTHY : HealthStatus.INACTIVE,
-        };
-      }
-      return i;
-    });
-    setIntegrations(updated);
+    const updated = AdminService.toggleIntegration(integration.id);
+    if (updated) {
+      setIntegrations((prev) =>
+        prev.map((i) => (i.id === updated.id ? updated : i))
+      );
+    }
   };
 
   const handleTest = async (integration: Integration) => {
     setTestingId(integration.id);
 
-    setTimeout(() => {
-      const updated = integrations.map((i) => {
-        if (i.id === integration.id) {
-          const isSuccess = Math.random() > 0.3;
-          const newStatus = isSuccess
-            ? HealthStatus.HEALTHY
-            : HealthStatus.FAILED;
-          const newLog: LogEntry = {
-            id: Date.now().toString(),
-            timestamp: new Date()
-              .toISOString()
-              .replace("T", " ")
-              .substring(0, 19),
-            level: isSuccess ? "success" : "error",
-            message: isSuccess
-              ? "Manual connection test successful."
-              : "Connection test failed: Connection refused (ECONNREFUSED).",
-          };
-          return { ...i, status: newStatus, logs: [...i.logs, newLog] };
-        }
-        return i;
-      });
-      setIntegrations(updated);
-      setTestingId(null);
-    }, 1500);
+    const updated = await AdminService.testIntegration(integration.id);
+    if (updated) {
+      setIntegrations((prev) =>
+        prev.map((i) => (i.id === updated.id ? updated : i))
+      );
+    }
+    setTestingId(null);
   };
 
   const handleSaveIntegration = (updated: Integration) => {
-    setIntegrations(
-      integrations.map((i) => (i.id === updated.id ? updated : i))
-    );
+    const result = AdminService.updateIntegration(updated.id, updated);
+    if (result) {
+      setIntegrations((prev) =>
+        prev.map((i) => (i.id === result.id ? result : i))
+      );
+    }
   };
 
   const filteredIntegrations = integrations.filter((i) =>
     i.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className={styles.pageContainer}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "200px",
+          }}
+        >
+          <div
+            style={{
+              width: 24,
+              height: 24,
+              border: "2px solid var(--color-accent-primary)",
+              borderTopColor: "transparent",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>

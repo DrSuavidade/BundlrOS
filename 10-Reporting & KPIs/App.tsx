@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ViewState, KPIRecord, KPIUnit, Report, ReportStatus } from "./types";
-import { MOCK_KPIS, PERIODS } from "./data/mockData";
+import { ReportingService } from "./services";
 import { generateReportNarrative } from "./services/geminiService";
 import {
   BarChart3,
@@ -279,11 +279,45 @@ const ReportDetailView: React.FC<{
 const App: React.FC = () => {
   const { t } = useLanguage();
   const [view, setView] = useState<ViewState>("DASHBOARD");
-  const [selectedPeriod, setSelectedPeriod] = useState<string>(PERIODS[0]);
+  const [periods, setPeriods] = useState<string[]>([]);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>("");
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
-  const [kpis] = useState<KPIRecord[]>(MOCK_KPIS);
+  const [kpis, setKpis] = useState<KPIRecord[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Load initial data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const availablePeriods = ReportingService.getPeriods();
+        setPeriods(availablePeriods);
+        setSelectedPeriod(availablePeriods[0] || "");
+
+        const kpiData = await ReportingService.getKPIs(availablePeriods[0]);
+        setKpis(kpiData);
+
+        const reportsData = await ReportingService.getReports();
+        setReports(reportsData);
+      } catch (error) {
+        console.error("[Reporting] Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  // Reload KPIs when period changes
+  useEffect(() => {
+    if (!selectedPeriod) return;
+    const loadKpis = async () => {
+      const kpiData = await ReportingService.getKPIs(selectedPeriod);
+      setKpis(kpiData);
+    };
+    loadKpis();
+  }, [selectedPeriod]);
 
   const activeReport = reports.find((r) => r.id === selectedReportId);
 
@@ -387,7 +421,7 @@ const App: React.FC = () => {
       {view === "DASHBOARD" && (
         <DashboardView
           kpis={kpis}
-          periods={PERIODS}
+          periods={periods}
           selectedPeriod={selectedPeriod}
           onSelectPeriod={setSelectedPeriod}
           t={t}

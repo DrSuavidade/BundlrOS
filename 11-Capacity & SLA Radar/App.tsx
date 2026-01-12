@@ -9,7 +9,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Client, IntakeItem, RiskLevel, SystemEvent } from "./types";
-import { MOCK_CLIENTS, MOCK_INTAKE } from "./constants";
+import { CapacityService } from "./services";
 import { analyzeRisks } from "./services/geminiService";
 import StatCard from "./components/StatCard";
 import CapacityChart from "./components/CapacityChart";
@@ -20,11 +20,30 @@ import styles from "./App.module.css";
 
 function App() {
   const { t } = useLanguage();
-  const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
-  const [intakeItems, setIntakeItems] = useState<IntakeItem[]>(MOCK_INTAKE);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [intakeItems, setIntakeItems] = useState<IntakeItem[]>([]);
   const [events, setEvents] = useState<SystemEvent[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Load initial data from service
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const clientsData = await CapacityService.getClients();
+        setClients(clientsData);
+
+        const intakeData = CapacityService.getIntakeItems();
+        setIntakeItems(intakeData);
+      } catch (error) {
+        console.error("[Capacity] Error loading data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   // Derived Metrics
   const avgSla = clients.reduce((acc, c) => acc + c.sla, 0) / clients.length;

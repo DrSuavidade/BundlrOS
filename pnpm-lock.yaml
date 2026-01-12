@@ -73,6 +73,9 @@ importers:
 
   10-Reporting & KPIs:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
@@ -107,6 +110,9 @@ importers:
 
   11-Capacity & SLA Radar:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
@@ -141,6 +147,9 @@ importers:
 
   12-Admin Integrations Hub:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
@@ -172,6 +181,9 @@ importers:
 
   13-Bundlr Budgets:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
