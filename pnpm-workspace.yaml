@@ -14,3 +14,4 @@ packages:
   - "13-Bundlr Budgets"
   - "_Shared"
   - "shell"
+  - "lib/supabase"

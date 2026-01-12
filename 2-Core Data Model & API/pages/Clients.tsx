@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Client } from "../types";
-import { MockAPI } from "../services/mockBackend";
+import { API } from "../services";
 import { StatusPill } from "../components/ui/StatusPill";
 import {
   Building2,
@@ -17,7 +17,7 @@ export const Clients: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    MockAPI.getClients().then(setClients);
+    API.getClients().then(setClients);
   }, []);
 
   const filteredClients = clients.filter(

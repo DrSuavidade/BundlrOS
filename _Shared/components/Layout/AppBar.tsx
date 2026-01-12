@@ -21,6 +21,7 @@ import {
   Settings2,
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
+import { useAuth } from "../../contexts/AuthContext";
 import styles from "./AppShell.module.css";
 
 export interface AppBarProps {
@@ -35,6 +36,7 @@ export const AppBar: React.FC<AppBarProps> = ({
   onLogoClick,
 }) => {
   const { language, setLanguage, t } = useLanguage();
+  const { user, logout } = useAuth();
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -582,7 +584,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                       margin: 0,
                     }}
                   >
-                    John Doe
+                    {user?.name || "Guest"}
                   </p>
                   <p
                     style={{
@@ -591,7 +593,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                       margin: "0.125rem 0 0 0",
                     }}
                   >
-                    admin@bundlr.io
+                    {user?.email || "Not logged in"}
                   </p>
                 </div>
                 {/* Language Toggle Flag */}
@@ -693,6 +695,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                 }}
               >
                 <button
+                  onClick={logout}
                   style={{
                     width: "100%",
                     display: "flex",

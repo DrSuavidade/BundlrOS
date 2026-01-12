@@ -1,0 +1,13 @@
+{
+  "name": "@bundlros/supabase",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "index.ts",
+  "types": "index.ts",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.47.0"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}

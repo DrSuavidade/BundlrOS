@@ -8,22 +8,50 @@ import { UserProfile } from "./components/UserProfile";
 import { AuditLogViewer } from "./components/AuditLogViewer";
 import { User, Role } from "./types";
 import { AuditService } from "./services/store";
-import { AppShell } from "@bundlros/ui";
+import { AppShell, useAuth } from "@bundlros/ui";
 
 function App() {
+  const {
+    user: authUser,
+    setUser: setAuthUser,
+    logout: authLogout,
+  } = useAuth();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    // Only run once on mount
+    if (initialized) return;
+
     // Check local storage for persistent session simulation
     const storedUser = localStorage.getItem("nexus_session");
     if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
+      const user = JSON.parse(storedUser);
+      setCurrentUser(user);
+      // Also update the shared AuthContext
+      setAuthUser({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+      });
     }
+    setInitialized(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
     localStorage.setItem("nexus_session", JSON.stringify(user));
+    // Update the shared AuthContext so AppBar shows the user
+    setAuthUser({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      avatarUrl: user.avatarUrl,
+    });
   };
 
   const handleLogout = () => {
@@ -37,6 +65,7 @@ function App() {
     }
     setCurrentUser(null);
     localStorage.removeItem("nexus_session");
+    authLogout(); // This will also redirect
   };
 
   // AppShell currently doesn't support logout prop directly in this iteration,

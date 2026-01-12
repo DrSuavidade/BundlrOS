@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MockAPI } from "../services/mockBackend";
+import { API } from "../services";
 import { Client, Deliverable, SystemEvent } from "../types";
 import {
   Activity,
@@ -65,9 +65,9 @@ export const Dashboard: React.FC = () => {
   const [events, setEvents] = useState<SystemEvent[]>([]);
 
   useEffect(() => {
-    MockAPI.getClients().then(setClients);
-    MockAPI.getDeliverables().then(setDeliverables);
-    MockAPI.getEvents().then(setEvents);
+    API.getClients().then(setClients);
+    API.getDeliverables().then(setDeliverables);
+    API.getEvents().then(setEvents);
   }, []);
 
   const pendingDeliverables = deliverables.filter((d) =>

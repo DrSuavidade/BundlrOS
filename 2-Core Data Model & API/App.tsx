@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Dashboard } from "./pages/Dashboard";
 import { Deliverables } from "./pages/Deliverables";
 import { Clients } from "./pages/Clients";
-import { MockAPI } from "./services/mockBackend";
+import { API } from "./services";
 
 const PlaceholderPage = ({ title }: { title: string }) => (
   <div className="flex flex-col items-center justify-center h-full text-center p-12 bg-[var(--color-bg-subtle)] rounded-xl border border-[var(--color-border-subtle)]">
@@ -34,7 +34,7 @@ const PlaceholderPage = ({ title }: { title: string }) => (
 
 const App: React.FC = () => {
   useEffect(() => {
-    MockAPI.init();
+    API.init();
   }, []);
 
   return (

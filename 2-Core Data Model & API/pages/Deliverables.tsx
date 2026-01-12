@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Deliverable, DeliverableStatus, Project } from "../types";
-import { MockAPI } from "../services/mockBackend";
+import { API } from "../services";
 import {
   Plus,
   Filter,
@@ -87,8 +87,8 @@ export const Deliverables: React.FC = () => {
 
   const fetchData = async () => {
     const [d, p] = await Promise.all([
-      MockAPI.getDeliverables(),
-      MockAPI.getProjects(),
+      API.getDeliverables(),
+      API.getProjects(),
     ]);
     setItems(d);
     setProjects(p);
@@ -98,7 +98,7 @@ export const Deliverables: React.FC = () => {
     e.preventDefault();
     if (!newItemTitle || !newItemProject) return;
 
-    await MockAPI.createDeliverable({
+    await API.createDeliverable({
       project_id: newItemProject,
       title: newItemTitle,
       type: "document",
@@ -114,7 +114,7 @@ export const Deliverables: React.FC = () => {
   };
 
   const handleTransition = async (id: string, newStatus: DeliverableStatus) => {
-    await MockAPI.transitionDeliverable(id, newStatus);
+    await API.transitionDeliverable(id, newStatus);
     fetchData();
   };
 
