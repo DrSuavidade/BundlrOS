@@ -267,6 +267,8 @@
     "subtitle": "Visão completa do cliente",
     "loading": "A carregar Cliente 360...",
     "errorLoading": "Erro ao carregar dados.",
+    "noClients": "Sem Clientes Ainda",
+    "noClientsDesc": "Adicione clientes no módulo Dados Base para os ver aqui.",
     "overview": "Visão Geral",
     "contacts": "Contactos",
     "projects": "Projetos",

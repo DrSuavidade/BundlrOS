@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Deliverable, QAStatus } from "./types";
-import { initialDeliverables, runMockQA } from "./services/mockData";
+import { QAService } from "./services";
 import { DeliverableDetail } from "./components/DeliverableDetail";
 import {
   ShieldCheck,
@@ -149,10 +149,24 @@ const Dashboard: React.FC<{
 // Main App
 const App: React.FC = () => {
   const { t } = useLanguage();
-  const [deliverables, setDeliverables] =
-    useState<Deliverable[]>(initialDeliverables);
+  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [runningId, setRunningId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const data = await QAService.getDeliverables();
+        setDeliverables(data);
+      } catch (error) {
+        console.error("[QA] Error loading deliverables:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const selectedDeliverable = deliverables.find((d) => d.id === selectedId);
 
@@ -167,7 +181,7 @@ const App: React.FC = () => {
     );
 
     try {
-      const newResult = await runMockQA(id, type);
+      const newResult = await QAService.runQA(id, type);
       setDeliverables((prev) =>
         prev.map((d) => (d.id === id ? { ...d, lastResult: newResult } : d))
       );
@@ -177,6 +191,30 @@ const App: React.FC = () => {
       setRunningId(null);
     }
   };
+
+  if (loading) {
+    return (
+      <div className={styles.pageContainer}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "200px",
+          }}
+        >
+          <div
+            className={styles.statusIndicator}
+            style={{
+              width: 24,
+              height: 24,
+              animation: "spin 1s linear infinite",
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>

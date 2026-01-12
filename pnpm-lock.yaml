@@ -348,6 +348,9 @@ importers:
 
   6-Client 360:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
@@ -413,6 +416,9 @@ importers:
 
   8-Approvals Center:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared
@@ -453,6 +459,9 @@ importers:
 
   9-QA Gates & Checks:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       '@bundlros/ui':
         specifier: workspace:*
         version: link:../_Shared

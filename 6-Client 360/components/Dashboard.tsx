@@ -24,7 +24,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ClientData } from "../types";
-import { fetchClientData } from "../services/mockData";
+import { fetchClientData } from "../services";
 import { generateClientInsight } from "../services/geminiService";
 import { Button, Badge, useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
@@ -96,7 +96,43 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  if (!data) return <div>{t("clients.errorLoading")}</div>;
+  if (!data) {
+    return (
+      <div className={styles.pageContainer}>
+        <div className={styles.loadingContainer}>
+          <div className={styles.loadingSpinner}>
+            <div
+              className={styles.spinner}
+              style={{
+                animation: "none",
+                background: "var(--color-bg-elevated)",
+              }}
+            >
+              <Briefcase
+                size={20}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
+              />
+            </div>
+            <h3
+              style={{
+                color: "var(--color-text-primary)",
+                marginBottom: "0.5rem",
+                fontSize: "1.1rem",
+              }}
+            >
+              {t("clients.noClients")}
+            </h3>
+            <p
+              className={styles.loadingText}
+              style={{ maxWidth: "300px", textAlign: "center" }}
+            >
+              {t("clients.noClientsDesc")}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>

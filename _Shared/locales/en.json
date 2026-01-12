@@ -267,6 +267,8 @@
     "subtitle": "Complete client view",
     "loading": "Loading Client 360...",
     "errorLoading": "Error loading data.",
+    "noClients": "No Clients Yet",
+    "noClientsDesc": "Add clients in the Core Data module to see them here.",
     "overview": "Overview",
     "contacts": "Contacts",
     "projects": "Projects",

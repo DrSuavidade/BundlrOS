@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ApprovalService } from "../services/approvalService";
+import { ApprovalService } from "../services";
 import { ApprovalRequest, ApprovalStatus, Stats } from "../types";
 import {
   ArrowRight,
