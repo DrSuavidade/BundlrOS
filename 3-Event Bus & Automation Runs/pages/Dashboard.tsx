@@ -34,14 +34,26 @@ export const Dashboard: React.FC = () => {
         (e) => e.status === Status.WAITING || e.status === Status.RUNNING
       ).length;
 
-      const hourlyData = [
-        { name: "10:00", events: 12, failed: 1 },
-        { name: "11:00", events: 19, failed: 0 },
-        { name: "12:00", events: 15, failed: 2 },
-        { name: "13:00", events: 25, failed: 1 },
-        { name: "14:00", events: 32, failed: 4 },
-        { name: "15:00", events: 20, failed: 0 },
-      ];
+      // Calculate hourly data for the last 6 hours
+      const now = new Date();
+      const hourlyData = Array.from({ length: 6 }).map((_, i) => {
+        const hour = new Date(now.getTime() - (5 - i) * 60 * 60 * 1000);
+        const hourLabel = hour.getHours().toString().padStart(2, "0") + ":00";
+
+        const hourEvents = events.filter((e) => {
+          const eventDate = new Date(e.createdAt);
+          return (
+            eventDate.getDate() === hour.getDate() &&
+            eventDate.getHours() === hour.getHours()
+          );
+        });
+
+        return {
+          name: hourLabel,
+          events: hourEvents.length,
+          failed: hourEvents.filter((e) => e.status === Status.FAILED).length,
+        };
+      });
 
       setStats({ total, success, failed, waiting, hourlyData });
     };

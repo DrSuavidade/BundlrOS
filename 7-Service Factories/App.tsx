@@ -21,6 +21,7 @@ import {
   X,
 } from "lucide-react";
 import { Button, useLanguage } from "@bundlros/ui";
+import { FactoryService } from "./services/supabaseService";
 import styles from "./App.module.css";
 
 // --- Factory List Component ---
@@ -174,32 +175,54 @@ const App: React.FC = () => {
     PIPELINE_TEMPLATES[0].id
   );
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const selectedFactory = factories.find((f) => f.id === selectedId);
   const currentTemplate = selectedFactory
     ? PIPELINE_TEMPLATES.find((t) => t.id === selectedFactory.templateId)
     : null;
 
-  const handleBootstrap = (e: React.FormEvent) => {
+  // Load factories on mount
+  useEffect(() => {
+    const loadFactories = async () => {
+      setIsLoading(true);
+      const data = await FactoryService.getAll();
+      setFactories(data);
+      setIsLoading(false);
+    };
+    loadFactories();
+  }, []);
+
+  const handleBootstrap = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newFactory = createFactory(
+    // Create local object using logic
+    const newFactoryTemplate = createFactory(
       newContractId,
       newClientName,
       selectedTemplateId
     );
-    setFactories([...factories, newFactory]);
-    setSelectedId(newFactory.id);
-    setIsBootstrapOpen(false);
-    setNewClientName("");
-    setNewContractId("");
+
+    // Save to DB
+    const created = await FactoryService.create(newFactoryTemplate);
+    if (created) {
+      setFactories([created, ...factories]);
+      setSelectedId(created.id);
+      setIsBootstrapOpen(false);
+      setNewClientName("");
+      setNewContractId("");
+    }
   };
 
-  const handleAdvance = () => {
+  const handleAdvance = async () => {
     if (!selectedFactory) return;
     const updated = advanceStage(selectedFactory);
-    setFactories(factories.map((f) => (f.id === updated.id ? updated : f)));
+    const saved = await FactoryService.update(updated);
+    if (saved) {
+      setFactories(factories.map((f) => (f.id === saved.id ? saved : f)));
+    }
   };
 
-  const handleDeliverableUpdate = (deliverableId: string) => {
+  const handleDeliverableUpdate = async (deliverableId: string) => {
     if (!selectedFactory) return;
 
     const deliverable = selectedFactory.deliverables.find(
@@ -225,24 +248,41 @@ const App: React.FC = () => {
       updated.blockers = blockers;
     }
 
-    setFactories(factories.map((f) => (f.id === updated.id ? updated : f)));
+    const saved = await FactoryService.update(updated);
+    if (saved) {
+      setFactories(factories.map((f) => (f.id === saved.id ? saved : f)));
+    }
   };
 
+  // Poll for updates or external blockers every 10s
   useEffect(() => {
-    if (selectedFactory && selectedFactory.status === Status.ACTIVE) {
-      const blockers = checkBlockers(selectedFactory);
-      if (blockers.length > 0) {
-        const updated = {
-          ...selectedFactory,
-          status: Status.BLOCKED,
-          blockers,
-        };
-        setFactories((prev) =>
-          prev.map((f) => (f.id === updated.id ? updated : f))
-        );
+    const interval = setInterval(async () => {
+      if (!selectedId) return;
+      const current = factories.find((f) => f.id === selectedId);
+      if (current && current.status === Status.ACTIVE) {
+        // Re-run blocker check to simulate external events
+        const blockers = checkBlockers(current);
+        if (
+          blockers.length > 0 &&
+          JSON.stringify(blockers) !== JSON.stringify(current.blockers)
+        ) {
+          console.log("New blockers detected:", blockers);
+          const updated = {
+            ...current,
+            status: Status.BLOCKED,
+            blockers,
+          };
+          const saved = await FactoryService.update(updated);
+          if (saved) {
+            setFactories((prev) =>
+              prev.map((f) => (f.id === saved.id ? saved : f))
+            );
+          }
+        }
       }
-    }
-  }, [selectedId, factories.length]);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [selectedId, factories]);
 
   return (
     <div className={styles.pageContainer}>
