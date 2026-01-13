@@ -25,7 +25,9 @@ export interface ApprovalRequest {
   token: string;
   history: ApprovalEvent[];
   attachmentName?: string;
-  attachmentUrl?: string; // Placeholder for file URL
+  attachmentUrl?: string;
+  attachmentSize?: number;
+  attachmentType?: string;
 }
 
 export interface Stats {

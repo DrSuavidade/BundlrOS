@@ -3,8 +3,8 @@
  * Approvals Center - Supabase Service
  * 
  * Provides Supabase-backed implementation for approvals.
- * Uses deliverables with 'awaiting_approval' status as the data source,
- * and a separate 'approvals' table for history/tokens.
+ * Uses 'approvals' table for context (description, assets) and history.
+ * Syncs status with 'deliverables' table.
  */
 
 import {
@@ -16,8 +16,21 @@ import { ApprovalRequest, ApprovalStatus, ApprovalEvent, Stats } from '../types'
 
 const APPROVALS_TABLE = 'approvals';
 
+interface ApprovalDBRow {
+    deliverable_id: string;
+    token: string;
+    client_email?: string;
+    history: any;
+    title?: string;
+    description?: string;
+    asset_url?: string;
+    asset_name?: string;
+    version?: string;
+    status?: string;
+}
+
 // Helper to get or create approval metadata for a deliverable
-const getOrCreateApprovalMetadata = async (deliverableId: string): Promise<{ token: string; history: ApprovalEvent[]; clientEmail: string }> => {
+const getOrCreateApprovalMetadata = async (deliverableId: string): Promise<ApprovalDBRow> => {
     // Try to fetch from DB
     const { data, error } = await supabase
         .from(APPROVALS_TABLE)
@@ -26,11 +39,7 @@ const getOrCreateApprovalMetadata = async (deliverableId: string): Promise<{ tok
         .single();
 
     if (data) {
-        return {
-            token: data.token,
-            history: data.history as ApprovalEvent[],
-            clientEmail: data.client_email || 'client@example.com'
-        };
+        return data as ApprovalDBRow;
     }
 
     // If not found (or error), create new default
@@ -45,18 +54,18 @@ const getOrCreateApprovalMetadata = async (deliverableId: string): Promise<{ tok
     const defaultEmail = 'client@example.com';
 
     // Persist it
-    await supabase.from(APPROVALS_TABLE).insert({
+    const newRecord = {
         deliverable_id: deliverableId,
         token: newToken,
         client_email: defaultEmail,
         history: initialHistory,
-    });
-
-    return {
-        token: newToken,
-        history: initialHistory,
-        clientEmail: defaultEmail
+        // Default description and version could be set here if we fetched deliverable first, 
+        // but valid to leave null and fallback in mapToApprovalRequest
     };
+
+    await supabase.from(APPROVALS_TABLE).insert(newRecord);
+
+    return newRecord;
 };
 
 // Map deliverable status to approval status
@@ -78,18 +87,50 @@ const mapStatus = (status: string): ApprovalStatus => {
 const mapToApprovalRequest = async (deliverable: SupabaseDeliverable): Promise<ApprovalRequest> => {
     const metadata = await getOrCreateApprovalMetadata(deliverable.id);
 
+    const fileAsset = await getLatestFileAsset(deliverable.id);
+
     return {
         id: deliverable.id,
-        title: deliverable.title,
-        description: `Approval requested for deliverable: ${deliverable.title} (Version: ${deliverable.version || 'v1.0'})`,
-        clientName: 'Project Team', // In real app: fetch from project->client 
-        clientEmail: metadata.clientEmail,
-        status: mapStatus(deliverable.status),
+        // Use metadata title if specific to approval, else fallback to deliverable
+        title: metadata.title || deliverable.title,
+        // Use metadata description if exists, else generic fallback
+        description: metadata.description || `Approval requested for deliverable: ${deliverable.title} (Version: ${deliverable.version || 'v1.0'})`,
+        clientName: await getClientName(deliverable.id), // Fetch real client name 
+        clientEmail: metadata.client_email || 'client@example.com',
+        // Status: Prioritize metadata.status (Approvals table). If null, default to PENDING.
+        // We ignore deliverable.status here because "null" validation is requested to be PENDING, 
+        // preventing "Approved" deliverable state from leaking into a new Approval Request.
+        status: (metadata.status as ApprovalStatus) || ApprovalStatus.PENDING,
         createdAt: deliverable.created_at,
         dueDate: deliverable.due_date || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         token: metadata.token,
-        history: metadata.history,
+        history: metadata.history as ApprovalEvent[],
+        attachmentName: metadata.asset_name || fileAsset?.filename,
+        attachmentUrl: metadata.asset_url || fileAsset?.public_url,
+        attachmentSize: fileAsset?.size_bytes,
+        attachmentType: fileAsset?.mime_type,
     };
+};
+
+const getLatestFileAsset = async (deliverableId: string) => {
+    const { data } = await supabase
+        .from('file_assets')
+        .select('filename, public_url, size_bytes, mime_type')
+        .eq('deliverable_id', deliverableId)
+        .order('uploaded_at', { ascending: false })
+        .limit(1)
+        .single();
+    return data;
+};
+
+const getClientName = async (deliverableId: string): Promise<string> => {
+    const { data } = await supabase
+        .from('deliverables')
+        .select('project:projects(client:clients(name))')
+        .eq('id', deliverableId)
+        .maybeSingle();
+
+    return (data as any)?.project?.client?.name || 'Project Team';
 };
 
 export const SupabaseApprovalService = {
@@ -164,7 +205,7 @@ export const SupabaseApprovalService = {
             const newStatus = statusMap[status] as any;
             await DeliverablesApi.transitionStatus(id, newStatus);
 
-            // 2. Update Metadata History
+            // 2. Update Metadata History & Status
             const metadata = await getOrCreateApprovalMetadata(id);
             const newEvent: ApprovalEvent = {
                 id: `evt-${Date.now()}`,
@@ -174,11 +215,14 @@ export const SupabaseApprovalService = {
                 actor
             };
 
-            const updatedHistory = [newEvent, ...metadata.history]; // Unshift logic (newest first)
+            const updatedHistory = [newEvent, ...(metadata.history as ApprovalEvent[])];
 
             await supabase
                 .from(APPROVALS_TABLE)
-                .update({ history: updatedHistory })
+                .update({
+                    history: updatedHistory,
+                    status: status // Persist status in approvals table too for record keeping
+                })
                 .eq('deliverable_id', id);
 
             // 3. Return fresh object
@@ -201,7 +245,7 @@ export const SupabaseApprovalService = {
             description: `Comment: ${comment}`,
             actor
         };
-        const updatedHistory = [newEvent, ...metadata.history];
+        const updatedHistory = [newEvent, ...(metadata.history as ApprovalEvent[])];
 
         await supabase
             .from(APPROVALS_TABLE)
@@ -222,7 +266,7 @@ export const SupabaseApprovalService = {
             description: 'Automated reminder email sent to client.',
             actor: 'System'
         };
-        const updatedHistory = [newEvent, ...metadata.history];
+        const updatedHistory = [newEvent, ...(metadata.history as ApprovalEvent[])];
 
         await supabase
             .from(APPROVALS_TABLE)

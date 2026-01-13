@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import { ApprovalService } from "../services";
 import { GeminiService } from "../services/geminiService";
@@ -9,12 +10,19 @@ import {
   Clock,
   Paperclip,
   Share2,
-  MessageSquare,
-  Send,
   Sparkles,
   Loader2,
+  FileText,
+  User,
+  CheckCircle,
+  Bell,
+  AlertCircle,
+  XCircle,
+  ThumbsUp,
 } from "lucide-react";
+import { Button } from "@bundlros/ui";
 import { format } from "date-fns";
+import styles from "./ApprovalDetail.module.css";
 
 export const ApprovalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,13 +31,18 @@ export const ApprovalDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<string>("");
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const [comment, setComment] = useState("");
 
   // For drafting
   const [aiDraftOpen, setAiDraftOpen] = useState(false);
   const [draftType, setDraftType] = useState<"APPROVE" | "REJECT">("APPROVE");
   const [draftContent, setDraftContent] = useState("");
   const [drafting, setDrafting] = useState(false);
+
+  // Confirmation Modal State
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    action: ApprovalStatus | null;
+  }>({ isOpen: false, action: null });
 
   useEffect(() => {
     const fetch = async () => {
@@ -40,6 +53,28 @@ export const ApprovalDetail: React.FC = () => {
     };
     fetch();
   }, [id]);
+
+  const handleQuickAction = (status: ApprovalStatus) => {
+    if (!approval) return;
+    setConfirmModal({ isOpen: true, action: status });
+  };
+
+  const performAction = async () => {
+    if (!approval || !confirmModal.action) return;
+
+    setLoading(true);
+    setConfirmModal({ isOpen: false, action: null });
+
+    await ApprovalService.updateStatus(
+      approval.id,
+      confirmModal.action,
+      "",
+      "Admin"
+    );
+    const updated = await ApprovalService.getById(approval.id);
+    if (updated) setApproval(updated);
+    setLoading(false);
+  };
 
   const handleGenerateSummary = async () => {
     if (!approval) return;
@@ -96,267 +131,467 @@ export const ApprovalDetail: React.FC = () => {
   if (loading)
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="animate-spin text-indigo-500" />
+        <Loader2 className="animate-spin text-[var(--color-accent-primary)]" />
       </div>
     );
-  if (!approval) return <div>Not Found</div>;
+  if (!approval) return <div className={styles.pageContainer}>Not Found</div>;
 
   return (
-    <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center text-slate-500 hover:text-slate-800 transition-colors"
-        >
-          <ArrowLeft size={20} className="mr-2" /> Back
-        </button>
-        <div className="flex gap-2">
+    <div className={styles.pageContainer}>
+      {/* Header (Simplified) */}
+      <div className={styles.header} style={{ marginBottom: "1.5rem" }}>
+        <div className={styles.titleSection}>
           <button
-            onClick={handleCopyLink}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 text-sm font-medium"
+            onClick={() => navigate("/approvals")}
+            className={styles.backButton}
+            title="Back to Approvals"
           >
-            <Share2 size={16} /> Share Link
+            <ArrowLeft size={16} />
           </button>
-          {approval.status === ApprovalStatus.PENDING && (
-            <button
-              onClick={handleSendReminder}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 text-sm font-medium"
-            >
-              Send Reminder
-            </button>
-          )}
+          <h1>{approval.title}</h1>
+          <p className="flex items-center gap-2">
+            Reference:{" "}
+            <span className="font-mono text-[var(--color-text-secondary)]">
+              #{approval.id.slice(0, 8)}
+            </span>
+            <span className="text-[var(--color-text-tertiary)]">•</span>
+            <span className="text-[var(--color-text-tertiary)]">
+              Created {format(new Date(approval.createdAt), "MMM d, yyyy")}
+            </span>
+          </p>
+        </div>
+        <div>
+          <Button
+            variant="secondary"
+            size="sm"
+            leftIcon={<Share2 size={14} />}
+            onClick={handleCopyLink}
+          >
+            Share
+          </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Content */}
+      {/* ACTION HERO BANNER */}
+      {approval.status === ApprovalStatus.PENDING && (
+        <div className={`${styles.statusBanner} ${styles.pending}`}>
+          <div className={styles.bannerContent}>
+            <h2>
+              <AlertCircle className="text-white" /> Action Required
+            </h2>
+            <p>
+              This item is currently pending approval. Please review the details
+              below.
+            </p>
+          </div>
+          <div className={styles.bannerActions}>
+            <Button
+              variant="danger"
+              onClick={() => handleQuickAction(ApprovalStatus.REJECTED)}
+              isLoading={loading}
+              className="!bg-white/10 !border-white/20 !text-white hover:!bg-white/20"
+            >
+              Reject
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => handleQuickAction(ApprovalStatus.APPROVED)}
+              isLoading={loading}
+              className="!bg-white !text-emerald-600 hover:!bg-white/90 !border-white shadow-lg"
+            >
+              Approve Deliverable
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {approval.status === ApprovalStatus.APPROVED && (
+        <div className={`${styles.statusBanner} ${styles.approved}`}>
+          <div className={styles.bannerContent}>
+            <h2>
+              <CheckCircle className="text-white" /> Approved
+            </h2>
+            <p>
+              This deliverable has been approved and moved to the next stage.
+            </p>
+          </div>
+          <div className={styles.bannerActions}>
+            {/* View Certificate or Next Steps could go here */}
+          </div>
+        </div>
+      )}
+
+      {approval.status === ApprovalStatus.REJECTED && (
+        <div className={`${styles.statusBanner} ${styles.rejected}`}>
+          <div className={styles.bannerContent}>
+            <h2>
+              <XCircle className="text-white" /> Rejected
+            </h2>
+            <p>
+              This request has been rejected. It has been returned to drafts.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-8">
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <StatusBadge status={approval.status} className="mb-4" />
-                <h1 className="text-3xl font-bold text-slate-800">
-                  {approval.title}
-                </h1>
-              </div>
-              {approval.status === ApprovalStatus.PENDING && (
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => openDraft("REJECT")}
-                    className="px-4 py-2 rounded-lg border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 font-medium text-sm"
-                  >
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => openDraft("APPROVE")}
-                    className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 font-medium text-sm shadow-sm shadow-indigo-200"
-                  >
-                    Approve
-                  </button>
-                </div>
-              )}
+          {/* AI Helper Tool */}
+          <div className={styles.aiTool}>
+            <div className={styles.aiToolIcon}>
+              <Sparkles size={16} />
             </div>
+            <div className="flex-1">
+              <div className={styles.aiToolContent}>
+                <h4>AI Assistant</h4>
+              </div>
 
-            <div className="prose prose-slate max-w-none">
-              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Description
-              </h3>
-              <div className="bg-slate-50 p-6 rounded-lg border border-slate-100 text-slate-700 leading-relaxed relative group">
-                {approval.description}
-
-                {/* Gemini Summary Integration */}
-                {!summary && (
-                  <button
+              {summary ? (
+                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
+                  {summary}
+                </p>
+              ) : (
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-[var(--color-text-secondary)] m-0">
+                    Need a quick overview? Generate a summary of this request.
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="!text-[var(--color-accent-primary)] !border-[var(--color-accent-primary)]/30 hover:!bg-[var(--color-accent-primary)]/5"
                     onClick={handleGenerateSummary}
-                    disabled={summaryLoading}
-                    className="absolute top-4 right-4 text-xs flex items-center gap-1 text-indigo-600 bg-white px-2 py-1 rounded shadow-sm border border-indigo-100 hover:bg-indigo-50 transition-all opacity-0 group-hover:opacity-100"
+                    isLoading={summaryLoading}
                   >
-                    {summaryLoading ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <Sparkles size={12} />
-                    )}
                     Summarize
-                  </button>
-                )}
-              </div>
-
-              {summary && (
-                <div className="mt-4 bg-indigo-50 p-4 rounded-lg border border-indigo-100 flex gap-3">
-                  <Sparkles
-                    className="text-indigo-500 shrink-0 mt-0.5"
-                    size={18}
-                  />
-                  <div>
-                    <p className="text-xs font-bold text-indigo-700 uppercase mb-1">
-                      AI Summary
-                    </p>
-                    <p className="text-sm text-indigo-800">{summary}</p>
-                  </div>
+                  </Button>
                 </div>
               )}
             </div>
+          </div>
 
-            <div className="mt-8 pt-8 border-t border-slate-100">
-              <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
+          {/* Description Card */}
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>
+                <FileText
+                  size={14}
+                  className="text-[var(--color-accent-primary)]"
+                />
+                Description
+              </div>
+            </div>
+            <div className={styles.sectionBody}>
+              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
+                {approval.description}
+              </p>
+            </div>
+          </div>
+
+          {/* Attachments Card */}
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>
+                <Paperclip
+                  size={14}
+                  className="text-[var(--color-accent-primary)]"
+                />
                 Attachments
-              </h3>
+              </div>
+            </div>
+            <div className={styles.sectionBody}>
               {approval.attachmentName ? (
-                <div className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg w-fit hover:border-indigo-300 hover:bg-indigo-50 transition-colors cursor-pointer">
-                  <div className="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-500">
-                    <Paperclip size={20} />
+                <div className="flex items-center gap-3 p-3 border border-[var(--color-border-subtle)] rounded-lg bg-[var(--color-bg-subtle)] hover:border-[var(--color-accent-primary)] transition-colors cursor-pointer w-full">
+                  <div className="w-10 h-10 bg-[var(--color-bg-elevated)] rounded flex items-center justify-center text-[var(--color-text-secondary)] shrink-0">
+                    <FileText size={20} />
                   </div>
-                  <div className="pr-4">
-                    <p className="text-sm font-medium text-slate-700">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-[var(--color-text-primary)]">
                       {approval.attachmentName}
-                    </p>
-                    <p className="text-xs text-slate-400">
-                      PDF Document • 2.4 MB
-                    </p>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-bold bg-[var(--color-bg-elevated)] px-1.5 py-0.5 rounded">
+                        {approval.attachmentType
+                          ? approval.attachmentType
+                              .split("/")[1]
+                              ?.toUpperCase()
+                              .slice(0, 4)
+                          : "FILE"}
+                      </span>
+                      <span className="text-[10px] text-[var(--color-text-tertiary)]">
+                        {approval.attachmentSize
+                          ? (approval.attachmentSize / (1024 * 1024)).toFixed(
+                              1
+                            ) + " MB"
+                          : ""}
+                      </span>
+                    </div>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="!h-8"
+                    onClick={() =>
+                      approval.attachmentUrl &&
+                      window.open(approval.attachmentUrl, "_blank")
+                    }
+                    disabled={!approval.attachmentUrl}
+                  >
+                    View
+                  </Button>
                 </div>
               ) : (
-                <p className="text-sm text-slate-400 italic">No attachments.</p>
+                <div className="text-sm text-[var(--color-text-tertiary)] italic p-4 text-center border dashed border-[var(--color-border-subtle)] rounded-lg">
+                  No attachments provided.
+                </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Meta & History */}
+        {/* Right Column - Timeline & Meta */}
         <div className="space-y-6">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-              Request Details
-            </h3>
-            <div className="space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Client</span>
-                <span className="font-medium text-slate-800">
-                  {approval.clientName}
-                </span>
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>
+                <User
+                  size={14}
+                  className="text-[var(--color-accent-primary)]"
+                />
+                Details
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Requested</span>
-                <span className="font-medium text-slate-800">
-                  {format(new Date(approval.createdAt), "MMM d, yyyy")}
-                </span>
+            </div>
+            <div className={styles.sectionBody}>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-[var(--color-text-secondary)]">
+                    Client
+                  </span>
+                  <span className="font-semibold text-[var(--color-text-primary)]">
+                    {approval.clientName}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-[var(--color-text-secondary)]">
+                    Due Date
+                  </span>
+                  <span className="font-medium text-[var(--color-text-primary)]">
+                    {format(new Date(approval.dueDate), "MMM d, yyyy")}
+                  </span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Due Date</span>
-                <span className="font-medium text-slate-800">
-                  {format(new Date(approval.dueDate), "MMM d, yyyy")}
-                </span>
-              </div>
+
+              {approval.status === ApprovalStatus.PENDING && (
+                <div className="mt-6 pt-4 border-t border-[var(--color-border-subtle)]">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="w-full"
+                    leftIcon={<Bell size={14} />}
+                    onClick={handleSendReminder}
+                  >
+                    Send Reminder
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
-            <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">
-              Timeline
-            </h3>
-            <div className="space-y-6 relative before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
-              {approval.history.map((event) => (
-                <div key={event.id} className="relative pl-8">
-                  <div
-                    className={`absolute left-0 top-1 w-4 h-4 rounded-full border-2 border-white ${
-                      event.type === "STATUS_CHANGED"
-                        ? "bg-indigo-500"
-                        : "bg-slate-300"
-                    }`}
-                  ></div>
-                  <p className="text-sm text-slate-800 font-medium">
-                    {event.description}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-1">
-                    {format(new Date(event.timestamp), "MMM d, h:mm a")} •{" "}
-                    {event.actor}
-                  </p>
-                </div>
-              ))}
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>
+                <Clock
+                  size={14}
+                  className="text-[var(--color-accent-primary)]"
+                />
+                Activity
+              </div>
+            </div>
+            <div className={styles.sectionBody}>
+              <div className="relative pl-2">
+                {approval.history.map((event, idx) => (
+                  <div key={event.id} className={styles.timelineItem}>
+                    <div className={styles.timelineIcon}>
+                      {event.type === "STATUS_CHANGED" ? (
+                        <CheckCircle size={12} className="text-emerald-500" />
+                      ) : (
+                        <Clock size={12} />
+                      )}
+                    </div>
+                    <div className={styles.timelineContent}>
+                      <h4>{event.description}</h4>
+                      <p className="text-xs">{event.actor}</p>
+                      <span className={styles.timelineTime}>
+                        {format(new Date(event.timestamp), "MMM d, h:mm a")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* AI Action Modal Overlay */}
-        {aiDraftOpen && (
-          <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-              <div
-                className={`px-6 py-4 border-b ${
-                  draftType === "APPROVE"
-                    ? "bg-indigo-50 border-indigo-100"
-                    : "bg-red-50 border-red-100"
-                } flex justify-between items-center`}
-              >
-                <div className="flex items-center gap-2">
-                  <Sparkles
-                    size={18}
-                    className={
-                      draftType === "APPROVE"
-                        ? "text-indigo-600"
-                        : "text-red-600"
-                    }
-                  />
-                  <h3
-                    className={`font-semibold ${
-                      draftType === "APPROVE"
-                        ? "text-indigo-800"
-                        : "text-red-800"
-                    }`}
-                  >
-                    AI Draft Assistant
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setAiDraftOpen(false)}
-                  className="text-slate-400 hover:text-slate-600"
-                >
-                  &times;
-                </button>
+      {/* AI Draft Modal */}
+      {aiDraftOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div
+            className={styles.sectionCard}
+            style={{
+              width: "100%",
+              maxWidth: "500px",
+              margin: 0,
+              boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+            }}
+          >
+            <div className={styles.sectionHeader}>
+              <div className={styles.sectionTitle}>
+                <Sparkles
+                  size={14}
+                  className={
+                    draftType === "APPROVE" ? "text-indigo-400" : "text-red-400"
+                  }
+                />
+                AI Draft Assistant
               </div>
-              <div className="p-6">
-                <p className="text-sm text-slate-500 mb-2">
-                  Review and edit the {draftType.toLowerCase()} message before
-                  sending:
-                </p>
-                <div className="relative">
-                  <textarea
-                    value={draftContent}
-                    onChange={(e) => setDraftContent(e.target.value)}
-                    className="w-full h-32 p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 text-sm"
-                    disabled={drafting}
-                  />
-                  {drafting && (
-                    <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
-                      <Loader2 className="animate-spin text-indigo-600" />
-                    </div>
-                  )}
-                </div>
-                <div className="mt-4 flex justify-end gap-2">
-                  <button
-                    onClick={() => setAiDraftOpen(false)}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDecision}
-                    disabled={drafting}
-                    className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${
-                      draftType === "APPROVE"
-                        ? "bg-indigo-600 hover:bg-indigo-700"
-                        : "bg-red-600 hover:bg-red-700"
-                    }`}
-                  >
-                    Confirm {draftType === "APPROVE" ? "Approval" : "Rejection"}
-                  </button>
-                </div>
+              <button
+                onClick={() => setAiDraftOpen(false)}
+                className="text-[var(--color-text-secondary)] hover:text-white"
+              >
+                &times;
+              </button>
+            </div>
+            <div className={styles.sectionBody}>
+              <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                Review the generated message before sending.
+              </p>
+              <textarea
+                className="w-full h-32 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg p-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] resize-none"
+                value={draftContent}
+                onChange={(e) => setDraftContent(e.target.value)}
+                disabled={drafting}
+              />
+              <div className="mt-4 flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAiDraftOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant={draftType === "APPROVE" ? "primary" : "danger"}
+                  size="sm"
+                  onClick={handleDecision}
+                  isLoading={drafting}
+                >
+                  Confirm
+                </Button>
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmModal.isOpen &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0, 0, 0, 0.6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setConfirmModal({ isOpen: false, action: null })}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "var(--color-bg-card)",
+                border: "1px solid var(--color-border-subtle)",
+                borderRadius: "0.75rem",
+                boxShadow: "0 24px 64px rgba(0, 0, 0, 0.5)",
+                width: "100%",
+                maxWidth: "360px",
+                padding: "1.5rem",
+              }}
+            >
+              <h3
+                style={{
+                  margin: "0 0 0.75rem",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                {confirmModal.action === ApprovalStatus.APPROVED
+                  ? "Confirm Approval"
+                  : "Confirm Rejection"}
+              </h3>
+              <p
+                style={{
+                  margin: "0 0 1.25rem",
+                  fontSize: "0.75rem",
+                  color: "var(--color-text-secondary)",
+                  lineHeight: 1.5,
+                }}
+              >
+                {confirmModal.action === ApprovalStatus.APPROVED
+                  ? "Are you sure you want to approve this deliverable? This action will notify the client."
+                  : "Are you sure you want to reject this deliverable? It will be returned to the draft stage."}
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  onClick={() =>
+                    setConfirmModal({ isOpen: false, action: null })
+                  }
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: "transparent",
+                    border: "1px solid var(--color-border-subtle)",
+                    borderRadius: "0.375rem",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={performAction}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background:
+                      confirmModal.action === ApprovalStatus.APPROVED
+                        ? "var(--color-accent-success, #10b981)"
+                        : "var(--color-accent-danger, #ef4444)",
+                    border: "none",
+                    borderRadius: "0.375rem",
+                    color: "white",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
         )}
-      </div>
     </div>
   );
 };

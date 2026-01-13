@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ApprovalService } from "../services";
 import { ApprovalRequest, ApprovalStatus, Stats } from "../types";
@@ -11,6 +11,7 @@ import {
   Clock,
   AlertCircle,
   ClipboardCheck,
+  RefreshCw,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useLanguage } from "@bundlros/ui";
@@ -118,22 +119,23 @@ export const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const data = await ApprovalService.getAll();
-      const statsData = await ApprovalService.getStats();
-      setApprovals(
-        data.sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
-      );
-      setStats(statsData);
-      setLoading(false);
-    };
-    fetchData();
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const data = await ApprovalService.getAll();
+    const statsData = await ApprovalService.getStats();
+    setApprovals(
+      data.sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+    );
+    setStats(statsData);
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -195,8 +197,13 @@ export const Dashboard: React.FC = () => {
           <span className={styles.requestsTitle}>
             {t("approvals.recentApprovals")}
           </span>
-          <button className={styles.viewAllButton}>
-            {t("approvals.viewDetails")}
+          <button
+            className={styles.viewAllButton}
+            onClick={fetchData}
+            title="Refresh List"
+          >
+            <RefreshCw size={14} className="mr-2" />
+            Refresh
           </button>
         </div>
 
@@ -208,8 +215,9 @@ export const Dashboard: React.FC = () => {
                   <FileText size={16} />
                 </div>
                 <div className={styles.requestItem__content}>
+                  {/* Fixed relative link to prevent routing to root */}
                   <Link
-                    to={`/approval/${approval.id}`}
+                    to={`approval/${approval.id}`}
                     className={styles.requestItem__title}
                   >
                     {approval.title}
@@ -229,8 +237,9 @@ export const Dashboard: React.FC = () => {
 
               <div className={styles.requestItem__actions}>
                 <StatusBadge status={approval.status} />
+                {/* Fixed relative link here as well */}
                 <Link
-                  to={`/approval/${approval.id}`}
+                  to={`approval/${approval.id}`}
                   className={styles.arrowButton}
                 >
                   <ArrowRight size={14} />
