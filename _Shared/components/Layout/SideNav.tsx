@@ -20,9 +20,15 @@ import styles from "./AppShell.module.css";
 
 interface SideNavProps {
   isOpen?: boolean;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
-export const SideNav: React.FC<SideNavProps> = ({ isOpen = true }) => {
+export const SideNav: React.FC<SideNavProps> = ({
+  isOpen = true,
+  onMouseEnter,
+  onMouseLeave,
+}) => {
   const { t } = useLanguage();
 
   const navGroups = [
@@ -106,6 +112,8 @@ export const SideNav: React.FC<SideNavProps> = ({ isOpen = true }) => {
       className={`${styles.sideNav} ${
         isOpen ? styles.sideNavOpen : styles.sideNavClosed
       }`}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
       <nav className="flex flex-col gap-4 px-2 overflow-y-auto py-2">
         {navGroups.map((group) => (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppBar } from "./AppBar";
 import { SideNav } from "./SideNav";
@@ -10,11 +10,26 @@ interface AppShellProps {
 }
 
 export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
+  };
+
+  const handleMouseEnter = () => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setIsSidebarOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setIsSidebarOpen(false);
+    }, 150);
   };
 
   const handleLogoClick = () => {
@@ -30,11 +45,17 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
       <AppBar
         title="BundlrOS"
         onMenuClick={handleToggleSidebar}
+        onMenuMouseEnter={handleMouseEnter}
+        onMenuMouseLeave={handleMouseLeave}
         onLogoClick={handleLogoClick}
       />
 
       <div className={styles.contentWrapper}>
-        <SideNav isOpen={isSidebarOpen} />
+        <SideNav
+          isOpen={isSidebarOpen}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        />
         <main
           className={`${styles.mainContent} ${
             isSidebarOpen ? "" : styles.mainContentExpanded

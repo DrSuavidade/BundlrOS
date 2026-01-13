@@ -27,12 +27,16 @@ import styles from "./AppShell.module.css";
 export interface AppBarProps {
   title?: string;
   onMenuClick?: () => void;
+  onMenuMouseEnter?: () => void;
+  onMenuMouseLeave?: () => void;
   onLogoClick?: () => void;
 }
 
 export const AppBar: React.FC<AppBarProps> = ({
   title = "BundlrOS",
   onMenuClick,
+  onMenuMouseEnter,
+  onMenuMouseLeave,
   onLogoClick,
 }) => {
   const { language, setLanguage, t } = useLanguage();
@@ -268,6 +272,8 @@ export const AppBar: React.FC<AppBarProps> = ({
         <div className={styles.appBarLeft}>
           <button
             onClick={onMenuClick}
+            onMouseEnter={onMenuMouseEnter}
+            onMouseLeave={onMenuMouseLeave}
             className={styles.menuButton}
             aria-label="Toggle menu"
           >
