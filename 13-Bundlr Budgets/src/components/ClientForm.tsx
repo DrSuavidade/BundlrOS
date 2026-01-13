@@ -7,6 +7,7 @@ interface ClientFormProps {
   notes: string;
   onChange: (field: string, value: string) => void;
   labels: any;
+  clients: string[];
 }
 
 export const ClientForm: React.FC<ClientFormProps> = ({
@@ -15,6 +16,7 @@ export const ClientForm: React.FC<ClientFormProps> = ({
   notes,
   onChange,
   labels,
+  clients,
 }) => {
   return (
     <div className={styles.sectionCard}>
@@ -25,13 +27,21 @@ export const ClientForm: React.FC<ClientFormProps> = ({
         <div className={styles.formRow}>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>{labels.clientName}</label>
-            <input
-              type="text"
+            <select
               className={styles.formInput}
-              placeholder="e.g. Acme Corp"
               value={clientName}
               onChange={(e) => onChange("clientName", e.target.value)}
-            />
+              style={{ paddingRight: "2rem" }} // Add padding for arrow
+            >
+              <option value="">
+                {labels.selectClient || "Select Client..."}
+              </option>
+              {clients.map((client) => (
+                <option key={client} value={client}>
+                  {client}
+                </option>
+              ))}
+            </select>
           </div>
           <div className={styles.formGroup}>
             <label className={styles.formLabel}>{labels.projectName}</label>

@@ -79,6 +79,7 @@ const buildTemplateBudget = (
 };
 
 import { AppShell, Button, useLanguage } from "@bundlros/ui";
+import { ClientsApi } from "@bundlros/supabase";
 import styles from "./App.module.css";
 import { Wallet } from "lucide-react";
 
@@ -91,6 +92,7 @@ const App: React.FC = () => {
   // ... (rest of the state remains same)
   // App State
   const [clientName, setClientName] = useState("");
+  const [clients, setClients] = useState<string[]>([]);
   const [projectName, setProjectName] = useState("");
   const [notes, setNotes] = useState("");
   const [activeTab, setActiveTab] = useState<"proposal" | "json" | "template">(
@@ -122,6 +124,18 @@ const App: React.FC = () => {
   useEffect(() => {
     // Standardize to dark mode as per BundlrOS spec
     document.documentElement.classList.add("dark");
+  }, []);
+
+  useEffect(() => {
+    async function fetchClients() {
+      try {
+        const data = await ClientsApi.getAll();
+        setClients(data.map((c) => c.name));
+      } catch (error) {
+        console.error("Failed to fetch clients", error);
+      }
+    }
+    fetchClients();
   }, []);
 
   // Derived Data
@@ -354,6 +368,7 @@ const App: React.FC = () => {
             notes={notes}
             onChange={handleClientUpdate}
             labels={labels}
+            clients={clients}
           />
 
           <div className={styles.builderHeader}>

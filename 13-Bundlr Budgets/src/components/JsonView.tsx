@@ -29,6 +29,8 @@ export const JsonView: React.FC<JsonViewProps> = ({ budget }) => {
   const tierBudgets: Record<Tier, Budget> = tiers.reduce((acc, tier) => {
     acc[tier] = {
       id: `${budget.id}-${tier}`,
+      clientId: budget.clientId,
+      contractId: budget.contractId,
       clientName: budget.clientName,
       projectName: budget.projectName,
       notes: budget.notes,
