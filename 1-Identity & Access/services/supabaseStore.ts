@@ -12,7 +12,8 @@ import { User, AuditLog, Role, UserStatus } from '../types';
 const mapProfileToUser = (profile: Profile): User => ({
     id: profile.id,
     email: profile.email,
-    name: profile.email.split('@')[0], // Use email prefix as name
+    name: profile.name || profile.email.split('@')[0], // Use name field, fallback to email prefix
+    title: profile.title || undefined,
     role: (profile.role as Role) || Role.DEV,
     status: (profile.status as UserStatus) || UserStatus.PENDING,
     avatarUrl: profile.avatar_url || undefined,

@@ -22,6 +22,8 @@ export interface Database {
                 Row: {
                     id: string;
                     email: string;
+                    name: string | null;
+                    title: string | null;
                     role: UserRole;
                     status: UserStatus;
                     organization_id: string | null;

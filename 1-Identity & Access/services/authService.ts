@@ -31,7 +31,8 @@ const statusMap: Record<string, UserStatus> = {
 const mapProfileToUser = (profile: Profile): User => ({
     id: profile.id,
     email: profile.email,
-    name: profile.email.split('@')[0], // Use email prefix as name if no name field
+    name: profile.name || profile.email.split('@')[0], // Use name field, fallback to email prefix
+    title: profile.title || undefined,
     role: roleMap[profile.role] || Role.DEV,
     status: statusMap[profile.status] || UserStatus.PENDING,
     avatarUrl: profile.avatar_url || undefined,
@@ -109,7 +110,11 @@ export const AuthService = {
                 await AuditLogsApi.create({
                     action: `auth.login`,
                     performer_id: profile.id,
-                    details: { email: profile.email, timestamp: new Date().toISOString() }
+                    details: {
+                        name: profile.name || profile.email.split('@')[0],
+                        email: profile.email,
+                        timestamp: new Date().toISOString()
+                    }
                 });
             } catch (auditErr) {
                 console.warn('[Auth] Failed to log audit event:', auditErr);
@@ -169,7 +174,20 @@ export const AuthService = {
     /**
      * Log out the current user
      */
-    async logout(): Promise<void> {
+    async logout(userId?: string, userEmail?: string): Promise<void> {
+        // Log the logout event
+        if (userId) {
+            try {
+                await AuditLogsApi.create({
+                    action: 'auth.logout',
+                    performer_id: userId,
+                    details: { email: userEmail || 'unknown', timestamp: new Date().toISOString() }
+                });
+            } catch (auditErr) {
+                console.warn('[Auth] Failed to log logout event:', auditErr);
+            }
+        }
+
         await supabase.auth.signOut();
     },
 

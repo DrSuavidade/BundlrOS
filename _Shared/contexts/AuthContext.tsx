@@ -10,6 +10,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
+  title?: string;
   role: string;
   avatarUrl?: string;
 }
@@ -51,7 +52,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Log the logout event to Supabase audit_logs
+    if (user) {
+      try {
+        const { AuditLogsApi } = await import("@bundlros/supabase");
+        await AuditLogsApi.create({
+          action: "auth.logout",
+          performer_id: user.id,
+          details: {
+            name: user.name,
+            email: user.email,
+            timestamp: new Date().toISOString(),
+          },
+        });
+      } catch (err) {
+        console.warn("[Auth] Failed to log logout:", err);
+      }
+    }
+
     setUserState(null);
     localStorage.removeItem(AUTH_STORAGE_KEY);
     // Redirect to login

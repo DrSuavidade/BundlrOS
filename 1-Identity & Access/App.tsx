@@ -33,6 +33,7 @@ function App() {
         id: user.id,
         email: user.email,
         name: user.name,
+        title: user.title,
         role: user.role,
         avatarUrl: user.avatarUrl,
       });
@@ -49,6 +50,7 @@ function App() {
       id: user.id,
       email: user.email,
       name: user.name,
+      title: user.title,
       role: user.role,
       avatarUrl: user.avatarUrl,
     });

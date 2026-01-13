@@ -18,6 +18,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  title?: string;
   role: Role;
   status: UserStatus;
   avatarUrl?: string;
@@ -28,7 +29,7 @@ export interface User {
 
 export interface AuditLog {
   id: string;
-  action: 'user.created' | 'user.updated' | 'user.role_changed' | 'auth.login' | 'user.deactivated';
+  action: 'user.created' | 'user.updated' | 'user.role_changed' | 'auth.login' | 'auth.logout' | 'user.deactivated';
   details: string;
   performerId: string;
   performerName: string;

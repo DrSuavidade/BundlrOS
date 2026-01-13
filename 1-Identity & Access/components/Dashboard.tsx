@@ -12,10 +12,12 @@ import {
 import { Users, UserPlus, Activity, ShieldAlert, Shield } from "lucide-react";
 import { Role, User, AuditLog } from "../types";
 import { useLanguage } from "@bundlros/ui";
+import { useAuth } from "@bundlros/ui";
 import styles from "../App.module.css";
 
 export const Dashboard: React.FC = () => {
   const { t } = useLanguage();
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,8 +40,15 @@ export const Dashboard: React.FC = () => {
     fetchData();
   }, []);
 
-  const activeUsers = users.filter((u) => u.status === "active").length;
-  const recentLogs = logs.slice(0, 5);
+  // Online users = just the current logged-in user (for now)
+  // In a real app, this would track sessions in the database
+  const onlineUsers = currentUser ? 1 : 0;
+
+  // Filter logs to only show authentication events (login/logout)
+  const authLogs = logs.filter(
+    (log) => log.action === "auth.login" || log.action === "auth.logout"
+  );
+  const recentLogs = authLogs.slice(0, 5);
 
   const roleDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -122,7 +131,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className={styles.statInfo}>
             <span className={styles.statLabel}>{t("identity.activeNow")}</span>
-            <span className={styles.statValue}>{activeUsers}</span>
+            <span className={styles.statValue}>{onlineUsers}</span>
           </div>
         </div>
 
@@ -223,20 +232,55 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className={styles.sectionBody}>
             <div className={styles.activityList}>
-              {recentLogs.map((log) => (
-                <div key={log.id} className={styles.activityItem}>
-                  <div className={styles.activityDot} />
-                  <div className={styles.activityContent}>
-                    <p className={styles.activityText}>{log.details}</p>
-                    <div className={styles.activityMeta}>
-                      <span>by {log.performerName}</span>
-                      <span>
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </span>
+              {recentLogs.map((log) => {
+                // Format the log message in a human-readable way
+                const formatLogMessage = () => {
+                  // Try to extract name or email from details
+                  let displayName = "Unknown user";
+                  if (typeof log.details === "string") {
+                    try {
+                      const parsed = JSON.parse(log.details);
+                      displayName = parsed.name || parsed.email || displayName;
+                    } catch {
+                      displayName = log.details;
+                    }
+                  } else if (typeof log.details === "object" && log.details) {
+                    const details = log.details as any;
+                    displayName = details.name || details.email || displayName;
+                  }
+
+                  switch (log.action) {
+                    case "auth.login":
+                      return `${displayName} logged in`;
+                    case "auth.logout":
+                      return `${displayName} logged out`;
+                    case "user.created":
+                      return `New user created: ${displayName}`;
+                    case "user.updated":
+                      return `User updated: ${displayName}`;
+                    case "user.deactivated":
+                      return `User deactivated: ${displayName}`;
+                    default:
+                      return `${log.action}: ${displayName}`;
+                  }
+                };
+
+                return (
+                  <div key={log.id} className={styles.activityItem}>
+                    <div className={styles.activityDot} />
+                    <div className={styles.activityContent}>
+                      <p className={styles.activityText}>
+                        {formatLogMessage()}
+                      </p>
+                      <div className={styles.activityMeta}>
+                        <span>
+                          {new Date(log.timestamp).toLocaleTimeString()}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {recentLogs.length === 0 && (
                 <p
                   style={{

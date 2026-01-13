@@ -505,6 +505,9 @@ importers:
 
   _Shared:
     dependencies:
+      '@bundlros/supabase':
+        specifier: workspace:*
+        version: link:../lib/supabase
       react:
         specifier: ^19.0.0
         version: 19.2.3
