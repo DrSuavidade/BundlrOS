@@ -734,6 +734,17 @@ export const AutomationRunsApi = {
         return (data || []) as AutomationRun[];
     },
 
+    async getByWorkflowId(workflowId: string): Promise<AutomationRun[]> {
+        const { data, error } = await supabase
+            .from('automation_runs')
+            .select('*')
+            .eq('workflow_id', workflowId)
+            .order('started_at', { ascending: false });
+
+        if (error) handleError(error);
+        return (data || []) as AutomationRun[];
+    },
+
     async getById(id: string): Promise<AutomationRun | null> {
         const { data, error } = await supabase
             .from('automation_runs')

@@ -5,16 +5,53 @@
  * Aggregates data from clients, projects, deliverables, and contracts.
  */
 
+/**
+ * Reporting & KPIs - Supabase Service
+ * 
+ * Generates KPI reports from Supabase data.
+ * Aggregates data from clients, projects, deliverables, and contracts.
+ * Uses Automation Runs to store and retrieve generated reports.
+ */
+
 import {
     ClientsApi,
     ProjectsApi,
     DeliverablesApi,
     ContractsApi,
+    AutomationRunsApi,
+    type AutomationRun
 } from '@bundlros/supabase';
 import { KPIRecord, KPIUnit, Report, ReportStatus } from '../types';
 
-// In-memory storage for reports (would be a dedicated table in real system)
-const reportsCache: Map<string, Report> = new Map();
+const REPORTING_WORKFLOW_ID = 'n8n:reporting_agent';
+
+// Map Automation Run to Report
+const mapRunToReport = (run: AutomationRun): Report => {
+    const input = run.input as any || {};
+    const output = run.output as any || {};
+
+    // Determine status
+    let status = ReportStatus.REQUESTED;
+    if (run.status === 'completed') status = ReportStatus.GENERATED;
+    if (output.approved) status = ReportStatus.APPROVED; // Stored in output?
+    if (output.sent) status = ReportStatus.SENT;
+
+    // Use specific fields if available
+    if (output.status === 'APPROVED') status = ReportStatus.APPROVED;
+    if (output.status === 'SENT') status = ReportStatus.SENT;
+
+    return {
+        id: run.id,
+        title: input.title || `Report - ${input.period}`,
+        period: input.period || 'Unknown Period',
+        status,
+        content: output.content || (run.status === 'running' ? 'Generating report...' : 'No content available.'),
+        createdAt: run.started_at,
+        generatedAt: run.completed_at || undefined,
+        sentAt: output.sentAt,
+        kpiSnapshot: output.kpis || [] // Assuming we store the snapshot in the run output
+    };
+};
 
 // Generate KPIs from Supabase data
 const generateKPIsFromData = async (period: string): Promise<KPIRecord[]> => {
@@ -144,38 +181,76 @@ export const SupabaseReportingService = {
     },
 
     getReports: async (): Promise<Report[]> => {
-        return Array.from(reportsCache.values())
-            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        try {
+            const runs = await AutomationRunsApi.getByWorkflowId(REPORTING_WORKFLOW_ID);
+            return runs.map(mapRunToReport);
+        } catch (error) {
+            console.error('[Reporting] Error fetching reports:', error);
+            return [];
+        }
     },
 
     getReportById: async (id: string): Promise<Report | undefined> => {
-        return reportsCache.get(id);
+        try {
+            const run = await AutomationRunsApi.getById(id);
+            if (!run) return undefined;
+            return mapRunToReport(run);
+        } catch (error) {
+            console.error('[Reporting] Error fetching report:', error);
+            return undefined;
+        }
     },
 
     createReport: async (title: string, period: string): Promise<Report> => {
         const kpis = await generateKPIsFromData(period);
 
-        const report: Report = {
-            id: `report-${Date.now()}`,
-            title,
-            period,
-            status: ReportStatus.REQUESTED,
-            content: null,
-            createdAt: new Date().toISOString(),
-            kpiSnapshot: kpis,
-        };
+        // Create automation run to act as the report
+        // We simulate the output immediately for better UX if the "agent" isn't actually running
+        // In a real scenario, we might just set status='running'
 
-        reportsCache.set(report.id, report);
-        return report;
+        // Simulating Agent Response for "Demo" purposes, but checking into DB
+        const narrative = `# Executive Summary - ${period}\n\nBased on the data, the company has seen ${kpis[0].value > 10 ? 'steady growth' : 'stable performance'}. Total contract value is ${kpis[5].value > 0 ? 'healthy' : 'pending'}.\n\n## Financial Performance\nRecurring revenue is tracking against targets.`;
+
+        const run = await AutomationRunsApi.create({
+            workflow_id: REPORTING_WORKFLOW_ID,
+            status: 'completed', // Simulate immediate completion for now
+            input: {
+                title,
+                period,
+                triggered_by: 'reporting_ui'
+            },
+            attempt_count: 1,
+            event_id: null,
+            output: {
+                content: narrative,
+                kpis: kpis,
+                status: 'GENERATED'
+            },
+            error: null,
+            completed_at: new Date().toISOString()
+        });
+
+        return mapRunToReport(run);
     },
 
     updateReport: async (id: string, updates: Partial<Report>): Promise<Report> => {
-        const existing = reportsCache.get(id);
-        if (!existing) throw new Error('Report not found');
+        // We can update the automation run output to store state changes (approved/sent)
+        const run = await AutomationRunsApi.getById(id);
+        if (!run) throw new Error('Report not found');
 
-        const updated = { ...existing, ...updates };
-        reportsCache.set(id, updated);
-        return updated;
+        const currentOutput = (run.output as any) || {};
+        const newOutput = { ...currentOutput, ...updates };
+
+        // For status updates, we map ReportStatus to our stored status field in output
+        if (updates.status) {
+            newOutput.status = updates.status;
+            if (updates.status === ReportStatus.SENT) {
+                newOutput.sentAt = new Date().toISOString();
+            }
+        }
+
+        const updatedRun = await AutomationRunsApi.complete(id, newOutput);
+        return mapRunToReport(updatedRun);
     },
 
     generateContent: async (id: string, content: string): Promise<Report> => {
@@ -183,7 +258,7 @@ export const SupabaseReportingService = {
             content,
             status: ReportStatus.GENERATED,
             generatedAt: new Date().toISOString(),
-        });
+        } as any);
     },
 
     approveReport: async (id: string): Promise<Report> => {
@@ -195,7 +270,6 @@ export const SupabaseReportingService = {
     sendReport: async (id: string): Promise<Report> => {
         return SupabaseReportingService.updateReport(id, {
             status: ReportStatus.SENT,
-            sentAt: new Date().toISOString(),
         });
     },
 };

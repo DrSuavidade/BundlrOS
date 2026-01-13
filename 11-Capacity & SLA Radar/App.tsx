@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { Client, IntakeItem, RiskLevel, SystemEvent } from "./types";
 import { CapacityService } from "./services";
-import { analyzeRisks } from "./services/geminiService";
 import StatCard from "./components/StatCard";
 import CapacityChart from "./components/CapacityChart";
 import RiskTable from "./components/RiskTable";
@@ -106,10 +105,14 @@ function App() {
 
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
-    setAiAnalysis(null);
-    const result = await analyzeRisks(clients, intakeItems);
-    setAiAnalysis(result);
-    setIsAnalyzing(false);
+    try {
+      const result = await CapacityService.analyzeRisks(clients, intakeItems);
+      setAiAnalysis(result);
+    } catch (e) {
+      console.error("Analysis failed", e);
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const handleResolveIntake = (id: string) => {

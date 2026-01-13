@@ -11,7 +11,6 @@ import {
   FileText,
   Shield,
 } from "lucide-react";
-import { analyzeFailure } from "../services/geminiService";
 import styles from "../App.module.css";
 
 interface DeliverableDetailProps {
@@ -28,17 +27,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
   isRunning,
 }) => {
   const { lastResult } = deliverable;
-  const [analysis, setAnalysis] = useState<string | null>(null);
-  const [analyzing, setAnalyzing] = useState(false);
-
-  const failedItems = lastResult.checklist.filter((i) => i.status === "failed");
-
-  const handleAnalyze = async () => {
-    setAnalyzing(true);
-    const result = await analyzeFailure(deliverable.name, failedItems);
-    setAnalysis(result);
-    setAnalyzing(false);
-  };
+  // Gemini analysis removed: database-backed implementation pending
 
   const getScoreClass = () => {
     if (lastResult.score === 100) return styles.success;
@@ -139,35 +128,16 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                   prevent downstream corruption.
                 </p>
 
-                {!analysis && !analyzing && (
-                  <button
-                    onClick={handleAnalyze}
-                    className={styles.analyzeButton}
-                  >
-                    <Search
-                      size={12}
-                      className="text-[var(--color-accent-primary)]"
-                    />
-                    Analyze Root Cause with Gemini AI
-                  </button>
-                )}
-
-                {analyzing && (
-                  <div className={styles.analyzingText}>
-                    <Cpu size={14} className="animate-spin" />
-                    Gemini is processing...
+                <div className={styles.aiResult}>
+                  <div className={styles.aiResult__header}>
+                    <Zap size={12} />
+                    Automated Analysis
                   </div>
-                )}
-
-                {analysis && (
-                  <div className={styles.aiResult}>
-                    <div className={styles.aiResult__header}>
-                      <Zap size={12} />
-                      AI Synthetic Insight
-                    </div>
-                    <div className={styles.aiResult__content}>{analysis}</div>
+                  <div className={styles.aiResult__content}>
+                    {lastResult.automatedSummary ||
+                      "Check execution logs for details."}
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

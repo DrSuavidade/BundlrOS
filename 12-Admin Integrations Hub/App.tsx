@@ -35,8 +35,8 @@ export default function App() {
     loadData();
   }, []);
 
-  const handleToggle = (integration: Integration) => {
-    const updated = AdminService.toggleIntegration(integration.id);
+  const handleToggle = async (integration: Integration) => {
+    const updated = await AdminService.toggleIntegration(integration.id);
     if (updated) {
       setIntegrations((prev) =>
         prev.map((i) => (i.id === updated.id ? updated : i))
@@ -56,8 +56,8 @@ export default function App() {
     setTestingId(null);
   };
 
-  const handleSaveIntegration = (updated: Integration) => {
-    const result = AdminService.updateIntegration(updated.id, updated);
+  const handleSaveIntegration = async (updated: Integration) => {
+    const result = await AdminService.updateIntegration(updated.id, updated);
     if (result) {
       setIntegrations((prev) =>
         prev.map((i) => (i.id === result.id ? result : i))
@@ -133,7 +133,7 @@ export default function App() {
           const clientIntegrations = filteredIntegrations.filter(
             (i) => i.clientId === client.id
           );
-          if (clientIntegrations.length === 0) return null;
+          // if (clientIntegrations.length === 0) return null;
 
           return (
             <section key={client.id} className={styles.clientSection}>

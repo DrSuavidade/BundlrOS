@@ -2,102 +2,69 @@
  * QA Gates & Checks - Supabase Service
  * 
  * Provides Supabase-backed implementation for QA gates.
- * Uses deliverables from Supabase and generates QA results.
+ * Uses deliverables from Supabase and generates QA results from Automation Runs.
  */
 
 import {
     DeliverablesApi,
+    AutomationRunsApi,
     type Deliverable as SupabaseDeliverable,
+    type AutomationRun
 } from '@bundlros/supabase';
-import { Deliverable, QAResult, ChecklistItem, QAStatus } from '../types';
+import { Deliverable, QAResult, QAStatus } from '../types';
 
-// In-memory storage for QA results (would be a dedicated table in real system)
-const qaResultsCache: Map<string, QAResult> = new Map();
+const WORKFLOW_ID = 'n8n:gatekeeper_active';
 
-// Generate checklist based on deliverable type
-const generateChecklist = (type: string): ChecklistItem[] => {
-    const common: ChecklistItem[] = [
-        { id: 'sec-1', category: 'security', label: 'No hardcoded secrets', status: 'passed' },
-        { id: 'perf-1', category: 'performance', label: 'Load time < 200ms', status: 'passed' },
-    ];
+// Generate a default "Pending" result
+const createPendingResult = (deliverableId: string, timestamp: string): QAResult => ({
+    id: `pending-${deliverableId}`,
+    deliverableId,
+    timestamp,
+    status: 'pending',
+    score: 0,
+    checklist: [],
+    automatedSummary: 'No QA run recorded.'
+});
 
-    switch (type) {
-        case 'website':
-        case 'web_page':
-            return [
-                ...common,
-                { id: 'vis-1', category: 'visual', label: 'Mobile responsiveness check', status: 'passed' },
-                { id: 'func-1', category: 'functional', label: 'All links work', status: 'passed' },
-                { id: 'vis-2', category: 'visual', label: 'Font loading', status: 'passed' },
-            ];
-        case 'api':
-        case 'backend':
-            return [
-                ...common,
-                { id: 'func-2', category: 'functional', label: 'Returns 200 OK on valid input', status: 'passed' },
-                { id: 'func-3', category: 'functional', label: 'Returns 400 on invalid payload', status: 'passed' },
-            ];
-        case 'video':
-        case 'image':
-            return [
-                ...common,
-                { id: 'vis-3', category: 'visual', label: 'Resolution meets requirements', status: 'passed' },
-                { id: 'vis-4', category: 'visual', label: 'Color profile is correct', status: 'passed' },
-            ];
-        default:
-            return common;
-    }
-};
-
-// Map deliverable status to QA status
-const mapQAStatus = (status: string): QAStatus => {
-    switch (status) {
-        case 'qa_failed':
-            return 'failed';
-        case 'in_qa':
-            return 'running';
-        case 'approved':
-        case 'published':
-            return 'passed';
-        default:
-            return 'pending';
-    }
-};
-
-// Get or generate QA result for a deliverable
-const getOrGenerateQAResult = (deliverable: SupabaseDeliverable): QAResult => {
-    if (qaResultsCache.has(deliverable.id)) {
-        return qaResultsCache.get(deliverable.id)!;
+// Map Automation Run output to QAResult
+const mapRunToResult = (run: AutomationRun, deliverableId: string): QAResult => {
+    // If run is running, return running status
+    if (run.status === 'running') {
+        return {
+            id: run.id,
+            deliverableId,
+            timestamp: run.started_at || new Date().toISOString(),
+            status: 'running',
+            score: 0,
+            checklist: [],
+            automatedSummary: 'QA Check in progress...'
+        };
     }
 
-    const checklist = generateChecklist(deliverable.type || 'default');
-    const status = mapQAStatus(deliverable.status);
+    // Try to parse output
+    const output = run.output as any;
+    if (output && output.qaResult) {
+        return {
+            ...output.qaResult,
+            id: run.id, // Ensure ID matches run ID
+            status: run.status === 'failed' ? 'failed' : (output.qaResult.status || 'passed')
+        };
+    }
 
-    // If deliverable failed QA, mark some checklist items as failed
-    const finalChecklist = status === 'failed'
-        ? checklist.map((item, i) => i === 0 ? { ...item, status: 'failed' as QAStatus, logs: 'Check failed' } : item)
-        : checklist;
-
-    const score = status === 'failed' ? 75 : status === 'passed' ? 100 : 0;
-
-    const result: QAResult = {
-        id: `qa-${deliverable.id}`,
-        deliverableId: deliverable.id,
-        timestamp: deliverable.updated_at,
-        status,
-        score,
-        checklist: finalChecklist,
-        automatedSummary: status === 'passed' ? 'All checks passed. Ready for deployment.'
-            : status === 'failed' ? 'Some checks failed. Review required.'
-                : 'QA in progress...',
+    // Fallback if output structure doesn't match
+    return {
+        id: run.id,
+        deliverableId,
+        timestamp: run.completed_at || run.started_at || new Date().toISOString(),
+        status: run.status === 'failed' ? 'failed' : 'passed', // Crude fallback
+        score: 0,
+        checklist: [],
+        automatedSummary: run.error ? `Error: ${JSON.stringify(run.error)}` : 'QA Completed (No detailed data)'
     };
-
-    qaResultsCache.set(deliverable.id, result);
-    return result;
 };
 
 // Map Supabase deliverable to local Deliverable type
-const mapToDeliverable = (d: SupabaseDeliverable): Deliverable => {
+const mapToDeliverable = (d: SupabaseDeliverable, latestRun?: AutomationRun): Deliverable => {
     const typeMap: Record<string, Deliverable['type']> = {
         'website': 'landing_page',
         'web_page': 'landing_page',
@@ -108,21 +75,42 @@ const mapToDeliverable = (d: SupabaseDeliverable): Deliverable => {
         'image': 'dashboard_widget',
     };
 
+    const result = latestRun
+        ? mapRunToResult(latestRun, d.id)
+        : createPendingResult(d.id, d.updated_at || new Date().toISOString());
+
     return {
         id: d.id,
         name: d.title,
         type: typeMap[d.type || ''] || 'landing_page',
         version: d.version || 'v1.0',
-        owner: 'Team',
-        lastResult: getOrGenerateQAResult(d),
+        owner: 'Team', // This could come from a join with profiles/owners if available
+        lastResult: result,
     };
 };
 
 export const SupabaseQAService = {
     getDeliverables: async (): Promise<Deliverable[]> => {
         try {
-            const deliverables = await DeliverablesApi.getAll();
-            return deliverables.map(mapToDeliverable);
+            const [deliverables, runs] = await Promise.all([
+                DeliverablesApi.getAll(),
+                AutomationRunsApi.getByWorkflowId(WORKFLOW_ID)
+            ]);
+
+            // Map runs by deliverable_id (from input)
+            // Assuming input is { deliverable_id: "..." }
+            const runsByDeliverable = new Map<string, AutomationRun>();
+
+            // Iterate in reverse (since sorted by started_at desc, we want the first one found?)
+            // Actually getByWorkflowId orders by started_at DESC. So the first one we find for a ID is the latest.
+            for (const run of runs) {
+                const input = run.input as any;
+                if (input && input.deliverable_id && !runsByDeliverable.has(input.deliverable_id)) {
+                    runsByDeliverable.set(input.deliverable_id, run);
+                }
+            }
+
+            return deliverables.map(d => mapToDeliverable(d, runsByDeliverable.get(d.id)));
         } catch (error) {
             console.error('[QA] Error fetching deliverables:', error);
             return [];
@@ -133,7 +121,18 @@ export const SupabaseQAService = {
         try {
             const deliverable = await DeliverablesApi.getById(id);
             if (!deliverable) return undefined;
-            return mapToDeliverable(deliverable);
+
+            // Fetch latest run for this ID
+            // Ideally we'd filter by input->>deliverable_id but we don't have that API yet.
+            // Fetching all might be heavy but for now it's consistent with getDeliverables.
+            // ASK: Should we implement a specific fetch?
+            // For now, let's reuse the logic by fetching all runs for the workflow.
+            // Note: This matches the getDeliverables strategy.
+
+            const runs = await AutomationRunsApi.getByWorkflowId(WORKFLOW_ID);
+            const latestRun = runs.find(r => (r.input as any)?.deliverable_id === id);
+
+            return mapToDeliverable(deliverable, latestRun);
         } catch (error) {
             console.error('[QA] Error fetching deliverable:', error);
             return undefined;
@@ -141,45 +140,37 @@ export const SupabaseQAService = {
     },
 
     runQA: async (deliverableId: string, currentType: string): Promise<QAResult> => {
-        // Simulate QA process
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        const isPass = Math.random() > 0.3; // 70% chance to pass
-        const baseList = generateChecklist(currentType);
-
-        const newList = baseList.map(item => ({
-            ...item,
-            status: isPass ? 'passed' : (Math.random() > 0.8 ? 'failed' : 'passed') as QAStatus,
-            logs: isPass ? undefined : 'Random simulation failure log entry...',
-        }));
-
-        const overallStatus = newList.some(i => i.status === 'failed') ? 'failed' : 'passed';
-        const score = Math.floor((newList.filter(i => i.status === 'passed').length / newList.length) * 100);
-
-        const result: QAResult = {
-            id: `qa-${Date.now()}`,
-            deliverableId,
-            timestamp: new Date().toISOString(),
-            status: overallStatus,
-            score,
-            checklist: newList,
-            automatedSummary: overallStatus === 'passed'
-                ? 'All systems go. Ready for deployment.'
-                : 'Validation failed. Check logs for details.',
-        };
-
-        // Update deliverable status in Supabase
         try {
-            const newStatus = overallStatus === 'passed' ? 'approved' : 'qa_failed';
-            await DeliverablesApi.transitionStatus(deliverableId, newStatus as any);
+            // Create a new Automation Run
+            const run = await AutomationRunsApi.create({
+                workflow_id: WORKFLOW_ID,
+                status: 'running',
+                input: {
+                    deliverable_id: deliverableId,
+                    type: currentType,
+                    triggered_by: 'qa_ui'
+                },
+                attempt_count: 1,
+                event_id: null,
+                output: null,
+                error: null,
+                completed_at: null
+            });
+
+            // Update local status representation via return
+            return {
+                id: run.id,
+                deliverableId,
+                timestamp: run.started_at || new Date().toISOString(),
+                status: 'running',
+                score: 0,
+                checklist: [],
+                automatedSummary: 'QA Check started...'
+            };
         } catch (error) {
-            console.error('[QA] Error updating deliverable status:', error);
+            console.error('[QA] Error starting run:', error);
+            throw error;
         }
-
-        // Cache the result
-        qaResultsCache.set(deliverableId, result);
-
-        return result;
     },
 
     getStats: async (): Promise<{ passed: number; failed: number; pending: number; total: number }> => {

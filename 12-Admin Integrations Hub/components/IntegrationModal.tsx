@@ -2,10 +2,6 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Integration, PROVIDERS, FieldMapping, HealthStatus } from "../types";
 import { X, Save, Wand2, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
-import {
-  generateSmartMappings,
-  analyzeErrorLog,
-} from "../services/geminiService";
 
 interface IntegrationModalProps {
   integration: Integration;
@@ -66,10 +62,16 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
 
   const handleAutoMap = async () => {
     setIsAiLoading(true);
-    const newMappings = await generateSmartMappings(
-      clientSourceFields,
-      provider.defaultFields
+    // Simulating AI delay
+    await new Promise((resolve) => setTimeout(resolve, 800));
+
+    const newMappings: FieldMapping[] = provider.defaultFields.map(
+      (field, idx) => ({
+        sourceField: clientSourceFields[idx % clientSourceFields.length],
+        destinationField: field,
+      })
     );
+
     setMappings(newMappings);
     setIsAiLoading(false);
   };
@@ -78,7 +80,10 @@ export const IntegrationModal: React.FC<IntegrationModalProps> = ({
     const lastError = integration.logs.find((l) => l.level === "error");
     if (lastError) {
       setIsAiLoading(true);
-      const analysis = await analyzeErrorLog(lastError.message, provider.name);
+      // Simulating AI delay
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      const analysis =
+        "Likely a temporary connection timeout. Recommended action: Retry the sync.";
       setAnalyzedError(analysis);
       setIsAiLoading(false);
     }

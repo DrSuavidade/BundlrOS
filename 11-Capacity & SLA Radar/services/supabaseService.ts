@@ -139,6 +139,33 @@ export const SupabaseCapacityService = {
         intakeItems = intakeItems.filter(item => item.id !== id);
     },
 
+    analyzeRisks: async (clients: Client[], intakeItems: IntakeItem[]): Promise<string> => {
+        // Trigger an automation run for analysis
+        const workflowId = 'n8n:capacity_analysis_agent';
+
+        // Filter for high priority items to avoid token overflow
+        const criticalItems = intakeItems.filter(i => i.severity === RiskLevel.CRITICAL || i.severity === RiskLevel.HIGH);
+        const atRiskClients = clients.filter(c => c.riskScore > 50);
+
+        try {
+            // Check if there is a recent completed run (cache)
+            // For now, we just create a new one to simulate "refresh"
+
+            // Create a run
+            // In a real app, this would be 'running' and we'd poll for completion
+            // Here we simulate the return immediatley
+            const analysis = `# Executive Operational Analysis\n\n## High Level Assessment\nCurrent operational load is **${clients.reduce((a, c) => a + c.capacityUsage, 0) / clients.length > 80 ? 'CRITICAL' : 'STABLE'}**.\n\n## Critical Risks\n${atRiskClients.map(c => `- **${c.name}**: Capacity at ${c.capacityUsage}% (SLA: ${c.sla}%)`).join('\n') || 'None detected.'}\n\n## Strategic Actions\nReallocate resources from stable low-load accounts to cover high-risk clients immediately.`;
+
+            // Log it
+            // await AutomationRunsApi.create(...)
+
+            return analysis;
+        } catch (error) {
+            console.error('[Capacity] Error analyzing risks:', error);
+            return "Analysis currently unavailable.";
+        }
+    },
+
     getMetrics: async (): Promise<DashboardMetrics> => {
         const clients = await SupabaseCapacityService.getClients();
 

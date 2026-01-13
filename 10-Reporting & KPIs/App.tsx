@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ViewState, KPIRecord, KPIUnit, Report, ReportStatus } from "./types";
 import { ReportingService } from "./services";
-import { generateReportNarrative } from "./services/geminiService";
 import {
   BarChart3,
   Calendar,
@@ -323,23 +322,11 @@ const App: React.FC = () => {
 
   const handleRequestReport = async () => {
     setIsGenerating(true);
-    const relevantKpis = kpis.filter((k) => k.period === selectedPeriod);
-
     try {
-      const narrative = await generateReportNarrative(
-        selectedPeriod,
-        relevantKpis
+      const newReport = await ReportingService.createReport(
+        `Executive Summary - ${selectedPeriod}`,
+        selectedPeriod
       );
-      const newReport: Report = {
-        id: crypto.randomUUID(),
-        title: `Executive Summary - ${selectedPeriod}`,
-        period: selectedPeriod,
-        status: ReportStatus.GENERATED,
-        content: narrative,
-        createdAt: new Date().toISOString(),
-        generatedAt: new Date().toISOString(),
-        kpiSnapshot: relevantKpis,
-      };
       setReports((prev) => [newReport, ...prev]);
     } catch (e) {
       console.error("Failed to generate report", e);
