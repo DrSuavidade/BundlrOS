@@ -1,9 +1,4 @@
-export enum AssetType {
-  IMAGE = 'IMAGE',
-  VIDEO = 'VIDEO',
-  DOCUMENT = 'DOCUMENT',
-  UNKNOWN = 'UNKNOWN'
-}
+export type AssetType = 'image' | 'video' | 'document';
 
 export enum ProcessingStatus {
   PENDING = 'PENDING',
@@ -23,46 +18,24 @@ export interface Deliverable {
   id: string;
   clientId: string;
   name: string;
-  dueDate: string;
-  status: 'active' | 'archived' | 'completed' | 'cancelled';
-}
-
-export interface AssetVersion {
-  version: number;
-  createdAt: string;
-  size: number;
-  checksum: string; // E.g., SHA-256
-  url: string;
+  dueDate?: string;
+  status?: string;
 }
 
 export interface Asset {
   id: string;
   filename: string;
+  url: string;
   type: AssetType;
-  mimeType: string;
-  size: number;
+  size: number; // in bytes
   uploadedAt: string;
-  updatedAt: string;
-  status: ProcessingStatus;
+  tags: string[];
+  description?: string;
+  previewUrl?: string;
 
   // Relations
   clientId?: string;
   deliverableId?: string;
-
-  // Versioning
-  currentVersion: number;
-  versions: AssetVersion[];
-
-  // Metadata
-  width?: number;
-  height?: number;
-  duration?: number; // seconds
-  tags: string[];
-  description?: string;
-
-  // Mock Storage
-  previewUrl: string; // Presigned URL simulation
-  checksum: string;
 }
 
 export interface UploadProgress {

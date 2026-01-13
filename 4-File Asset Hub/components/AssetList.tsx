@@ -1,5 +1,5 @@
 import React from "react";
-import { Asset, AssetType } from "../types";
+import { Asset } from "../types";
 import {
   FileImage,
   FileVideo,
@@ -25,9 +25,8 @@ export const AssetList: React.FC<AssetListProps> = ({
         <thead>
           <tr>
             <th>Name</th>
-            <th>Status</th>
+            <th>Type</th>
             <th>Size</th>
-            <th>Version</th>
             <th>Date</th>
             <th>Actions</th>
           </tr>
@@ -42,12 +41,12 @@ export const AssetList: React.FC<AssetListProps> = ({
               <td>
                 <div className={styles.itemName}>
                   <div className={styles.itemIcon}>
-                    {asset.type === AssetType.IMAGE ? (
+                    {asset.type === "image" ? (
                       <img
                         src={asset.previewUrl}
                         className="h-full w-full object-cover"
                       />
-                    ) : asset.type === AssetType.VIDEO ? (
+                    ) : asset.type === "video" ? (
                       <FileVideo size={16} />
                     ) : (
                       <FileText size={16} />
@@ -64,15 +63,12 @@ export const AssetList: React.FC<AssetListProps> = ({
                 </div>
               </td>
               <td>
-                <span className={styles.statusBadge}>Ready</span>
-              </td>
-              <td>{(asset.size / 1024 / 1024).toFixed(2)} MB</td>
-              <td>
-                <span className="font-mono text-[var(--color-text-tertiary)]">
-                  v{asset.currentVersion}
+                <span className={styles.statusBadge}>
+                  {asset.type.toUpperCase()}
                 </span>
               </td>
-              <td>{format(new Date(asset.updatedAt), "MMM d, yyyy")}</td>
+              <td>{(asset.size / 1024 / 1024).toFixed(2)} MB</td>
+              <td>{format(new Date(asset.uploadedAt), "MMM d, yyyy")}</td>
               <td className="text-right">
                 <button className={styles.actionBtn}>
                   <MoreVertical size={16} />

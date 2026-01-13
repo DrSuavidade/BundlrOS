@@ -1,213 +1,265 @@
 /**
- * File Asset Hub - Supabase Service
- * 
- * Provides Supabase-backed implementation for file asset management.
- * Uses clients and deliverables tables from the database.
+ * Supabase Backend for File Asset Hub
+ *
+ * Implements the IAssetBackend interface using Supabase Storage and Database.
  */
 
-import {
-    ClientsApi,
-    DeliverablesApi,
-    type Client as SupabaseClient,
-    type Deliverable as SupabaseDeliverable,
-} from '@bundlros/supabase';
-import { Asset, AssetType, Client, Deliverable, ProcessingStatus } from '../types';
+import { createClient } from "@supabase/supabase-js";
+import { Asset, Client, Deliverable } from "../types";
+import { ClientsApi, DeliverablesApi } from "@bundlros/supabase";
 
-// Map Supabase Client to local Client type
-const mapClient = (client: SupabaseClient): Client => ({
-    id: client.id,
-    name: client.name,
-});
+// Initialize the Supabase client
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Map Supabase Deliverable to local Deliverable type
-// Note: Supabase deliverables link to projects, not clients directly
-const mapDeliverable = (deliverable: SupabaseDeliverable): Deliverable => ({
-    id: deliverable.id,
-    clientId: deliverable.project_id || '', // Project ID serves as parent
-    name: deliverable.title, // Supabase uses 'title' not 'name'
-    dueDate: deliverable.due_date || new Date().toISOString(),
-    status: mapDeliverableStatus(deliverable.status),
-});
+const STORAGE_BUCKET = "assets";
+const ASSETS_TABLE = "file_assets";
 
-// Map Supabase deliverable status to local status
-const mapDeliverableStatus = (status: string): 'active' | 'archived' | 'completed' | 'cancelled' => {
-    switch (status) {
-        case 'published':
-        case 'approved':
-            return 'completed';
-        case 'archived':
-            return 'archived';
-        case 'draft':
-        case 'in_progress':
-        case 'awaiting_approval':
-        case 'in_qa':
-        case 'qa_failed':
-        default:
-            return 'active';
-    }
-};
+export const supabaseBackend = {
+    // --- Data Fetching ---
 
-// Note: Assets table doesn't exist in Supabase yet, we'll use mock for now
-// but keep clients and deliverables from database
-
-class SupabaseAssetService {
-    private assets: Asset[] = []; // In-memory until we have assets table
-
-    // === Clients from Supabase ===
-    async getClients(): Promise<Client[]> {
+    getClients: async (): Promise<Client[]> => {
         try {
             const clients = await ClientsApi.getAll();
-            return clients.map(mapClient);
-        } catch (error) {
-            console.error('[AssetHub] Error fetching clients:', error);
+            return clients.map((c) => ({
+                id: c.id,
+                name: c.name,
+            }));
+        } catch (e) {
+            console.error("Failed to fetch clients", e);
             return [];
         }
-    }
+    },
 
-    // === Deliverables from Supabase ===
-    // Note: In this module, clientId actually maps to projectId for filtering
-    async getDeliverables(clientId?: string): Promise<Deliverable[]> {
+    getDeliverables: async (clientId?: string): Promise<Deliverable[]> => {
         try {
-            let deliverables: SupabaseDeliverable[];
-            if (clientId) {
-                // clientId here is treated as projectId for filtering
-                deliverables = await DeliverablesApi.getByProjectId(clientId);
-            } else {
-                deliverables = await DeliverablesApi.getAll();
-            }
-            return deliverables.map(mapDeliverable);
-        } catch (error) {
-            console.error('[AssetHub] Error fetching deliverables:', error);
+            // Assuming we have an API to get deliverables, possibly filtered
+            // For now, fetching generic items or using a placeholder if API missing
+            // We will try to rely on a 'DeliverablesApi' if it exists, roughly.
+            // If not, we'll query the table directly.
+            let query = supabase.from("deliverables").select("*");
+            if (clientId) query = query.eq("client_id", clientId);
+            const { data, error } = await query;
+            if (error) throw error;
+            return (
+                data?.map((d) => ({
+                    id: d.id,
+                    name: d.title || d.name || "Untitled",
+                    clientId: d.client_id,
+                    status: d.status,
+                })) || []
+            );
+        } catch (e) {
+            console.error("Failed to fetch deliverables", e);
             return [];
         }
-    }
+    },
 
-    // === Assets (in-memory until we have assets table) ===
-    async getAssets(filter?: { clientId?: string; deliverableId?: string }): Promise<Asset[]> {
-        let result = [...this.assets];
-        if (filter?.clientId) {
-            result = result.filter(a => a.clientId === filter.clientId);
+    getAssets: async (filter?: {
+        clientId?: string;
+        deliverableId?: string;
+    }): Promise<Asset[]> => {
+        try {
+            let query = supabase.from(ASSETS_TABLE).select("*");
+
+            if (filter?.clientId) query = query.eq("client_id", filter.clientId);
+            if (filter?.deliverableId)
+                query = query.eq("deliverable_id", filter.deliverableId);
+
+            const { data, error } = await query.order("uploaded_at", {
+                ascending: false,
+            });
+
+            if (error) throw error;
+
+            // Transform DB rows to Asset type
+            return (data || []).map((row) => ({
+                id: row.id,
+                filename: row.filename,
+                url: row.public_url || "", // Or generate signed URL if private
+                type: row.mime_type.startsWith("image/")
+                    ? "image"
+                    : row.mime_type.startsWith("video/")
+                        ? "video"
+                        : "document",
+                size: row.size_bytes,
+                uploadedAt: row.uploaded_at,
+                tags: row.tags || [],
+                clientId: row.client_id,
+                deliverableId: row.deliverable_id,
+                previewUrl: row.preview_url || row.public_url,
+            }));
+        } catch (e) {
+            console.error("Failed to fetch assets from Supabase", e);
+            return [];
         }
-        if (filter?.deliverableId) {
-            result = result.filter(a => a.deliverableId === filter.deliverableId);
-        }
-        return result.sort((a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-    }
+    },
 
-    async getPresignedUrl(filename: string, _mimeType: string): Promise<{ uploadUrl: string; key: string }> {
-        // In production, this would call Supabase Storage for a presigned URL
-        return {
-            uploadUrl: `https://mock-storage.bundlros.io/upload/${Date.now()}_${filename}`,
-            key: `${Date.now()}_${filename}`
-        };
-    }
+    // --- Upload Flow ---
 
-    async uploadFileToMinIO(
-        _uploadUrl: string,
+    /**
+     * 1. Get a Signed Upload URL (Supabase Storage)
+     * Note: In standard Supabase JS, we usually verify auth then upload directly.
+     * But to match the interface, we'll return parameters needed for upload.
+     *
+     * Actually, simpler path with Supabase JS:
+     * We skip "presigned url" pattern if we can iterate directly.
+     * But the interface demands `getPresignedUrl`.
+     * We will simulate it or implement it if RLS requires signed URLs.
+     * For simplicity here, we'll return the path where it SHOULD go, and let `uploadFileToMinIO` handle the actual SDK upload.
+     */
+    getPresignedUrl: async (
+        filename: string,
+        mimeType: string
+    ): Promise<{ uploadUrl: string; key: string }> => {
+        // We'll generate a unique path
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+        const ext = filename.split(".").pop();
+        const cleanName = filename.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+        const key = `${cleanName}-${uniqueSuffix}.${ext}`;
+
+        // Note: Supabase doesn't do typical S3 presigned PUTs easily client-side without edge functions.
+        // We will cheat slightly and return the KEY, and allow uploadFileToMinIO to use the Supabase Client.
+        return { uploadUrl: "", key };
+    },
+
+    uploadFileToMinIO: async (
+        passedKey: string, // Key generated by getPresignedUrl
         file: File,
         onProgress: (progress: number) => void
-    ): Promise<string> {
-        // Simulate upload progress
-        const totalSteps = 10;
-        for (let i = 1; i <= totalSteps; i++) {
-            await new Promise(resolve => setTimeout(resolve, 200));
-            onProgress(i * 10);
+    ): Promise<string> => {
+        // Use the passed key if provided, otherwise generate one
+        let key = passedKey;
+        if (!key) {
+            const uniqueSuffix = Date.now();
+            const ext = file.name.split(".").pop();
+            const cleanName = file.name
+                .split(".")[0]
+                .replace(/[^a-z0-9]/gi, "_")
+                .toLowerCase();
+            key = `${cleanName}-${uniqueSuffix}.${ext}`;
         }
-        // Return a local object URL for preview
-        return URL.createObjectURL(file);
-    }
 
-    async createAsset(
+        const { data, error } = await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(key, file, {
+                cacheControl: "3600",
+                upsert: false,
+            });
+
+        if (error) {
+            throw error;
+        }
+
+        onProgress(100);
+
+        // Get public URL
+        const {
+            data: { publicUrl },
+        } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(key);
+
+        return publicUrl;
+    },
+
+    createAsset: async (
         file: File,
-        key: string,
-        previewUrl: string,
+        key: string, // This receives the public URL from uploadFileToMinIO in the current flow
+        previewUrl: string, // This is duplicative in this flow
         metadata?: { clientId?: string; deliverableId?: string }
-    ): Promise<Asset> {
-        const type = file.type.startsWith('image/')
-            ? AssetType.IMAGE
-            : file.type.startsWith('video/')
-                ? AssetType.VIDEO
-                : AssetType.DOCUMENT;
+    ): Promise<Asset> => {
+        // In this flow, 'key' passed to this function is actually the result of uploadFileToMinIO, which we returned as PUBLIC URL.
+        // So 'key' == publicUrl.
 
-        const newAsset: Asset = {
-            id: crypto.randomUUID(),
+        const publicUrl = key; // Renaming for clarity
+        const fileType = file.type.startsWith("image/")
+            ? "image"
+            : file.type.startsWith("video/")
+                ? "video"
+                : "document";
+
+        const newRow = {
             filename: file.name,
-            type,
-            mimeType: file.type,
-            size: file.size,
-            uploadedAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            status: ProcessingStatus.READY,
-            clientId: metadata?.clientId,
-            deliverableId: metadata?.deliverableId,
-            currentVersion: 1,
-            checksum: crypto.randomUUID().slice(0, 16),
-            previewUrl,
+            mime_type: file.type,
+            size_bytes: file.size,
+            public_url: publicUrl,
+            preview_url: publicUrl, // For images, same. For docs, might need thumb.
+            client_id: metadata?.clientId || null,
+            deliverable_id: metadata?.deliverableId || null,
             tags: [],
-            versions: [{
-                version: 1,
-                createdAt: new Date().toISOString(),
-                size: file.size,
-                checksum: crypto.randomUUID().slice(0, 16),
-                url: previewUrl
-            }]
+            uploaded_at: new Date().toISOString(),
         };
 
-        // Check for versioning
-        if (metadata?.deliverableId) {
-            const existing = this.assets.find(a =>
-                a.deliverableId === metadata.deliverableId &&
-                a.filename === file.name
-            );
+        const { data, error } = await supabase
+            .from(ASSETS_TABLE)
+            .insert(newRow)
+            .select()
+            .single();
 
-            if (existing) {
-                const newVersionNum = existing.currentVersion + 1;
-                existing.currentVersion = newVersionNum;
-                existing.updatedAt = new Date().toISOString();
-                existing.size = file.size;
-                existing.previewUrl = previewUrl;
-                existing.versions.unshift({
-                    version: newVersionNum,
-                    createdAt: new Date().toISOString(),
-                    size: file.size,
-                    checksum: crypto.randomUUID().slice(0, 16),
-                    url: previewUrl
-                });
-                return existing;
-            }
-        }
+        if (error) throw error;
 
-        this.assets.unshift(newAsset);
-        return newAsset;
-    }
+        return {
+            id: data.id,
+            filename: data.filename,
+            url: data.public_url,
+            type: fileType as any,
+            size: data.size_bytes,
+            uploadedAt: data.uploaded_at,
+            tags: data.tags || [],
+            clientId: data.client_id,
+            deliverableId: data.deliverable_id,
+            previewUrl: data.preview_url,
+        };
+    },
 
-    async attachAssetToDeliverable(assetId: string, deliverableId: string): Promise<Asset> {
-        const asset = this.assets.find(a => a.id === assetId);
-        if (!asset) throw new Error("Asset not found");
+    // --- Metadata Ops ---
 
-        asset.deliverableId = deliverableId;
+    attachAssetToDeliverable: async (
+        assetId: string,
+        deliverableId: string
+    ): Promise<Asset> => {
+        const { data, error } = await supabase
+            .from(ASSETS_TABLE)
+            .update({ deliverable_id: deliverableId })
+            .eq("id", assetId)
+            .select()
+            .single();
 
-        // Auto-assign client based on deliverable
-        const deliverables = await this.getDeliverables();
-        const deliverable = deliverables.find(d => d.id === deliverableId);
-        if (deliverable && !asset.clientId) {
-            asset.clientId = deliverable.clientId;
-        }
+        if (error) throw error;
+        return mapRowToAsset(data);
+    },
 
-        asset.updatedAt = new Date().toISOString();
-        return { ...asset };
-    }
+    updateAssetMetadata: async (
+        assetId: string,
+        tags: string[],
+        description: string
+    ): Promise<Asset> => {
+        const { data, error } = await supabase
+            .from(ASSETS_TABLE)
+            .update({ tags, description }) // Ensure 'description' column exists in DB
+            .eq("id", assetId)
+            .select()
+            .single();
 
-    async updateAssetMetadata(assetId: string, tags: string[], description: string): Promise<Asset> {
-        const asset = this.assets.find(a => a.id === assetId);
-        if (!asset) throw new Error("Asset not found");
+        if (error) throw error;
+        return mapRowToAsset(data);
+    },
+};
 
-        asset.tags = tags;
-        asset.description = description;
-        return { ...asset };
-    }
-}
-
-export const supabaseBackend = new SupabaseAssetService();
+// Helper
+const mapRowToAsset = (row: any): Asset => ({
+    id: row.id,
+    filename: row.filename,
+    url: row.public_url || "",
+    type: row.mime_type.startsWith("image/")
+        ? "image"
+        : row.mime_type.startsWith("video/")
+            ? "video"
+            : "document",
+    size: row.size_bytes,
+    uploadedAt: row.uploaded_at,
+    tags: row.tags || [],
+    clientId: row.client_id,
+    deliverableId: row.deliverable_id,
+    previewUrl: row.preview_url || row.public_url,
+});

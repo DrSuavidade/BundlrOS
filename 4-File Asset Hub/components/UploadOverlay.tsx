@@ -39,15 +39,15 @@ export const UploadOverlay: React.FC<UploadOverlayProps> = ({
         const uploadId = newUploads[i].id;
 
         try {
-          // 1. Get Presigned URL
+          // 1. Get Presigned URL (for Supabase, this just generates a key)
           const { uploadUrl, key } = await backend.getPresignedUrl(
             file.name,
             file.type
           );
 
-          // 2. Upload to MinIO (Mock)
-          const previewUrl = await backend.uploadFileToMinIO(
-            uploadUrl,
+          // 2. Upload to Storage (returns publicUrl)
+          const publicUrl = await backend.uploadFileToMinIO(
+            key, // Pass the key as uploadUrl for Supabase backend
             file,
             (progress) => {
               setUploads((prev) =>
@@ -56,8 +56,8 @@ export const UploadOverlay: React.FC<UploadOverlayProps> = ({
             }
           );
 
-          // 3. Finalize
-          await backend.createAsset(file, key, previewUrl);
+          // 3. Finalize - save metadata to DB (pass publicUrl as the key/url)
+          await backend.createAsset(file, publicUrl, publicUrl);
 
           setUploads((prev) =>
             prev.map((u) =>

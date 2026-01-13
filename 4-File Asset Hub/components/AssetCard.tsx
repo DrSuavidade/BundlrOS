@@ -1,5 +1,5 @@
 import React from "react";
-import { Asset, AssetType } from "../types";
+import { Asset } from "../types";
 import { FileImage, FileVideo, FileText, Clock, Box } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import styles from "./Assets.module.css";
@@ -10,7 +10,8 @@ interface AssetCardProps {
 }
 
 export const AssetCard: React.FC<AssetCardProps> = ({ asset, onClick }) => {
-  const isImage = asset.type === AssetType.IMAGE;
+  const isImage = asset.type === "image";
+  const isVideo = asset.type === "video";
 
   return (
     <div onClick={() => onClick(asset)} className={styles.assetCard}>
@@ -24,20 +25,14 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onClick }) => {
           />
         ) : (
           <div className={styles.thumbnailPlaceholder}>
-            {asset.type === AssetType.VIDEO ? (
-              <FileVideo size={48} />
-            ) : (
-              <FileText size={48} />
-            )}
+            {isVideo ? <FileVideo size={48} /> : <FileText size={48} />}
           </div>
         )}
 
         {/* Overlay Badges */}
         <div className={styles.badges}>
-          <span className={styles.badge}>v{asset.currentVersion}</span>
-          {asset.type === AssetType.VIDEO && (
-            <span className={styles.badge}>VID</span>
-          )}
+          {isVideo && <span className={styles.badge}>VID</span>}
+          {isImage && <span className={styles.badge}>IMG</span>}
         </div>
       </div>
 
@@ -50,10 +45,10 @@ export const AssetCard: React.FC<AssetCardProps> = ({ asset, onClick }) => {
           <div className={styles.cardMeta}>
             <span className="flex items-center">
               <Clock size={10} className="mr-1" />
-              {formatDistanceToNow(new Date(asset.updatedAt))} ago
+              {formatDistanceToNow(new Date(asset.uploadedAt))} ago
             </span>
             <span>•</span>
-            <span className="uppercase">{asset.mimeType.split("/")[1]}</span>
+            <span>{(asset.size / 1024 / 1024).toFixed(2)} MB</span>
           </div>
         </div>
 

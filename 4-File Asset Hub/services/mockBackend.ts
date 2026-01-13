@@ -1,4 +1,4 @@
-import { Asset, AssetType, AssetVersion, Client, Deliverable, ProcessingStatus } from '../types';
+import { Asset, Client, Deliverable } from '../types';
 
 // --- MOCK DATA ---
 
@@ -19,222 +19,172 @@ const INITIAL_ASSETS: Asset[] = [
   {
     id: 'a1',
     filename: 'hero_banner_v1.jpg',
-    type: AssetType.IMAGE,
-    mimeType: 'image/jpeg',
+    type: 'image',
+    url: 'https://picsum.photos/800/600?random=1',
     size: 2450000,
     uploadedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-    status: ProcessingStatus.READY,
     clientId: 'c1',
     deliverableId: 'd1',
-    currentVersion: 1,
-    checksum: 'a1b2c3d4',
     previewUrl: 'https://picsum.photos/800/600?random=1',
     tags: ['banner', 'hero', 'campaign'],
     description: 'Main hero banner for the landing page.',
-    versions: [
-      { version: 1, createdAt: new Date(Date.now() - 86400000 * 2).toISOString(), size: 2450000, checksum: 'a1b2c3d4', url: 'https://picsum.photos/800/600?random=1' }
-    ]
   },
   {
     id: 'a2',
     filename: 'logo_transparent.png',
-    type: AssetType.IMAGE,
-    mimeType: 'image/png',
+    type: 'image',
+    url: 'https://picsum.photos/400/400?random=2',
     size: 512000,
     uploadedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    updatedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-    status: ProcessingStatus.READY,
     clientId: 'c1',
     deliverableId: 'd2',
-    currentVersion: 2,
-    checksum: 'e5f6g7h8',
     previewUrl: 'https://picsum.photos/400/400?random=2',
-    tags: ['logo', 'transparent'],
-    description: 'Official logo with transparent background.',
-    versions: [
-      { version: 1, createdAt: new Date(Date.now() - 86400000 * 10).toISOString(), size: 480000, checksum: 'old_checksum', url: 'https://picsum.photos/400/400?random=20' },
-      { version: 2, createdAt: new Date(Date.now() - 86400000 * 5).toISOString(), size: 512000, checksum: 'e5f6g7h8', url: 'https://picsum.photos/400/400?random=2' }
-    ]
+    tags: ['logo', 'branding'],
+    description: 'Transparent logo for web use.',
   },
   {
     id: 'a3',
-    filename: 'concept_art_final.png',
-    type: AssetType.IMAGE,
-    mimeType: 'image/png',
-    size: 15400000,
-    uploadedAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    status: ProcessingStatus.READY,
+    filename: 'product_teaser.mp4',
+    type: 'video',
+    url: 'https://example.com/video.mp4',
+    size: 15000000,
+    uploadedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     clientId: 'c2',
     deliverableId: 'd3',
-    currentVersion: 1,
-    checksum: 'i9j0k1l2',
-    previewUrl: 'https://picsum.photos/1920/1080?random=3',
-    tags: ['concept', 'art', 'scifi'],
-    versions: [
-        { version: 1, createdAt: new Date().toISOString(), size: 15400000, checksum: 'i9j0k1l2', url: 'https://picsum.photos/1920/1080?random=3' }
-    ]
-  }
+    previewUrl: 'https://picsum.photos/800/450?random=3',
+    tags: ['video', 'teaser', 'promo'],
+    description: 'Product teaser video for social media.',
+  },
+  {
+    id: 'a4',
+    filename: 'data_visualization.pdf',
+    type: 'document',
+    url: 'https://example.com/report.pdf',
+    size: 3200000,
+    uploadedAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+    clientId: 'c3',
+    previewUrl: undefined,
+    tags: ['report', 'data', 'analytics'],
+    description: 'Annual data visualization report.',
+  },
 ];
 
-// --- SERVICE ---
+// Simulated mutable store
+let assets: Asset[] = [...INITIAL_ASSETS];
 
-class MockBackendService {
-  private assets: Asset[] = [...INITIAL_ASSETS];
-  private clients: Client[] = [...MOCK_CLIENTS];
-  private deliverables: Deliverable[] = [...MOCK_DELIVERABLES];
+// --- MOCK BACKEND ---
 
-  // Helper to simulate network latency
-  private async delay(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
+export const backend = {
+  getClients: async (): Promise<Client[]> => {
+    await delay(200);
+    return MOCK_CLIENTS;
+  },
 
-  async getClients(): Promise<Client[]> {
-    await this.delay(300);
-    return this.clients;
-  }
-
-  async getDeliverables(clientId?: string): Promise<Deliverable[]> {
-    await this.delay(300);
+  getDeliverables: async (clientId?: string): Promise<Deliverable[]> => {
+    await delay(200);
     if (clientId) {
-      return this.deliverables.filter(d => d.clientId === clientId);
+      return MOCK_DELIVERABLES.filter(d => d.clientId === clientId);
     }
-    return this.deliverables;
-  }
+    return MOCK_DELIVERABLES;
+  },
 
-  async getAssets(filter?: { clientId?: string; deliverableId?: string }): Promise<Asset[]> {
-    await this.delay(500); // Simulate query time
-    let result = this.assets;
+  getAssets: async (filter?: { clientId?: string; deliverableId?: string }): Promise<Asset[]> => {
+    await delay(300);
+    let result = [...assets];
     if (filter?.clientId) {
       result = result.filter(a => a.clientId === filter.clientId);
     }
     if (filter?.deliverableId) {
       result = result.filter(a => a.deliverableId === filter.deliverableId);
     }
-    // Sort by newest
-    return result.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  }
+    return result.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+  },
 
-  // Simulate obtaining a presigned URL (S3/MinIO pattern)
-  async getPresignedUrl(filename: string, mimeType: string): Promise<{ uploadUrl: string; key: string }> {
-    await this.delay(600);
+  getPresignedUrl: async (filename: string, mimeType: string): Promise<{ uploadUrl: string; key: string }> => {
+    await delay(150);
+    const key = `uploads/${Date.now()}_${filename.replace(/\s/g, '_')}`;
     return {
-      uploadUrl: `https://mock-minio.lumina.io/upload/${Date.now()}_${filename}`,
-      key: `${Date.now()}_${filename}`
+      uploadUrl: `https://mock-minio.local/bundlr-assets/${key}`,
+      key
     };
-  }
+  },
 
-  // Simulate the actual PUT request to MinIO
-  async uploadFileToMinIO(uploadUrl: string, file: File, onProgress: (progress: number) => void): Promise<string> {
-    // In a real app, this would be fetch(uploadUrl, { method: 'PUT', body: file })
-    const totalSteps = 10;
-    for (let i = 1; i <= totalSteps; i++) {
-      await this.delay(200); // Simulate upload chunk
-      onProgress(i * 10);
+  uploadFileToMinIO: async (
+    uploadUrl: string,
+    file: File,
+    onProgress: (progress: number) => void
+  ): Promise<string> => {
+    // Simulate upload progress
+    for (let i = 0; i <= 100; i += 20) {
+      await delay(100);
+      onProgress(i);
     }
-    // Return a local object URL to visualize the upload immediately in this mock
-    return URL.createObjectURL(file);
-  }
 
-  // Finalize upload in DB (create asset entity)
-  async createAsset(
-    file: File, 
-    key: string, 
+    // Return a mock preview URL (using picsum for images)
+    const isImage = file.type.startsWith('image/');
+    if (isImage) {
+      return `https://picsum.photos/800/600?random=${Date.now()}`;
+    }
+    return uploadUrl; // For non-images, just return the URL
+  },
+
+  createAsset: async (
+    file: File,
+    key: string,
     previewUrl: string,
     metadata?: { clientId?: string; deliverableId?: string }
-  ): Promise<Asset> {
-    await this.delay(400);
+  ): Promise<Asset> => {
+    await delay(200);
 
-    const type = file.type.startsWith('image/') 
-      ? AssetType.IMAGE 
-      : file.type.startsWith('video/') 
-        ? AssetType.VIDEO 
-        : AssetType.DOCUMENT;
+    const type = file.type.startsWith('image/')
+      ? 'image'
+      : file.type.startsWith('video/')
+        ? 'video'
+        : 'document';
 
     const newAsset: Asset = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: `a${Date.now()}`,
       filename: file.name,
       type,
-      mimeType: file.type,
+      url: previewUrl,
       size: file.size,
       uploadedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      status: ProcessingStatus.READY,
       clientId: metadata?.clientId,
       deliverableId: metadata?.deliverableId,
-      currentVersion: 1,
-      checksum: Math.random().toString(36).substr(2, 16), // Mock checksum
-      previewUrl,
+      previewUrl: previewUrl,
       tags: [],
-      versions: [
-        {
-          version: 1,
-          createdAt: new Date().toISOString(),
-          size: file.size,
-          checksum: Math.random().toString(36).substr(2, 16),
-          url: previewUrl
-        }
-      ]
+      description: undefined,
     };
 
-    // Check for versioning logic: If asset with same name exists in same deliverable
-    if (metadata?.deliverableId) {
-      const existing = this.assets.find(a => 
-        a.deliverableId === metadata.deliverableId && 
-        a.filename === file.name
-      );
-
-      if (existing) {
-        // Version up the existing asset instead of creating new
-        const newVersionNum = existing.currentVersion + 1;
-        existing.currentVersion = newVersionNum;
-        existing.updatedAt = new Date().toISOString();
-        existing.size = file.size; // update to latest size
-        existing.previewUrl = previewUrl; // update head pointer
-        existing.versions.unshift({
-          version: newVersionNum,
-          createdAt: new Date().toISOString(),
-          size: file.size,
-          checksum: Math.random().toString(36).substr(2, 16),
-          url: previewUrl
-        });
-        return existing;
-      }
-    }
-
-    this.assets.unshift(newAsset);
+    assets.unshift(newAsset);
     return newAsset;
-  }
+  },
 
-  async attachAssetToDeliverable(assetId: string, deliverableId: string): Promise<Asset> {
-    await this.delay(300);
-    const asset = this.assets.find(a => a.id === assetId);
-    if (!asset) throw new Error("Asset not found");
-    
-    // If we were real, we'd check if moving it causes a version conflict here too.
-    // For simplicity, we just move it.
-    asset.deliverableId = deliverableId;
-    
-    // Auto-assign client if not present based on deliverable
-    const deliverable = this.deliverables.find(d => d.id === deliverableId);
-    if (deliverable && !asset.clientId) {
-      asset.clientId = deliverable.clientId;
-    }
-    
-    asset.updatedAt = new Date().toISOString();
-    return { ...asset };
-  }
+  attachAssetToDeliverable: async (assetId: string, deliverableId: string): Promise<Asset> => {
+    await delay(200);
+    const index = assets.findIndex(a => a.id === assetId);
+    if (index === -1) throw new Error('Asset not found');
 
-  async updateAssetMetadata(assetId: string, tags: string[], description: string): Promise<Asset> {
-    await this.delay(300);
-    const asset = this.assets.find(a => a.id === assetId);
-    if (!asset) throw new Error("Asset not found");
-    
-    asset.tags = tags;
-    asset.description = description;
-    return { ...asset };
-  }
-}
+    assets[index] = {
+      ...assets[index],
+      deliverableId,
+    };
+    return assets[index];
+  },
 
-export const backend = new MockBackendService();
+  updateAssetMetadata: async (assetId: string, tags: string[], description: string): Promise<Asset> => {
+    await delay(200);
+    const index = assets.findIndex(a => a.id === assetId);
+    if (index === -1) throw new Error('Asset not found');
+
+    assets[index] = {
+      ...assets[index],
+      tags,
+      description,
+    };
+    return assets[index];
+  },
+};
+
+// Utility
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
