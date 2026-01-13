@@ -260,6 +260,37 @@
       "priority": "Prioridade",
       "create": "Criar Intake",
       "cancel": "Cancelar"
+    },
+    "panel": {
+      "assignMe": "Atribuir a Mim",
+      "startWork": "Iniciar Trabalho",
+      "markResolved": "Marcar Resolvido",
+      "delete": "Eliminar",
+      "slaMonitor": "Monitor SLA",
+      "breached": "VIOLADO",
+      "due": "Prazo:",
+      "requestDetails": "Detalhes do Pedido",
+      "assignee": "Responsável",
+      "unassigned": "Não Atribuído",
+      "aiTriage": {
+        "title": "Assistente de Triagem IA",
+        "analyzing": "A analisar...",
+        "run": "Executar Análise",
+        "suggestedPriority": "Prioridade Sugerida",
+        "apply": "Aplicar",
+        "confidence": "Confiança",
+        "reasoning": "Raciocínio",
+        "nextSteps": "Próximos Passos",
+        "generateDraft": "Gerar Rascunho de Resposta"
+      },
+      "confirmations": {
+        "reassignTitle": "Reatribuir Intake?",
+        "reassignBody": "Este intake está atualmente atribuído a **{name}**. Tem a certeza que deseja reatribuí-lo a si mesmo?",
+        "reassignConfirm": "Reatribuir a Mim",
+        "deleteTitle": "Eliminar Intake?",
+        "deleteBody": "Tem a certeza que deseja **eliminar permanentemente** este intake? Esta ação não pode ser desfeita.",
+        "deleteConfirm": "Eliminar Permanentemente"
+      }
     }
   },
   "clients": {

@@ -66,7 +66,9 @@ export const IntakeList: React.FC<IntakeListProps> = ({
                 className={selectedId === item.id ? styles.selectedRow : ""}
               >
                 <td>
-                  <span className={styles.rowId}>#{item.id}</span>
+                  <span className={styles.rowId} title={item.id}>
+                    #{item.id.slice(-6)}
+                  </span>
                 </td>
                 <td>
                   <Badge type="status" value={item.status} />
@@ -115,9 +117,30 @@ export const IntakeList: React.FC<IntakeListProps> = ({
                 </td>
                 <td>
                   {item.assignee ? (
-                    <div className={styles.assigneeBadge} title={item.assignee}>
-                      {item.assignee.substring(0, 2).toUpperCase()}
-                    </div>
+                    item.assigneeAvatarUrl ? (
+                      <img
+                        src={item.assigneeAvatarUrl}
+                        alt={item.assignee}
+                        title={item.assignee}
+                        referrerPolicy="no-referrer"
+                        crossOrigin="anonymous"
+                        className={styles.assigneeAvatar}
+                        style={{
+                          width: "24px",
+                          height: "24px",
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          border: "1px solid var(--color-border-subtle)",
+                        }}
+                      />
+                    ) : (
+                      <div
+                        className={styles.assigneeBadge}
+                        title={item.assignee}
+                      >
+                        {item.assignee.substring(0, 2).toUpperCase()}
+                      </div>
+                    )
                   ) : (
                     <div className={styles.unassignedBadge}>
                       <User size={12} />

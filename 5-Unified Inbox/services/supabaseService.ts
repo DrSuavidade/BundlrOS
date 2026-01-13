@@ -61,6 +61,22 @@ const mapIntakeItem = async (item: SupabaseIntakeItem): Promise<IntakeItem> => {
         }
     }
 
+    // Get assignee info if present
+    let assigneeName: string | undefined;
+    let assigneeAvatarUrl: string | undefined;
+    if (item.assignee_id) {
+        try {
+            const { ProfilesApi } = await import('@bundlros/supabase');
+            const profile = await ProfilesApi.getById(item.assignee_id);
+            if (profile) {
+                assigneeName = profile.name || profile.email?.split('@')[0] || 'Unknown';
+                assigneeAvatarUrl = profile.avatar_url || undefined;
+            }
+        } catch {
+            // Keep undefined
+        }
+    }
+
     return {
         id: item.id,
         title: item.title,
@@ -71,7 +87,9 @@ const mapIntakeItem = async (item: SupabaseIntakeItem): Promise<IntakeItem> => {
         status: mapStatus(item.status),
         createdAt: item.created_at,
         slaDueAt: item.sla_due_at || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        assignee: item.assignee_id || undefined,
+        assignee: assigneeName,
+        assigneeId: item.assignee_id || undefined,
+        assigneeAvatarUrl,
         tags: item.tags || [],
         aiAnalysis: item.ai_analysis ? (item.ai_analysis as unknown as AIAnalysisResult) : undefined,
     };
@@ -146,7 +164,7 @@ export const InboxService = {
                     [Status.TRIAGING]: 'Triaged',
                     [Status.IN_PROGRESS]: 'In Progress',
                     [Status.BLOCKED]: 'In Progress', // No direct mapping
-                    [Status.RESOLVED]: 'Done',
+                    [Status.RESOLVED]: 'Resolved',
                     [Status.CLOSED]: 'Archived',
                 };
                 updateData.status = statusMap[updates.status];

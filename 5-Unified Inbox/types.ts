@@ -24,7 +24,9 @@ export interface IntakeItem {
   status: Status;
   createdAt: string; // ISO Date string
   slaDueAt: string; // ISO Date string
-  assignee?: string;
+  assignee?: string; // Display name
+  assigneeId?: string; // User ID for comparison
+  assigneeAvatarUrl?: string; // Avatar URL for display
   tags: string[];
   aiAnalysis?: AIAnalysisResult;
 }

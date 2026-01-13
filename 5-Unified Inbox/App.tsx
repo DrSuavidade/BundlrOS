@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { IntakeItem, Priority, Status, FilterState } from "./types";
 import { InboxService } from "./services";
 import { IntakeList } from "./components/IntakeList";
@@ -120,33 +121,33 @@ const App: React.FC = () => {
     setSelectedItem(updated);
   };
 
-  const handleCreateIntake = (e: React.FormEvent) => {
+  const handleCreateIntake = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newIntake.title || !newIntake.client) return;
 
-    const newItem: IntakeItem = {
-      id: `INT-${1000 + items.length}`,
-      title: newIntake.title,
-      description: newIntake.description || "No description provided.",
-      client: newIntake.client,
-      requestor: newIntake.requestor || "unknown@example.com",
-      priority: newIntake.priority,
-      status: Status.NEW,
-      createdAt: new Date().toISOString(),
-      slaDueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24h from now
-      assignee: undefined,
-      tags: [],
-    };
+    try {
+      // Create the intake in Supabase
+      const createdItem = await InboxService.create({
+        title: newIntake.title,
+        description: newIntake.description || "No description provided.",
+        client: newIntake.client,
+        requestor: newIntake.requestor || "unknown@example.com",
+        priority: newIntake.priority,
+      });
 
-    setItems((prev) => [newItem, ...prev]);
-    setIsNewIntakeOpen(false);
-    setNewIntake({
-      title: "",
-      description: "",
-      client: "",
-      priority: Priority.MEDIUM,
-      requestor: "",
-    });
+      // Add to local state
+      setItems((prev) => [createdItem, ...prev]);
+      setIsNewIntakeOpen(false);
+      setNewIntake({
+        title: "",
+        description: "",
+        client: "",
+        priority: Priority.MEDIUM,
+        requestor: "",
+      });
+    } catch (error) {
+      console.error("[Inbox] Failed to create intake:", error);
+    }
   };
 
   const filteredItems = useMemo(() => {
@@ -331,172 +332,167 @@ const App: React.FC = () => {
         item={selectedItem}
         onClose={() => setSelectedItem(null)}
         onUpdate={handleUpdateItem}
+        onDelete={(id) => {
+          setItems((prev) => prev.filter((item) => item.id !== id));
+          setSelectedItem(null);
+        }}
       />
 
-      {/* New Intake Modal */}
-      {isNewIntakeOpen && (
-        <div
-          className="modal-overlay"
-          onClick={() => setIsNewIntakeOpen(false)}
-        >
+      {/* New Intake Modal - Rendered via portal to escape shell z-index */}
+      {isNewIntakeOpen &&
+        createPortal(
           <div
-            className="modal w-full max-w-xl"
-            onClick={(e) => e.stopPropagation()}
+            className="modal-overlay"
+            style={{ zIndex: 9999 }}
+            onClick={() => setIsNewIntakeOpen(false)}
           >
-            {/* Header with gradient accent */}
-            <div className="modal__header">
-              <h2 className="modal__title">
-                <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center">
-                  <PlusCircle size={18} className="text-white" />
-                </div>
-                {t("inbox.newIntake")}
-              </h2>
-              <button
-                onClick={() => setIsNewIntakeOpen(false)}
-                className="modal__close"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateIntake} className="modal__body">
-              {/* Title */}
-              <div className="form-group">
-                <label className="form-label">
-                  <FileText size={14} />
-                  {t("inbox.form.title")}
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={newIntake.title}
-                  onChange={(e) =>
-                    setNewIntake({ ...newIntake, title: e.target.value })
-                  }
-                  className="form-input"
-                  placeholder={t("inbox.form.titlePlaceholder")}
-                />
+            <div
+              className="modal w-full max-w-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header with gradient accent */}
+              <div className="modal__header">
+                <h2 className="modal__title">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center">
+                    <PlusCircle size={18} className="text-white" />
+                  </div>
+                  {t("inbox.newIntake")}
+                </h2>
+                <button
+                  onClick={() => setIsNewIntakeOpen(false)}
+                  className="modal__close"
+                >
+                  <X size={18} />
+                </button>
               </div>
 
-              {/* Description */}
-              <div className="form-group">
-                <label className="form-label">
-                  <FileText size={14} />
-                  {t("inbox.form.description")}
-                </label>
-                <textarea
-                  value={newIntake.description}
-                  onChange={(e) =>
-                    setNewIntake({ ...newIntake, description: e.target.value })
-                  }
-                  className="form-input"
-                  style={{ minHeight: "100px", resize: "vertical" }}
-                  placeholder={t("inbox.form.descriptionPlaceholder")}
-                  rows={4}
-                />
-              </div>
-
-              {/* Client & Priority Row */}
-              <div className="grid grid-cols-2 gap-4 form-group">
-                <div>
+              <form onSubmit={handleCreateIntake} className="modal__body">
+                {/* Title */}
+                <div className="form-group">
                   <label className="form-label">
-                    <Building2 size={14} />
-                    {t("inbox.form.client")}
+                    <FileText size={14} />
+                    {t("inbox.form.title")}
                   </label>
-                  <select
+                  <input
+                    type="text"
                     required
-                    value={newIntake.client}
+                    value={newIntake.title}
                     onChange={(e) =>
-                      setNewIntake({ ...newIntake, client: e.target.value })
+                      setNewIntake({ ...newIntake, title: e.target.value })
                     }
-                    className="form-select"
-                  >
-                    <option value="">{t("inbox.form.selectClient")}</option>
-                    {clients.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
+                    className="form-input"
+                    placeholder={t("inbox.form.titlePlaceholder")}
+                  />
                 </div>
 
-                <div>
+                {/* Description */}
+                <div className="form-group">
                   <label className="form-label">
-                    <Zap size={14} />
-                    {t("inbox.form.priority")}
+                    <FileText size={14} />
+                    {t("inbox.form.description")}
                   </label>
-                  <select
-                    value={newIntake.priority}
+                  <textarea
+                    value={newIntake.description}
                     onChange={(e) =>
                       setNewIntake({
                         ...newIntake,
-                        priority: e.target.value as Priority,
+                        description: e.target.value,
                       })
                     }
-                    className="form-select"
-                  >
-                    {Object.values(Priority).map((p) => (
-                      <option key={p} value={p}>
-                        {p}
-                      </option>
-                    ))}
-                  </select>
+                    className="form-input"
+                    style={{ minHeight: "100px", resize: "vertical" }}
+                    placeholder={t("inbox.form.descriptionPlaceholder")}
+                    rows={4}
+                  />
                 </div>
-              </div>
 
-              {/* Requestor */}
-              <div className="form-group">
-                <label className="form-label">
-                  <User size={14} />
-                  {t("inbox.form.requestor")}
-                </label>
-                <input
-                  type="email"
-                  value={newIntake.requestor}
-                  onChange={(e) =>
-                    setNewIntake({ ...newIntake, requestor: e.target.value })
-                  }
-                  className="form-input"
-                  placeholder={t("inbox.form.requestorPlaceholder")}
-                />
-              </div>
+                {/* Client & Priority Row */}
+                <div className="grid grid-cols-2 gap-4 form-group">
+                  <div>
+                    <label className="form-label">
+                      <Building2 size={14} />
+                      {t("inbox.form.client")}
+                    </label>
+                    <select
+                      required
+                      value={newIntake.client}
+                      onChange={(e) =>
+                        setNewIntake({ ...newIntake, client: e.target.value })
+                      }
+                      className="form-select"
+                    >
+                      <option value="">{t("inbox.form.selectClient")}</option>
+                      {clients.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Info Box */}
-              <div className="info-box">
-                <Clock size={18} className="info-box__icon" />
-                <div className="info-box__content">
-                  <p className="info-box__title">
-                    SLA will be automatically calculated
-                  </p>
-                  <p className="info-box__description">
-                    Based on the client contract terms and selected priority
-                    level. Critical items have a 4-hour SLA, while Low priority
-                    items have 72 hours.
-                  </p>
+                  <div>
+                    <label className="form-label">
+                      <Zap size={14} />
+                      {t("inbox.form.priority")}
+                    </label>
+                    <select
+                      value={newIntake.priority}
+                      onChange={(e) =>
+                        setNewIntake({
+                          ...newIntake,
+                          priority: e.target.value as Priority,
+                        })
+                      }
+                      className="form-select"
+                    >
+                      {Object.values(Priority).map((p) => (
+                        <option key={p} value={p}>
+                          {p}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-              </div>
-            </form>
 
-            <div className="modal__footer">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsNewIntakeOpen(false)}
-              >
-                {t("inbox.form.cancel")}
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={handleCreateIntake}
-                leftIcon={<PlusCircle size={14} />}
-              >
-                {t("inbox.form.create")}
-              </Button>
+                {/* Requestor */}
+                <div className="form-group">
+                  <label className="form-label">
+                    <User size={14} />
+                    {t("inbox.form.requestor")}
+                  </label>
+                  <input
+                    type="email"
+                    value={newIntake.requestor}
+                    onChange={(e) =>
+                      setNewIntake({ ...newIntake, requestor: e.target.value })
+                    }
+                    className="form-input"
+                    placeholder={t("inbox.form.requestorPlaceholder")}
+                  />
+                </div>
+              </form>
+
+              <div className="modal__footer">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsNewIntakeOpen(false)}
+                >
+                  {t("inbox.form.cancel")}
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleCreateIntake}
+                  leftIcon={<PlusCircle size={14} />}
+                >
+                  {t("inbox.form.create")}
+                </Button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </>
   );
 };

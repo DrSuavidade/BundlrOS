@@ -260,6 +260,37 @@
       "priority": "Priority",
       "create": "Create Intake",
       "cancel": "Cancel"
+    },
+    "panel": {
+      "assignMe": "Assign Me",
+      "startWork": "Start Work",
+      "markResolved": "Mark Resolved",
+      "delete": "Delete",
+      "slaMonitor": "SLA Monitor",
+      "breached": "BREACHED",
+      "due": "Due:",
+      "requestDetails": "Request Details",
+      "assignee": "Assignee",
+      "unassigned": "Unassigned",
+      "aiTriage": {
+        "title": "AI Triage Assistant",
+        "analyzing": "Analyzing...",
+        "run": "Run Analysis",
+        "suggestedPriority": "Suggested Priority",
+        "apply": "Apply",
+        "confidence": "Confidence",
+        "reasoning": "Reasoning",
+        "nextSteps": "Next Steps",
+        "generateDraft": "Generate Response Draft"
+      },
+      "confirmations": {
+        "reassignTitle": "Reassign Intake?",
+        "reassignBody": "This intake is currently assigned to **{name}**. Are you sure you want to reassign it to yourself?",
+        "reassignConfirm": "Reassign to Me",
+        "deleteTitle": "Delete Intake?",
+        "deleteBody": "Are you sure you want to **permanently delete** this intake? This action cannot be undone.",
+        "deleteConfirm": "Delete Permanently"
+      }
     }
   },
   "clients": {
