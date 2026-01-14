@@ -35,6 +35,7 @@ import { ClientService } from "../services";
 import { generateClientInsight } from "../services/geminiService";
 import { Button, Badge, useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
+import { ActionModal, ActionType } from "./ActionModals";
 
 // --- Timeline Item Component ---
 const TimelineItem: React.FC<{ event: any; isLast?: boolean }> = ({
@@ -82,6 +83,9 @@ const Dashboard: React.FC = () => {
     industry: "",
     status: "active" as const,
   });
+
+  // Action Modals State
+  const [activeAction, setActiveAction] = useState<ActionType>(null);
 
   // Fetch client list on mount
   useEffect(() => {
@@ -251,15 +255,41 @@ const Dashboard: React.FC = () => {
       {/* Quick Actions */}
       <div className={styles.actionsGrid}>
         {[
-          { icon: FileText, label: "New Contract" },
-          { icon: Briefcase, label: "Log Meeting" },
-          { icon: CheckCircle, label: "Add Task", accent: true },
-          { icon: ImageIcon, label: "Upload Asset" },
-          { icon: MessageSquare, label: "Send Email" },
-          { icon: AlertCircle, label: "Report Bug" },
-        ].map(({ icon: Icon, label, accent }) => (
+          {
+            icon: FileText,
+            label: "New Contract",
+            type: "NEW_CONTRACT" as ActionType,
+          },
+          {
+            icon: Briefcase,
+            label: "Log Meeting",
+            type: "LOG_MEETING" as ActionType,
+          },
+          {
+            icon: CheckCircle,
+            label: "Add Task",
+            type: "ADD_TASK" as ActionType,
+            accent: true,
+          },
+          {
+            icon: ImageIcon,
+            label: "Upload Asset",
+            type: "UPLOAD_ASSET" as ActionType,
+          },
+          {
+            icon: MessageSquare,
+            label: "Send Email",
+            type: "SEND_EMAIL" as ActionType,
+          },
+          {
+            icon: AlertCircle,
+            label: "Report Bug",
+            type: "REPORT_BUG" as ActionType,
+          },
+        ].map(({ icon: Icon, label, type, accent }) => (
           <button
             key={label}
+            onClick={() => setActiveAction(type)}
             className={`${styles.actionButton} ${accent ? styles.accent : ""}`}
           >
             <div className={styles.actionIcon}>
@@ -637,6 +667,14 @@ const Dashboard: React.FC = () => {
           </div>,
           document.body
         )}
+
+      {/* Action Modal */}
+      <ActionModal
+        type={activeAction}
+        isOpen={!!activeAction}
+        onClose={() => setActiveAction(null)}
+        clientId={selectedClientId}
+      />
     </div>
   );
 };
