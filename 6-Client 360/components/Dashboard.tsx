@@ -18,6 +18,11 @@ import {
   Building2,
   Tag,
   Hash,
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  Users,
+  Phone,
   Calendar, // Added Calendar icon
   Trash2,
   Mail,
@@ -38,6 +43,8 @@ import { generateClientInsight } from "../services/geminiService";
 import { Button, Badge, useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
 import { ActionModal, ActionType } from "./ActionModals";
+import { DetailPanel } from "./DetailPanel";
+import { useNavigate } from "react-router-dom";
 
 // --- Timeline Item Component ---
 const TimelineItem: React.FC<{ event: any; isLast?: boolean }> = ({
@@ -93,6 +100,121 @@ const Dashboard: React.FC = () => {
 
   // Action Modals State
   const [activeAction, setActiveAction] = useState<ActionType>(null);
+
+  // Detail Panel State
+  const [detailPanel, setDetailPanel] = useState<{
+    isOpen: boolean;
+    type: "contracts" | "activity";
+    title: string;
+    data: any[];
+  }>({
+    isOpen: false,
+    type: "contracts",
+    title: "",
+    data: [],
+  });
+
+  const navigate = useNavigate();
+
+  // Activity Stream State
+  const [activityFilter, setActivityFilter] = useState<
+    "all" | "email" | "meeting"
+  >("all");
+  const [activities, setActivities] = useState<any[]>([]);
+
+  // Fetch activities (System Events)
+  useEffect(() => {
+    if (!selectedClientId) return;
+
+    // We'll use SystemEvents for events (emails sent) and AuditLogs for activities (meetings logged)
+    const fetchStream = async () => {
+      const [events, logs] = await Promise.all([
+        ClientService.getSystemEvents(selectedClientId),
+        ClientService.getAuditLogs(selectedClientId),
+      ]);
+
+      // Map events to stream format
+      const mappedEvents = events.map((e: any) => {
+        let type = "system";
+        let title = e.type.replace(".", " ").toUpperCase();
+        let notes = "";
+
+        if (e.type === "email.send") {
+          type = "email";
+          title = "Email Sent";
+          const payload = e.payload || {};
+          notes = payload.subject
+            ? `Subject: ${payload.subject}`
+            : "No subject";
+        } else if (e.type.includes("meeting")) {
+          type = "meeting";
+        }
+
+        return {
+          id: e.id,
+          type,
+          title,
+          notes,
+          timestamp: e.created_at,
+          displayTimestamp: new Date(e.created_at).toLocaleDateString(),
+        };
+      });
+
+      // Map logs to stream format (looking for MEETING_LOGGED)
+      const mappedLogs = logs.map((l: any) => {
+        let type = "system";
+        let title = l.action.replace("_", " ");
+        let notes = "";
+
+        // Safe detail parsing
+        let details = l.details;
+        if (typeof details === "string") {
+          try {
+            details = JSON.parse(details);
+          } catch (e) {
+            details = {};
+          }
+        }
+        details = details || {};
+
+        if (l.action === "MEETING_LOGGED") {
+          type = "meeting";
+          title = "Meeting Logged";
+          notes = details.subject ? `Topic: ${details.subject}` : "No details";
+          if (details.attendees) notes += ` • With: ${details.attendees}`;
+        }
+
+        return {
+          id: l.id,
+          type,
+          title,
+          notes:
+            notes ||
+            (typeof l.details === "string"
+              ? l.details
+              : JSON.stringify(l.details)),
+          timestamp: l.created_at,
+          displayTimestamp: new Date(l.created_at).toLocaleDateString(),
+        };
+      });
+
+      // Merge and sort
+      const merged = [...mappedEvents, ...mappedLogs].sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+
+      setActivities(merged);
+    };
+
+    fetchStream();
+  }, [selectedClientId]);
+
+  // Derived filtered state
+  const filteredActivities = activities.filter((a) => {
+    if (activityFilter === "all") return true;
+    return a.type === activityFilter;
+  });
 
   // Fetch client list on mount
   useEffect(() => {
@@ -383,9 +505,19 @@ const Dashboard: React.FC = () => {
                   />
                   {t("clients.contracts")}
                 </div>
-                <a href="#" className={styles.sectionAction}>
+                <button
+                  onClick={() =>
+                    setDetailPanel({
+                      isOpen: true,
+                      type: "contracts",
+                      title: "All Contracts",
+                      data: data.contracts,
+                    })
+                  }
+                  className={`${styles.sectionAction} text-xs bg-transparent border-0 cursor-pointer`}
+                >
                   {t("clients.viewAll")} <ArrowUpRight size={10} />
-                </a>
+                </button>
               </div>
               <div className={styles.sectionBody}>
                 {data.contracts.map((c) => (
@@ -423,9 +555,12 @@ const Dashboard: React.FC = () => {
                   />
                   {t("clients.deliverables")}
                 </div>
-                <a href="#" className={styles.sectionAction}>
-                  Roadmap <ArrowUpRight size={10} />
-                </a>
+                <button
+                  onClick={() => navigate("/approvals")}
+                  className={`${styles.sectionAction} text-xs bg-transparent border-0 cursor-pointer`}
+                >
+                  {t("clients.viewAll")} <ArrowUpRight size={10} />
+                </button>
               </div>
               <div className={styles.sectionBody}>
                 {data.deliverables.map((d) => (
@@ -467,102 +602,137 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Engagement Chart */}
-          <div className={styles.sectionCard}>
+          {/* Financials & Health (Client Pulse) */}
+          <div
+            className={styles.sectionCard}
+            style={{ flex: 1, display: "flex", flexDirection: "column" }}
+          >
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>
                 <Activity
                   size={14}
                   className="text-[var(--color-accent-primary)]"
                 />
-                Engagement & ROI
+                Client Pulse
               </div>
-              <select
-                className="form-select text-xs"
-                style={{
-                  backgroundColor: "transparent",
-                  border: "none",
-                  color: "var(--color-text-secondary)",
-                  fontWeight: 600,
-                  paddingLeft: 0,
-                  outline: "none",
-                  width: "auto",
-                }}
-              >
-                <option
-                  style={{
-                    backgroundColor: "var(--color-bg-card)",
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  Last 30 Days
-                </option>
-                <option
-                  style={{
-                    backgroundColor: "var(--color-bg-card)",
-                    color: "var(--color-text-primary)",
-                  }}
-                >
-                  Last 90 Days
-                </option>
-              </select>
+              <div className="flex gap-2">
+                <Badge variant="info">Q1 2026</Badge>
+              </div>
             </div>
-            <div className={styles.sectionBody}>
-              <div style={{ height: 180, width: "100%" }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
-                    data={data.kpis.engagement}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                  >
-                    <defs>
-                      <linearGradient id="colorEng" x1="0" y1="0" x2="0" y2="1">
-                        <stop
-                          offset="5%"
-                          stopColor="var(--color-accent-primary)"
-                          stopOpacity={0.3}
+            <div className={styles.sectionBody} style={{ flex: 1 }}>
+              <div className={styles.pulseGrid}>
+                {/* Financial Overview */}
+                <div
+                  className={`${styles.pulseCol} ${styles.pulseColbordered} pr-6`}
+                  style={{
+                    borderRight: "1px solid var(--color-border-subtle)",
+                  }}
+                >
+                  <h4 className={styles.pulseTitle}>Financial Overview</h4>
+
+                  {/* Retainer Usage */}
+                  <div>
+                    <div className="flex justify-between items-end mb-1">
+                      <span className="text-sm font-medium text-[var(--color-text-primary)]">
+                        Retainer Usage
+                      </span>
+                      <span className="text-xs text-[var(--color-text-tertiary)]">
+                        75% Used
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-[var(--color-accent-primary)] h-full"
+                        style={{ width: "75%" }}
+                      ></div>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-xs text-[var(--color-text-tertiary)]">
+                        $33.7k Spend
+                      </span>
+                      <span className="text-xs text-[var(--color-text-tertiary)]">
+                        $45.0k Cap
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Pending Invoices */}
+                  <div className={styles.pulseCard}>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`${styles.pulseCardIcon} ${styles.warning}`}
+                      >
+                        <DollarSign size={16} />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                          Pending Invoices
+                        </div>
+                        <div className="text-xs text-[var(--color-text-tertiary)]">
+                          2 Outstanding
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono font-bold text-[var(--color-text-primary)]">
+                        $12,450
+                      </div>
+                      <div className="text-xs text-red-400">Due in 5 days</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Client Health */}
+                <div className={styles.pulseCol}>
+                  <h4 className={styles.pulseTitle}>Client Health</h4>
+
+                  {/* Health Score */}
+                  <div className="flex items-center gap-4">
+                    <div className={styles.healthCircle}>
+                      <svg className="w-full h-full transform -rotate-90">
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="var(--color-border-subtle)"
+                          strokeWidth="6"
                         />
-                        <stop
-                          offset="95%"
-                          stopColor="var(--color-accent-primary)"
-                          stopOpacity={0}
+                        <circle
+                          cx="32"
+                          cy="32"
+                          r="28"
+                          fill="none"
+                          stroke="#10B981"
+                          strokeWidth="6"
+                          strokeDasharray={`${2 * Math.PI * 28}`}
+                          strokeDashoffset={`${2 * Math.PI * 28 * (1 - 0.88)}`}
+                          strokeLinecap="round"
                         />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      vertical={false}
-                      stroke="var(--color-border-subtle)"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 9, fill: "var(--color-text-tertiary)" }}
-                      dy={8}
-                    />
-                    <YAxis
-                      axisLine={false}
-                      tickLine={false}
-                      tick={{ fontSize: 9, fill: "var(--color-text-tertiary)" }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "var(--color-bg-card)",
-                        borderRadius: "8px",
-                        border: "1px solid var(--color-border-subtle)",
-                        boxShadow: "0 8px 24px rgba(0,0,0,0.3)",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="value"
-                      stroke="var(--color-accent-primary)"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorEng)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                      </svg>
+                      <span className={styles.healthValue}>88</span>
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-[var(--color-text-primary)]">
+                        Exemplary Health
+                      </div>
+                      <div className="text-xs text-[var(--color-text-tertiary)]">
+                        NPS: 9/10 • Engagement: High
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sentiment/Mood */}
+                  <div className="mt-auto">
+                    <div className="text-xs text-[var(--color-text-tertiary)] mb-2">
+                      Likely Sentiment (AI Analysis)
+                    </div>
+                    <div className={styles.sentimentBox}>
+                      <TrendingUp size={16} />
+                      <span>Positive trends detected in last 3 calls.</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -570,57 +740,203 @@ const Dashboard: React.FC = () => {
 
         {/* Side Column */}
         <div className={styles.sideColumn}>
-          {/* Timeline */}
+          {/* Activity Stream */}
           <div className={`${styles.sectionCard} ${styles.timelineCard}`}>
-            <div className={styles.sectionHeader}>
+            <div
+              className={styles.sectionHeader}
+              style={{
+                borderBottom: "1px solid var(--color-border-subtle)",
+                paddingBottom: "0.75rem",
+              }}
+            >
               <div className={styles.sectionTitle}>
                 <Clock
                   size={14}
                   className="text-[var(--color-accent-primary)]"
                 />
-                {t("clients.recentActivity")}
+                Activity Stream
+              </div>
+              <div className={styles.streamFilter}>
+                <span
+                  className={`${styles.streamFilterItem} ${
+                    activityFilter === "all" ? styles.active : ""
+                  }`}
+                  onClick={() => setActivityFilter("all")}
+                >
+                  All
+                </span>
+                <span
+                  className={`${styles.streamFilterItem} ${
+                    activityFilter === "email" ? styles.active : ""
+                  }`}
+                  onClick={() => setActivityFilter("email")}
+                >
+                  Emails
+                </span>
+                <span
+                  className={`${styles.streamFilterItem} ${
+                    activityFilter === "meeting" ? styles.active : ""
+                  }`}
+                  onClick={() => setActivityFilter("meeting")}
+                >
+                  Meetings
+                </span>
               </div>
             </div>
-            <div className={styles.sectionBody}>
-              {data.timeline.slice(0, 3).map((event, idx) => (
-                <TimelineItem
-                  key={event.id}
-                  event={event}
-                  isLast={idx === 2 || idx === data.timeline.length - 1}
-                />
+            <div className={styles.sectionBody} style={{ paddingTop: "1rem" }}>
+              {filteredActivities.length === 0 && (
+                <div className={styles.emptyState}>
+                  <div className={styles.emptyState__icon}>
+                    <MessageSquare size={24} />
+                  </div>
+                  <p className={styles.emptyState__title}>No activity found</p>
+                  <p className={styles.emptyState__description}>
+                    No recent emails or meetings for this filter.
+                  </p>
+                </div>
+              )}
+              {filteredActivities.slice(0, 3).map((event, idx) => (
+                <div key={idx} className={styles.streamItem}>
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={styles.streamDot}
+                      style={{
+                        backgroundColor:
+                          event.type === "meeting"
+                            ? "rgb(168, 85, 247)"
+                            : event.type === "email"
+                            ? "rgb(249, 115, 22)"
+                            : "rgb(59, 130, 246)",
+                      }}
+                    />
+                    <div className={styles.streamLine} />
+                  </div>
+                  <div>
+                    <div className="text-xs text-[var(--color-text-tertiary)] mb-0.5">
+                      {event.displayTimestamp}
+                    </div>
+                    <div className="text-sm font-medium text-[var(--color-text-primary)]">
+                      {event.title}
+                    </div>
+                    <div className="text-xs text-[var(--color-text-secondary)] mt-0.5 max-w-[200px] truncate">
+                      {event.notes}
+                    </div>
+                  </div>
+                </div>
               ))}
+              <div className="text-center mt-4 pt-3 border-t border-white/5">
+                <button
+                  className={styles.viewHistoryBtn}
+                  onClick={() =>
+                    setDetailPanel({
+                      isOpen: true,
+                      type: "activity",
+                      title: "Activity History",
+                      data: activities,
+                    })
+                  }
+                >
+                  View All History
+                  <ArrowUpRight size={14} />
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Account Team */}
+          {/* Stakeholders */}
           <div className={styles.teamCard}>
-            <h3 className={styles.teamTitle}>Account Team</h3>
-            {[
-              {
-                name: "Alex Morgan",
-                role: "Senior Strategist",
-                initials: "AM",
-              },
-              { name: "Sam Torres", role: "Project Lead", initials: "ST" },
-            ].map((person, idx) => (
-              <div key={idx} className={styles.teamMember}>
-                <div className={styles.teamAvatar}>{person.initials}</div>
-                <div>
-                  <div className={styles.memberName}>{person.name}</div>
-                  <div className={styles.memberRole}>{person.role}</div>
+            {/* Internal Team */}
+            <div className="mb-6">
+              <h3 className={styles.teamTitle}>Internal Team</h3>
+              {[
+                {
+                  name: "Alex Morgan",
+                  role: "Account Manager",
+                  initials: "AM",
+                  image: null,
+                },
+                {
+                  name: "Sam Torres",
+                  role: "Project Lead",
+                  initials: "ST",
+                  image: null,
+                },
+              ].map((person, idx) => (
+                <div key={idx} className={`${styles.teamMember} mb-3 group`}>
+                  <div className={styles.teamAvatar}>{person.initials}</div>
+                  <div className="flex-1">
+                    <div className={styles.memberName}>{person.name}</div>
+                    <div className={styles.memberRole}>{person.role}</div>
+                  </div>
+                  <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+                      <MessageSquare size={12} />
+                    </button>
+                    <button className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
+                      <Mail size={12} />
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {/* Client Contacts */}
+            <div>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className={styles.teamTitle} style={{ marginBottom: 0 }}>
+                  Client Contacts
+                </h3>
+                <button className="text-[10px] text-[var(--color-accent-primary)] hover:underline flex items-center gap-1">
+                  <Plus size={10} /> Add
+                </button>
               </div>
-            ))}
-            <div className={styles.teamActions}>
+              {[
+                {
+                  name: "Sarah Jenkins",
+                  role: "Primary Point of Contact",
+                  initials: "SJ",
+                },
+                { name: "Mike Ross", role: "Billing Contact", initials: "MR" },
+              ].map((person, idx) => (
+                <div key={idx} className={`${styles.teamMember} mb-3 group`}>
+                  <div
+                    className={`${styles.teamAvatar}`}
+                    style={{ background: "var(--color-status-success)" }}
+                  >
+                    {person.initials}
+                  </div>
+                  <div className="flex-1">
+                    <div className={styles.memberName}>{person.name}</div>
+                    <div className={styles.memberRole}>{person.role}</div>
+                  </div>
+                  <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                      title="Email"
+                    >
+                      <Mail size={12} />
+                    </button>
+                    <button
+                      className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
+                      title="Call"
+                    >
+                      <Phone size={12} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div
+              className="mt-4 pt-4"
+              style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
+            >
               <Button
-                variant="ghost"
+                variant="primary"
                 size="sm"
-                className="!bg-white/10 !text-white hover:!bg-white/20 !border-white/10"
+                className="w-full justify-center"
               >
-                <MessageSquare size={12} className="mr-1.5" /> Chat
-              </Button>
-              <Button variant="primary" size="sm">
-                <Calendar size={12} className="mr-1.5" /> Schedule
+                <Calendar size={14} className="mr-2" /> Schedule Meeting
               </Button>
             </div>
           </div>
@@ -864,6 +1180,15 @@ const Dashboard: React.FC = () => {
         isOpen={!!activeAction}
         onClose={() => setActiveAction(null)}
         clientId={selectedClientId}
+      />
+
+      {/* Detail Slide-over Panel */}
+      <DetailPanel
+        isOpen={detailPanel.isOpen}
+        onClose={() => setDetailPanel((prev) => ({ ...prev, isOpen: false }))}
+        title={detailPanel.title}
+        type={detailPanel.type}
+        data={detailPanel.data}
       />
     </div>
   );

@@ -843,6 +843,17 @@ export const AuditLogsApi = {
 
         if (error) handleError(error);
         return data as AuditLog;
+    },
+
+    async getByTargetId(targetId: string): Promise<AuditLog[]> {
+        const { data, error } = await supabase
+            .from('audit_logs')
+            .select('*')
+            .eq('target_id', targetId)
+            .order('created_at', { ascending: false });
+
+        if (error) handleError(error);
+        return (data || []) as AuditLog[];
     }
 };
 

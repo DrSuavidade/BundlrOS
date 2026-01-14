@@ -18,6 +18,8 @@ interface IClient360Service {
     getClientList: () => Promise<Array<{ id: string; name: string }>>;
     createClient: (client: { name: string; code: string; email: string; nif: string; industry: string; status: 'active' | 'churned' | 'lead' }) => Promise<{ id: string; name: string } | null>;
     deleteClient: (id: string) => Promise<void>;
+    getSystemEvents: (clientId: string) => Promise<any[]>;
+    getAuditLogs: (clientId: string) => Promise<any[]>;
 }
 
 // Mock service wrapper
@@ -26,6 +28,8 @@ const MockClient360Service: IClient360Service = {
     getClientList: async () => [{ id: MOCK_CLIENT.id, name: MOCK_CLIENT.name }],
     createClient: async () => ({ id: 'c-new-mock', name: 'New Mock Client' }),
     deleteClient: async () => { console.log('Mock delete client'); },
+    getSystemEvents: async () => [], // Mock implementation
+    getAuditLogs: async () => [], // Mock implementation
 };
 
 // Export the appropriate service based on environment

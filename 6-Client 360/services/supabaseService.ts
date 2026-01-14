@@ -12,6 +12,7 @@ import {
     ProjectsApi,
     IntakeItemsApi,
     AuditLogsApi,
+    SystemEventsApi,
     type Client as SupabaseClient,
     type Contract as SupabaseContract,
     type Deliverable as SupabaseDeliverable,
@@ -225,4 +226,22 @@ export const Client360Service = {
             throw error;
         }
     },
+
+    getSystemEvents: async (clientId: string) => {
+        try {
+            return await SystemEventsApi.getByClientId(clientId);
+        } catch (error) {
+            console.error('[Client360] Error fetching system events:', error);
+            return [];
+        }
+    },
+
+    getAuditLogs: async (clientId: string) => {
+        try {
+            return await AuditLogsApi.getByTargetId(clientId);
+        } catch (error) {
+            console.error('[Client360] Error fetching audit logs:', error);
+            return [];
+        }
+    }
 };
