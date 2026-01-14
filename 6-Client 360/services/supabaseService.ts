@@ -206,4 +206,14 @@ export const Client360Service = {
             return [];
         }
     },
+
+    createClient: async (client: { name: string; code: string; industry: string; status: 'active' | 'churned' | 'lead' }): Promise<{ id: string } | null> => {
+        try {
+            const newClient = await ClientsApi.create(client);
+            return { id: newClient.id };
+        } catch (error) {
+            console.error('[Client360] Error creating client:', error);
+            return null;
+        }
+    },
 };

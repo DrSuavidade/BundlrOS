@@ -16,12 +16,14 @@ const useMockBackend = import.meta.env.VITE_USE_MOCK_BACKEND === 'true';
 interface IClient360Service {
     fetchClientData: (clientId: string) => Promise<ClientData | null>;
     getClientList: () => Promise<Array<{ id: string; name: string }>>;
+    createClient: (client: { name: string; code: string; industry: string; status: 'active' | 'churned' | 'lead' }) => Promise<{ id: string } | null>;
 }
 
 // Mock service wrapper
 const MockClient360Service: IClient360Service = {
     fetchClientData: mockFetchClientData,
     getClientList: async () => [{ id: MOCK_CLIENT.id, name: MOCK_CLIENT.name }],
+    createClient: async () => ({ id: 'c-new-mock' }),
 };
 
 // Export the appropriate service based on environment

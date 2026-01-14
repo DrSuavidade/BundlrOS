@@ -8,12 +8,18 @@ import {
   Image as ImageIcon,
   Sparkles,
   MessageSquare,
-  Calendar,
   Target,
   Activity,
   ArrowUpRight,
   PlayCircle,
+  PlusCircle,
+  X,
+  Building2,
+  Tag,
+  Hash,
+  Calendar, // Added Calendar icon
 } from "lucide-react";
+import { createPortal } from "react-dom";
 import {
   AreaChart,
   Area,
@@ -24,7 +30,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ClientData } from "../types";
-import { fetchClientData } from "../services";
+import { ClientService } from "../services";
 import { generateClientInsight } from "../services/geminiService";
 import { Button, Badge, useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
@@ -62,15 +68,63 @@ const Dashboard: React.FC = () => {
   const { t } = useLanguage();
   const [data, setData] = useState<ClientData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [insightLoading, setInsightLoading] = useState(false);
 
+  // New Client Modal State
+  const [isNewClientOpen, setIsNewClientOpen] = useState(false);
+  const [newClient, setNewClient] = useState({
+    name: "",
+    code: "",
+    industry: "",
+    status: "active" as const,
+  });
+
+  // Fetch client list on mount
   useEffect(() => {
-    fetchClientData("c-101").then((d) => {
+    ClientService.getClientList().then((list) => {
+      setClients(list);
+      if (list.length > 0) {
+        // Default to first client or c-101 if it exists in list
+        const defaultClient = list.find((c) => c.id === "c-101") || list[0];
+        setSelectedClientId(defaultClient.id);
+      }
+    });
+  }, []);
+
+  // Fetch client data when selection changes
+  useEffect(() => {
+    if (!selectedClientId) return;
+
+    setLoading(true);
+    setAiInsight(null); // Reset insight on client switch
+
+    ClientService.fetchClientData(selectedClientId).then((d) => {
       setData(d);
       setLoading(false);
     });
-  }, []);
+  }, [selectedClientId]);
+
+  const handleCreateClient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClient.name) return;
+
+    try {
+      const created = await ClientService.createClient(newClient);
+      if (created) {
+        // Refresh list and select new client
+        const list = await ClientService.getClientList();
+        setClients(list);
+        setSelectedClientId(created.id);
+        setIsNewClientOpen(false);
+        setNewClient({ name: "", code: "", industry: "", status: "active" });
+      }
+    } catch (error) {
+      console.error("Failed to create client", error);
+    }
+  };
 
   const handleGenerateInsight = async () => {
     if (!data) return;
@@ -139,16 +193,53 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className={styles.header}>
         <div className={styles.clientInfo}>
-          <div className={styles.clientAvatar}>{data.name.charAt(0)}</div>
-          <div className={styles.clientDetails}>
-            <h1>
-              {data.name}
-              <Badge variant="info">{data.tier}</Badge>
-            </h1>
-            <div className={styles.clientMeta}>
-              <span>{data.industry}</span>
-              <span>•</span>
-              <span>{t("clients.overview")}</span>
+          {/* Client Selector & Avatar */}
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <div className={styles.clientAvatar}>
+                {data ? data.name.charAt(0) : "?"}
+              </div>
+
+              <div className="flex flex-col">
+                <div className="flex items-center gap-2 mb-1">
+                  <select
+                    value={selectedClientId}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="form-select"
+                    style={{
+                      fontSize: "1.25rem",
+                      fontWeight: 700,
+                      paddingTop: "0.25rem",
+                      paddingBottom: "0.25rem",
+                      minWidth: "250px",
+                    }}
+                  >
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                  {data && <Badge variant="info">{data.tier}</Badge>}
+                </div>
+
+                <div className={styles.clientMeta}>
+                  <span>{data ? data.industry : "Unknown Industry"}</span>
+                  <span>•</span>
+                  <span>{t("clients.overview")}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 mt-2 ml-[60px]">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setIsNewClientOpen(true)}
+                className="!text-[var(--color-accent-primary)] hover:!text-white hover:!bg-[var(--color-accent-primary)] !h-6 !text-xs !px-2"
+              >
+                <PlusCircle size={12} className="mr-1" /> Add Client
+              </Button>
             </div>
           </div>
         </div>
@@ -448,6 +539,114 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* New Client Modal */}
+      {isNewClientOpen &&
+        createPortal(
+          <div
+            className="modal-overlay"
+            style={{ zIndex: 9999 }}
+            onClick={() => setIsNewClientOpen(false)}
+          >
+            <div
+              className="modal w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="modal__header">
+                <h2 className="modal__title">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center text-white">
+                      <Building2 size={18} />
+                    </div>
+                    Add New Client
+                  </div>
+                </h2>
+                <button
+                  onClick={() => setIsNewClientOpen(false)}
+                  className="modal__close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Modal Form */}
+              <form onSubmit={handleCreateClient} className="modal__body">
+                <div className="form-group">
+                  <label className="form-label">
+                    <Building2 size={12} className="inline mr-1" />
+                    Company Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newClient.name}
+                    onChange={(e) =>
+                      setNewClient({ ...newClient, name: e.target.value })
+                    }
+                    className="form-input"
+                    placeholder="e.g. Acme Corp"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="form-group">
+                    <label className="form-label">
+                      <Hash size={12} className="inline mr-1" />
+                      Client Code
+                    </label>
+                    <input
+                      type="text"
+                      value={newClient.code}
+                      onChange={(e) =>
+                        setNewClient({ ...newClient, code: e.target.value })
+                      }
+                      className="form-input"
+                      placeholder="e.g. C-102"
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">
+                      <Tag size={12} className="inline mr-1" />
+                      Industry
+                    </label>
+                    <input
+                      type="text"
+                      value={newClient.industry}
+                      onChange={(e) =>
+                        setNewClient({
+                          ...newClient,
+                          industry: e.target.value,
+                        })
+                      }
+                      className="form-input"
+                      placeholder="e.g. Retail"
+                    />
+                  </div>
+                </div>
+              </form>
+
+              <div className="modal__footer">
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => setIsNewClientOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleCreateClient}
+                  leftIcon={<PlusCircle size={16} />}
+                >
+                  Create Client
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
