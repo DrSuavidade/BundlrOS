@@ -62,6 +62,8 @@ industry text,
 status USER-DEFINED DEFAULT 'active'::client_status,
 created_at timestamp with time zone DEFAULT now(),
 updated_at timestamp with time zone DEFAULT now(),
+email text,
+nif text,
 CONSTRAINT clients_pkey PRIMARY KEY (id)
 );
 CREATE TABLE public.contacts (

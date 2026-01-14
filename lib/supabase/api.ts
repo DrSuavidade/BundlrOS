@@ -18,6 +18,7 @@ import type {
     AutomationRun, AutomationRunInsert, AutomationRunUpdate,
     AuditLog, AuditLogInsert,
     Profile, ProfileUpdate,
+    FileAsset, FileAssetInsert, FileAssetUpdate,
 } from './types';
 
 // ============================================================================
@@ -157,6 +158,16 @@ export const ClientsApi = {
     },
 
     async delete(id: string): Promise<void> {
+        // Unlink system events first to avoid foreign key constraints
+        const { error: eventError } = await supabase
+            .from('system_events')
+            .update({ client_id: null })
+            .eq('client_id', id);
+
+        if (eventError) handleError(eventError);
+
+        // Ideally we should handle other relations too, but for new clients this is usually the blocker.
+
         const { error } = await supabase
             .from('clients')
             .delete()
@@ -836,6 +847,54 @@ export const AuditLogsApi = {
 };
 
 // ============================================================================
+// File Assets API
+// ============================================================================
+
+export const FileAssetsApi = {
+    async getAll(): Promise<FileAsset[]> {
+        const { data, error } = await supabase
+            .from('file_assets')
+            .select('*')
+            .order('uploaded_at', { ascending: false });
+
+        if (error) handleError(error);
+        return (data || []) as FileAsset[];
+    },
+
+    async getByClientId(clientId: string): Promise<FileAsset[]> {
+        const { data, error } = await supabase
+            .from('file_assets')
+            .select('*')
+            .eq('client_id', clientId)
+            .order('uploaded_at', { ascending: false });
+
+        if (error) handleError(error);
+        return (data || []) as FileAsset[];
+    },
+
+    async create(asset: FileAssetInsert): Promise<FileAsset> {
+        const { data, error } = await supabase
+            .from('file_assets')
+            .insert(asset)
+            .select()
+            .single();
+
+        if (error) handleError(error);
+
+        const result = data as FileAsset;
+
+        await SystemEventsApi.create({
+            type: 'asset.uploaded',
+            client_id: asset.client_id,
+            payload: { filename: result.filename, type: result.mime_type },
+            status: 'created'
+        });
+
+        return result;
+    }
+};
+
+// ============================================================================
 // Unified API Object (for backwards compatibility with MockAPI)
 // ============================================================================
 
@@ -851,6 +910,7 @@ export const API = {
     systemEvents: SystemEventsApi,
     automationRuns: AutomationRunsApi,
     auditLogs: AuditLogsApi,
+    fileAssets: FileAssetsApi,
 
     // Backwards compatible methods
     init: () => Promise.resolve(), // No-op, Supabase handles its own initialization

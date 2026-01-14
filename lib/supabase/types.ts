@@ -40,6 +40,8 @@ export interface Database {
                     id: string;
                     name: string;
                     code: string | null;
+                    email: string | null;
+                    nif: string | null;
                     industry: string | null;
                     status: ClientStatus;
                     created_at: string;
@@ -193,6 +195,23 @@ export interface Database {
                 };
                 Update: Partial<Database['public']['Tables']['audit_logs']['Insert']>;
             };
+            file_assets: {
+                Row: {
+                    id: string;
+                    filename: string;
+                    mime_type: string | null;
+                    size_bytes: number | null;
+                    public_url: string | null;
+                    preview_url: string | null;
+                    client_id: string | null;
+                    deliverable_id: string | null;
+                    tags: string[] | null;
+                    description: string | null;
+                    uploaded_at: string;
+                };
+                Insert: Omit<Database['public']['Tables']['file_assets']['Row'], 'id' | 'uploaded_at'> & { id?: string };
+                Update: Partial<Database['public']['Tables']['file_assets']['Insert']>;
+            };
         };
         Functions: Record<string, never>;
         Enums: {
@@ -248,3 +267,6 @@ export type IntakeItemUpdate = Tables['intake_items']['Update'];
 export type SystemEventUpdate = Tables['system_events']['Update'];
 export type AutomationRunUpdate = Tables['automation_runs']['Update'];
 export type AuditLogUpdate = Tables['audit_logs']['Update'];
+export type FileAsset = Tables['file_assets']['Row'];
+export type FileAssetInsert = Tables['file_assets']['Insert'];
+export type FileAssetUpdate = Tables['file_assets']['Update'];

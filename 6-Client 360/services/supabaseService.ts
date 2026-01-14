@@ -207,13 +207,22 @@ export const Client360Service = {
         }
     },
 
-    createClient: async (client: { name: string; code: string; industry: string; status: 'active' | 'churned' | 'lead' }): Promise<{ id: string } | null> => {
+    createClient: async (client: { name: string; code: string; email: string; nif: string; industry: string; status: 'active' | 'churned' | 'lead' }): Promise<{ id: string; name: string } | null> => {
         try {
             const newClient = await ClientsApi.create(client);
-            return { id: newClient.id };
+            return { id: newClient.id, name: newClient.name };
         } catch (error) {
             console.error('[Client360] Error creating client:', error);
             return null;
+        }
+    },
+
+    deleteClient: async (id: string): Promise<void> => {
+        try {
+            await ClientsApi.delete(id);
+        } catch (error) {
+            console.error('[Client360] Error deleting client:', error);
+            throw error;
         }
     },
 };

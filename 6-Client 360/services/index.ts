@@ -16,14 +16,16 @@ const useMockBackend = import.meta.env.VITE_USE_MOCK_BACKEND === 'true';
 interface IClient360Service {
     fetchClientData: (clientId: string) => Promise<ClientData | null>;
     getClientList: () => Promise<Array<{ id: string; name: string }>>;
-    createClient: (client: { name: string; code: string; industry: string; status: 'active' | 'churned' | 'lead' }) => Promise<{ id: string } | null>;
+    createClient: (client: { name: string; code: string; email: string; nif: string; industry: string; status: 'active' | 'churned' | 'lead' }) => Promise<{ id: string; name: string } | null>;
+    deleteClient: (id: string) => Promise<void>;
 }
 
 // Mock service wrapper
 const MockClient360Service: IClient360Service = {
     fetchClientData: mockFetchClientData,
     getClientList: async () => [{ id: MOCK_CLIENT.id, name: MOCK_CLIENT.name }],
-    createClient: async () => ({ id: 'c-new-mock' }),
+    createClient: async () => ({ id: 'c-new-mock', name: 'New Mock Client' }),
+    deleteClient: async () => { console.log('Mock delete client'); },
 };
 
 // Export the appropriate service based on environment
