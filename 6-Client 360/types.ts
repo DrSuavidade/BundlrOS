@@ -59,11 +59,15 @@ export interface TimelineEvent {
   type: 'meeting' | 'delivery' | 'contract' | 'system';
 }
 
+import { Contact } from "@bundlros/supabase";
+
 export interface ClientData {
+
   id: string;
   name: string;
   industry: string;
   tier: 'Enterprise' | 'Growth' | 'Startup';
+  contacts: Contact[];
   contracts: Contract[];
   deliverables: Deliverable[];
   inbox: Message[];

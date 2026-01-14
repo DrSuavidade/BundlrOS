@@ -13,6 +13,7 @@ import {
     IntakeItemsApi,
     AuditLogsApi,
     SystemEventsApi,
+    ContactsApi,
     type Client as SupabaseClient,
     type Contract as SupabaseContract,
     type Deliverable as SupabaseDeliverable,
@@ -108,11 +109,12 @@ export const Client360Service = {
             }
 
             // Fetch related data in parallel
-            const [contracts, projects, intakeItems, auditLogs] = await Promise.all([
+            const [contracts, projects, intakeItems, auditLogs, contacts] = await Promise.all([
                 ContractsApi.getByClientId(clientId),
                 ProjectsApi.getByClientId(clientId),
                 IntakeItemsApi.getAll(), // Filter by client
                 AuditLogsApi.getAll(20),
+                ContactsApi.getByClientId(clientId),
             ]);
 
             // Get deliverables from projects
@@ -179,6 +181,7 @@ export const Client360Service = {
                 name: client.name,
                 industry: client.industry || 'Technology',
                 tier: 'Enterprise', // Would come from client tier field
+                contacts: contacts || [],
                 contracts: contracts.map(mapContract),
                 deliverables: deliverables.slice(0, 5).map(mapDeliverable),
                 inbox,

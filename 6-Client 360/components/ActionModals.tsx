@@ -103,6 +103,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             status: (formData.status || "pending") as ContractStatus,
             start_date: formData.start_date || new Date().toISOString(),
             end_date: formData.end_date || null,
+            payment_type: formData.payment_type || "one_off",
           });
           break;
 
@@ -225,7 +226,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="form-group">
                 <label className="form-label">Value ($)</label>
                 <input
@@ -235,6 +236,17 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   value={formData.value || ""}
                   onChange={(e) => handleChange("value", e.target.value)}
                 />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Payment</label>
+                <select
+                  className="form-select"
+                  value={formData.payment_type || "one_off"}
+                  onChange={(e) => handleChange("payment_type", e.target.value)}
+                >
+                  <option value="one_off">Regular (2x)</option>
+                  <option value="monthly">Monthly</option>
+                </select>
               </div>
               <div className="form-group">
                 <label className="form-label">Status</label>

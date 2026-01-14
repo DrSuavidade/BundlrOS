@@ -5,6 +5,28 @@ export const MOCK_CLIENT: ClientData = {
   name: 'Acme Corp',
   industry: 'Technology',
   tier: 'Enterprise',
+  contacts: [
+    {
+      id: "ct-1",
+      client_id: "c-101",
+      name: "Sarah Jenkins",
+      email: "sarah@acme.com",
+      phone: "555-0123",
+      role: "Primary Point of Contact",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: "ct-2",
+      client_id: "c-101",
+      name: "Mike Ross",
+      email: "mike@acme.com",
+      phone: "555-5678",
+      role: "Billing Contact",
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ],
   contracts: [
     { id: 'cnt-1', title: 'Q4 Marketing Retainer', value: '$150k', status: 'active', endDate: '2024-12-31' },
     { id: 'cnt-2', title: '2025 Strategy Renewal', value: '$450k', status: 'pending', endDate: '2025-12-31' },

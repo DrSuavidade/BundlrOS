@@ -26,6 +26,7 @@ import {
   Calendar, // Added Calendar icon
   Trash2,
   Mail,
+  List,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
@@ -45,6 +46,7 @@ import styles from "./Dashboard.module.css";
 import { ActionModal, ActionType } from "./ActionModals";
 import { DetailPanel } from "./DetailPanel";
 import { useNavigate } from "react-router-dom";
+import { SystemEventsApi } from "../../lib/supabase/api";
 
 // --- Timeline Item Component ---
 const TimelineItem: React.FC<{ event: any; isLast?: boolean }> = ({
@@ -101,10 +103,16 @@ const Dashboard: React.FC = () => {
   // Action Modals State
   const [activeAction, setActiveAction] = useState<ActionType>(null);
 
+  // Sidebar Contact Selection & Schedule Meeting
+  const [selectedSidebarContact, setSelectedSidebarContact] = useState<
+    string | null
+  >(null);
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+
   // Detail Panel State
   const [detailPanel, setDetailPanel] = useState<{
     isOpen: boolean;
-    type: "contracts" | "activity";
+    type: "contracts" | "activity" | "contacts";
     title: string;
     data: any[];
   }>({
@@ -228,17 +236,29 @@ const Dashboard: React.FC = () => {
     });
   }, []);
 
-  // Fetch client data when selection changes
-  useEffect(() => {
-    if (!selectedClientId) return;
-
+  // Function to refresh dashboard data (exposed for child components)
+  const refreshDashboardData = (clientId: string) => {
+    if (!clientId) return Promise.resolve();
     setLoading(true);
-    setAiInsight(null); // Reset insight on client switch
+    // Only reset AI insight if we are switching clients, maybe?
+    // Actually simpler to just reload data.
+    // If we call this from DetailPanel, we might NOT want to clear AI insight or full loading state visually if possible,
+    // but for now let's keep consistency.
 
-    ClientService.fetchClientData(selectedClientId).then((d) => {
+    // Actually, if I just want to update contacts, fetching everything is fine.
+
+    return ClientService.fetchClientData(clientId).then((d) => {
       setData(d);
       setLoading(false);
     });
+  };
+
+  // Fetch client data when selection changes
+  useEffect(() => {
+    if (selectedClientId) {
+      setAiInsight(null); // Reset insight on client switch only
+      refreshDashboardData(selectedClientId);
+    }
   }, [selectedClientId]);
 
   const handleCreateClient = async (e: React.FormEvent) => {
@@ -294,6 +314,35 @@ const Dashboard: React.FC = () => {
     } catch (err) {
       console.error("Failed to delete client", err);
       alert("Failed to delete client. Please try again.");
+    }
+  };
+
+  const handleScheduleMeeting = async () => {
+    if (!selectedSidebarContact || !selectedClientId) return;
+
+    const contact = data?.contacts?.find(
+      (c: any) => c.id === selectedSidebarContact
+    );
+    if (!contact?.email) {
+      alert("Selected contact does not have an email address.");
+      return;
+    }
+
+    try {
+      await SystemEventsApi.create({
+        client_id: selectedClientId,
+        type: "schedule.send",
+        status: "pending",
+        payload: {
+          to: contact.email,
+          from: "Bundlr",
+          message: "ai text added later",
+          subject: "schedule meeting",
+        },
+      });
+      setScheduleModalOpen(false);
+    } catch (err) {
+      console.error("Failed to schedule meeting", err);
     }
   };
 
@@ -514,13 +563,13 @@ const Dashboard: React.FC = () => {
                       data: data.contracts,
                     })
                   }
-                  className={`${styles.sectionAction} text-xs bg-transparent border-0 cursor-pointer`}
+                  className={styles.headerBtn}
                 >
                   {t("clients.viewAll")} <ArrowUpRight size={10} />
                 </button>
               </div>
               <div className={styles.sectionBody}>
-                {data.contracts.map((c) => (
+                {data.contracts.slice(0, 2).map((c) => (
                   <div key={c.id} className={styles.contractItem}>
                     <div>
                       <div className={styles.contractName}>{c.title}</div>
@@ -557,13 +606,13 @@ const Dashboard: React.FC = () => {
                 </div>
                 <button
                   onClick={() => navigate("/approvals")}
-                  className={`${styles.sectionAction} text-xs bg-transparent border-0 cursor-pointer`}
+                  className={styles.headerBtn}
                 >
                   {t("clients.viewAll")} <ArrowUpRight size={10} />
                 </button>
               </div>
               <div className={styles.sectionBody}>
-                {data.deliverables.map((d) => (
+                {data.deliverables.slice(0, 2).map((d) => (
                   <div key={d.id} className={styles.deliverableItem}>
                     <div className={styles.deliverableHeader}>
                       <span className={styles.deliverableName}>{d.title}</span>
@@ -843,98 +892,106 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Stakeholders */}
+          {/* Client Contacts */}
           <div className={styles.teamCard}>
-            {/* Internal Team */}
-            <div className="mb-6">
-              <h3 className={styles.teamTitle}>Internal Team</h3>
-              {[
-                {
-                  name: "Alex Morgan",
-                  role: "Account Manager",
-                  initials: "AM",
-                  image: null,
-                },
-                {
-                  name: "Sam Torres",
-                  role: "Project Lead",
-                  initials: "ST",
-                  image: null,
-                },
-              ].map((person, idx) => (
-                <div key={idx} className={`${styles.teamMember} mb-3 group`}>
-                  <div className={styles.teamAvatar}>{person.initials}</div>
-                  <div className="flex-1">
-                    <div className={styles.memberName}>{person.name}</div>
-                    <div className={styles.memberRole}>{person.role}</div>
-                  </div>
-                  <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
-                      <MessageSquare size={12} />
-                    </button>
-                    <button className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors">
-                      <Mail size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+            <div className="flex justify-between items-center mb-3">
+              <h3 className={styles.teamTitle} style={{ marginBottom: 0 }}>
+                Client Contacts
+              </h3>
+              <button
+                className={styles.teamAddBtn}
+                onClick={() =>
+                  setDetailPanel({
+                    isOpen: true,
+                    type: "contacts",
+                    title: "Client Contacts",
+                    data: data?.contacts || [],
+                  })
+                }
+              >
+                <List size={12} /> View All
+              </button>
             </div>
 
-            {/* Client Contacts */}
-            <div>
-              <div className="flex justify-between items-center mb-3">
-                <h3 className={styles.teamTitle} style={{ marginBottom: 0 }}>
-                  Client Contacts
-                </h3>
-                <button className="text-[10px] text-[var(--color-accent-primary)] hover:underline flex items-center gap-1">
-                  <Plus size={10} /> Add
-                </button>
-              </div>
-              {[
-                {
-                  name: "Sarah Jenkins",
-                  role: "Primary Point of Contact",
-                  initials: "SJ",
-                },
-                { name: "Mike Ross", role: "Billing Contact", initials: "MR" },
-              ].map((person, idx) => (
-                <div key={idx} className={`${styles.teamMember} mb-3 group`}>
-                  <div
-                    className={`${styles.teamAvatar}`}
-                    style={{ background: "var(--color-status-success)" }}
-                  >
-                    {person.initials}
-                  </div>
-                  <div className="flex-1">
-                    <div className={styles.memberName}>{person.name}</div>
-                    <div className={styles.memberRole}>{person.role}</div>
-                  </div>
-                  <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                      title="Email"
+            <div className="flex flex-col gap-3">
+              {(data?.contacts || [])
+                .slice(0, 2)
+                .map((contact: any, idx: number) => {
+                  const isSelected = selectedSidebarContact === contact.id;
+                  return (
+                    <div
+                      key={contact.id || idx}
+                      className={`${
+                        styles.teamMember
+                      } group cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-[rgba(255,255,255,0.15)] shadow-sm"
+                          : "hover:bg-[rgba(255,255,255,0.05)]"
+                      }`}
+                      onClick={() =>
+                        setSelectedSidebarContact(
+                          isSelected ? null : contact.id
+                        )
+                      }
                     >
-                      <Mail size={12} />
-                    </button>
-                    <button
-                      className="p-1.5 hover:bg-[var(--color-bg-elevated)] rounded text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors"
-                      title="Call"
-                    >
-                      <Phone size={12} />
-                    </button>
-                  </div>
-                </div>
-              ))}
+                      <div
+                        className={`${styles.teamAvatar}`}
+                        style={{ background: "var(--color-status-success)" }}
+                      >
+                        {contact.name
+                          .split(" ")
+                          .map((n: string) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .slice(0, 2)}
+                      </div>
+                      <div className="flex-1">
+                        <div className={styles.memberName}>{contact.name}</div>
+                        <div className={styles.memberRole}>{contact.role}</div>
+                      </div>
+                      <div className="flex gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                        {contact.email && (
+                          <div className={styles.tooltipContainer}>
+                            <button
+                              className={styles.teamActionBtn}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Mail size={12} />
+                            </button>
+                            <div className={styles.customTooltip}>
+                              {contact.email}
+                            </div>
+                          </div>
+                        )}
+                        {contact.phone && (
+                          <div className={styles.tooltipContainer}>
+                            <button
+                              className={styles.teamActionBtn}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Phone size={12} />
+                            </button>
+                            <div className={styles.customTooltip}>
+                              {contact.phone}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
 
             <div
               className="mt-4 pt-4"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.1)" }}
+              style={{ borderTop: "1px solid var(--color-border-subtle)" }}
             >
               <Button
                 variant="primary"
                 size="sm"
                 className="w-full justify-center"
+                disabled={!selectedSidebarContact}
+                onClick={() => setScheduleModalOpen(true)}
               >
                 <Calendar size={14} className="mr-2" /> Schedule Meeting
               </Button>
@@ -1182,13 +1239,120 @@ const Dashboard: React.FC = () => {
         clientId={selectedClientId}
       />
 
+      {/* Schedule Meeting Modal */}
+      {scheduleModalOpen &&
+        createPortal(
+          <div
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0, 0, 0, 0.6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999,
+              backdropFilter: "blur(4px)",
+            }}
+            onClick={() => setScheduleModalOpen(false)}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: "var(--color-bg-card)",
+                border: "1px solid var(--color-border-subtle)",
+                borderRadius: "0.75rem",
+                boxShadow: "0 24px 64px rgba(0, 0, 0, 0.5)",
+                width: "100%",
+                maxWidth: "360px",
+                padding: "1.5rem",
+              }}
+            >
+              <h3
+                style={{
+                  margin: "0 0 0.75rem",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                Schedule Meeting via AI
+              </h3>
+              <p
+                style={{
+                  margin: "0 0 1.25rem",
+                  fontSize: "0.75rem",
+                  color: "var(--color-text-secondary)",
+                  lineHeight: 1.5,
+                }}
+              >
+                An AI-generated message will be sent to this contact's email to
+                initiate scheduling. Are you sure you want to continue?
+              </p>
+              <div
+                style={{
+                  display: "flex",
+                  gap: "0.5rem",
+                  justifyContent: "flex-end",
+                }}
+              >
+                <button
+                  onClick={() => setScheduleModalOpen(false)}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: "transparent",
+                    border: "1px solid var(--color-border-subtle)",
+                    borderRadius: "0.375rem",
+                    color: "var(--color-text-secondary)",
+                    fontSize: "0.75rem",
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleScheduleMeeting}
+                  style={{
+                    padding: "0.5rem 1rem",
+                    background: "var(--color-accent-primary)",
+                    border: "none",
+                    borderRadius: "0.375rem",
+                    color: "white",
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  Confirm & Send
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
       {/* Detail Slide-over Panel */}
       <DetailPanel
         isOpen={detailPanel.isOpen}
         onClose={() => setDetailPanel((prev) => ({ ...prev, isOpen: false }))}
         title={detailPanel.title}
         type={detailPanel.type}
-        data={detailPanel.data}
+        data={
+          detailPanel.type === "contacts"
+            ? data?.contacts || []
+            : detailPanel.type === "contracts"
+            ? data?.contracts || []
+            : detailPanel.type === "activity"
+            ? activities
+            : detailPanel.data
+        }
+        clientId={selectedClientId}
+        onRefresh={() => {
+          // Re-fetch data for the current client
+          if (selectedClientId) {
+            return refreshDashboardData(selectedClientId);
+          }
+          return Promise.resolve();
+        }}
       />
     </div>
   );

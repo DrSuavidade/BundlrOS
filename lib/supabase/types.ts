@@ -56,6 +56,7 @@ export interface Database {
                     client_id: string;
                     name: string;
                     email: string | null;
+                    phone: string | null;
                     role: string | null;
                     created_at: string;
                     updated_at: string;
@@ -72,6 +73,7 @@ export interface Database {
                     end_date: string | null;
                     value: number | null;
                     status: ContractStatus;
+                    payment_type: 'monthly' | 'one_off';
                     created_at: string;
                     updated_at: string;
                 };
