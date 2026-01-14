@@ -436,10 +436,8 @@
 }
 
 /* Timeline */
-.timelineCard {
-    position: sticky;
-    top: 4rem;
-}
+/* Timeline */
+/* .timelineCard sticky behavior is now handled by .sideColumn */
 
 .timelineItem {
     display: flex;
@@ -461,6 +459,8 @@
     width: 1px;
     background: linear-gradient(to bottom, var(--color-border-subtle), transparent);
 }
+
+/* ... (keep icons styles) ... */
 
 .timelineIcon {
     width: 28px;
@@ -517,6 +517,17 @@
     display: inline-block;
 }
 
+/* Timeline styles completed */
+
+.sideColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 1rem;
+    height: fit-content;
+}
+
 /* Team Card */
 .teamCard {
     background: linear-gradient(135deg, #312e81 0%, #4c1d95 100%);
@@ -524,6 +535,19 @@
     padding: 1rem;
     position: relative;
     overflow: hidden;
+}
+
+/* Utilities */
+.transparentSelect {
+    background-color: transparent;
+    border-color: transparent;
+    padding-left: 0;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+}
+
+.transparentSelect:hover {
+    color: var(--color-text-primary);
 }
 
 .teamCard::before {

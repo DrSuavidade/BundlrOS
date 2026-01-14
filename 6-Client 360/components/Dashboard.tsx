@@ -12,6 +12,7 @@ import {
   Activity,
   ArrowUpRight,
   PlayCircle,
+  Plus, // Explicitly import Plus
   PlusCircle,
   X,
   Building2,
@@ -221,6 +222,13 @@ const Dashboard: React.FC = () => {
                     ))}
                   </select>
                   {data && <Badge variant="info">{data.tier}</Badge>}
+                  <button
+                    onClick={() => setIsNewClientOpen(true)}
+                    className="flex items-center justify-center w-6 h-6 rounded-full border border-white text-white hover:border-gray-400 hover:text-gray-400 transition-all ml-2"
+                    title="Add Client"
+                  >
+                    <Plus size={14} />
+                  </button>
                 </div>
 
                 <div className={styles.clientMeta}>
@@ -229,17 +237,6 @@ const Dashboard: React.FC = () => {
                   <span>{t("clients.overview")}</span>
                 </div>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2 mt-2 ml-[60px]">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setIsNewClientOpen(true)}
-                className="!text-[var(--color-accent-primary)] hover:!text-white hover:!bg-[var(--color-accent-primary)] !h-6 !text-xs !px-2"
-              >
-                <PlusCircle size={12} className="mr-1" /> Add Client
-              </Button>
             </div>
           </div>
         </div>
@@ -250,38 +247,6 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* AI Insight Section */}
-      <section className={styles.aiSection}>
-        <div className={styles.aiHeader}>
-          <div className={styles.aiTitle}>
-            <div className={styles.aiIcon}>
-              <Sparkles size={16} className="text-yellow-300" />
-            </div>
-            <div>
-              <h2>{t("clients.aiInsights")}</h2>
-              <p>Powered by Gemini</p>
-            </div>
-          </div>
-          <button
-            onClick={handleGenerateInsight}
-            disabled={insightLoading}
-            className={styles.aiButton}
-          >
-            {insightLoading
-              ? t("clients.generating")
-              : t("clients.generateInsight")}
-          </button>
-        </div>
-        <div className={styles.aiContent}>
-          {aiInsight ? (
-            <p>{aiInsight}</p>
-          ) : (
-            <div className={styles.aiPlaceholder}>
-              <PlayCircle size={16} />
-              <span>{t("clients.askAI")}</span>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* Quick Actions */}
       <div className={styles.actionsGrid}>
@@ -414,9 +379,34 @@ const Dashboard: React.FC = () => {
                 />
                 Engagement & ROI
               </div>
-              <select className="text-xs bg-transparent border border-[var(--color-border-subtle)] rounded px-2 py-1 text-[var(--color-text-secondary)]">
-                <option>Last 30 Days</option>
-                <option>Last 90 Days</option>
+              <select
+                className="form-select text-xs"
+                style={{
+                  backgroundColor: "transparent",
+                  border: "none",
+                  color: "var(--color-text-secondary)",
+                  fontWeight: 600,
+                  paddingLeft: 0,
+                  outline: "none",
+                  width: "auto",
+                }}
+              >
+                <option
+                  style={{
+                    backgroundColor: "var(--color-bg-card)",
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  Last 30 Days
+                </option>
+                <option
+                  style={{
+                    backgroundColor: "var(--color-bg-card)",
+                    color: "var(--color-text-primary)",
+                  }}
+                >
+                  Last 90 Days
+                </option>
               </select>
             </div>
             <div className={styles.sectionBody}>
@@ -495,11 +485,11 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className={styles.sectionBody}>
-              {data.timeline.map((event, idx) => (
+              {data.timeline.slice(0, 3).map((event, idx) => (
                 <TimelineItem
                   key={event.id}
                   event={event}
-                  isLast={idx === data.timeline.length - 1}
+                  isLast={idx === 2 || idx === data.timeline.length - 1}
                 />
               ))}
             </div>
