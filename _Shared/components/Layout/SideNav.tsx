@@ -118,19 +118,13 @@ export const SideNav: React.FC<SideNavProps> = ({
       <nav className="flex flex-col gap-4 px-2 overflow-y-auto py-2">
         {navGroups.map((group) => (
           <div key={group.titleKey} className="flex flex-col gap-1">
-            <div className="px-3 mb-1 text-[10px] font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider opacity-80">
-              {t(group.titleKey)}
-            </div>
+            <div className={styles.navGroupTitle}>{t(group.titleKey)}</div>
             {group.items.map((item) => (
               <NavLink
                 key={item.labelKey}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-                    isActive
-                      ? "bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-medium shadow-sm"
-                      : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-elevated)]"
-                  }`
+                  `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
                 }
               >
                 {item.icon}
@@ -145,11 +139,7 @@ export const SideNav: React.FC<SideNavProps> = ({
         <NavLink
           to="/identity"
           className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-              isActive
-                ? "bg-[var(--color-bg-elevated)] text-[var(--color-text-primary)] font-medium"
-                : "text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-elevated)]"
-            }`
+            `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
           }
         >
           <Settings size={18} />

@@ -203,7 +203,6 @@ export const Dashboard: React.FC = () => {
             title="Refresh List"
           >
             <RefreshCw size={14} className="mr-2" />
-            Refresh
           </button>
         </div>
 
