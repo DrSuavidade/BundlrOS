@@ -1,20 +1,50 @@
 import { Factory, Status, LogEntry, Deliverable, DeliverableType } from '../types';
-import { PIPELINE_TEMPLATES, INITIAL_DELIVERABLES_CONFIG } from '../constants';
+import { PIPELINE_TEMPLATES, DELIVERABLES_LIBRARY } from '../constants';
+import { DeliverablesApi, ProjectsApi } from '../../lib/supabase/api';
+import { supabase } from '../../lib/supabase/client';
 
 export const generateId = () => Math.random().toString(36).substr(2, 9);
 
 export const createFactory = (contractId: string, clientName: string, templateId: string): Factory => {
-  const template = PIPELINE_TEMPLATES.find(t => t.id === templateId);
-  if (!template) throw new Error('Template not found');
+  // Handle 'null' template case (e.g. from automatic contract creation)
+  if (templateId === 'null') {
+    return {
+      id: generateId(),
+      contractId,
+      clientName,
+      templateId: 'null',
+      currentStageId: '', // No stage yet
+      status: Status.IDLE,
+      deliverables: [],
+      blockers: [],
+      logs: [
+        {
+          id: generateId(),
+          timestamp: new Date().toISOString(),
+          event: 'BOOTSTRAP',
+          message: `Factory initialized pending template selection.`
+        }
+      ],
+      startedAt: new Date().toISOString(),
+      lastUpdated: new Date().toISOString()
+    };
+  }
 
-  const initialDeliverablesConfig = INITIAL_DELIVERABLES_CONFIG[templateId] || [];
-  
-  const deliverables: Deliverable[] = initialDeliverablesConfig.map(d => ({
-    id: d.templateId, // Using template ID as instance ID for simplicity in this demo, in real app would be unique
-    name: d.name,
-    type: d.type,
-    status: 'PENDING'
-  }));
+  const template = PIPELINE_TEMPLATES.find(t => t.id === templateId);
+  if (!template) throw new Error(`Template not found: ${templateId}`);
+
+  // Gather unique deliverables from all stages
+  const requiredIds = Array.from(new Set(template.stages.flatMap(s => s.requiredDeliverables)));
+
+  const deliverables: Deliverable[] = requiredIds.map(reqId => {
+    const def = DELIVERABLES_LIBRARY[reqId];
+    return {
+      id: reqId,
+      name: def ? def.name : reqId,
+      type: def ? def.type : DeliverableType.DOCUMENT,
+      status: 'PENDING'
+    };
+  });
 
   const initialLog: LogEntry = {
     id: generateId(),
@@ -38,9 +68,29 @@ export const createFactory = (contractId: string, clientName: string, templateId
   };
 };
 
+export const hydrateFactory = (factory: Factory, templateId: string): Factory => {
+  const fresh = createFactory(factory.contractId, factory.clientName, templateId);
+  return {
+    ...fresh,
+    id: factory.id, // Preserve ID
+    logs: [
+      ...factory.logs,
+      {
+        id: generateId(),
+        timestamp: new Date().toISOString(),
+        event: 'UPDATE',
+        message: `Template applied: ${templateId}`
+      }
+    ]
+  };
+};
+
 export const checkBlockers = (factory: Factory): string[] => {
   const template = PIPELINE_TEMPLATES.find(t => t.id === factory.templateId);
-  if (!template) return ['Configuration Error: Template Missing'];
+  if (!template) {
+    if (factory.templateId === 'null') return ['Pending Template Selection'];
+    return ['Configuration Error: Template Missing'];
+  }
 
   const currentStageIndex = template.stages.findIndex(s => s.id === factory.currentStageId);
   const currentStage = template.stages[currentStageIndex];
@@ -60,9 +110,8 @@ export const checkBlockers = (factory: Factory): string[] => {
   }
 
   // Random Simulated External Blockers (e.g. Machine Breakdown)
-  // In a real app, this would come from external sensors/APIs
-  if (Math.random() > 0.95) {
-     blockers.push('External: Supply Chain Delay Detected');
+  if (Math.random() > 0.99) {
+    blockers.push('External: Supply Chain Delay Detected');
   }
 
   return blockers;
@@ -73,7 +122,7 @@ export const advanceStage = (factory: Factory): Factory => {
   if (!template) return factory;
 
   const currentStageIndex = template.stages.findIndex(s => s.id === factory.currentStageId);
-  
+
   // Check if already done
   if (currentStageIndex === -1 || currentStageIndex === template.stages.length - 1) {
     return {
@@ -131,7 +180,7 @@ export const advanceStage = (factory: Factory): Factory => {
 };
 
 export const updateDeliverableStatus = (factory: Factory, deliverableId: string, status: 'PENDING' | 'READY' | 'APPROVED'): Factory => {
-  const newDeliverables = factory.deliverables.map(d => 
+  const newDeliverables = factory.deliverables.map(d =>
     d.id === deliverableId ? { ...d, status } : d
   );
 
@@ -140,6 +189,98 @@ export const updateDeliverableStatus = (factory: Factory, deliverableId: string,
     deliverables: newDeliverables,
     // Re-evaluate blockers immediately upon update
     status: Status.ACTIVE, // Optimistically reset to active to clear old blocks, checkBlockers will re-block if needed on next tick or check
-    blockers: [] 
+    blockers: []
   };
+};
+
+const getDeliverableTypeFromTemplate = (templateId: string): 'document' | 'design' | 'software' | 'report' | 'video' => {
+  const t = templateId.toUpperCase();
+  if (t.includes('WEBSITE') || t.includes('AI') || t.includes('AUTOMATION') || t.includes('CHATBOT') || t.includes('WEB')) return 'software';
+  if (t.includes('DESIGN') || t.includes('ASSETS') || t.includes('CONTENT') || t.includes('CREATIVE')) return 'design';
+  if (t.includes('REPORT') || t.includes('AUDIT')) return 'report';
+  return 'document';
+};
+
+export const createFinalDeliverable = async (factory: Factory): Promise<Factory> => {
+  const type = getDeliverableTypeFromTemplate(factory.templateId);
+
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 7);
+
+  try {
+
+    let projectId = factory.contractId;
+
+    // 1. Try to find existing project for this contract
+    const { data: existingProject } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('contract_id', factory.contractId)
+      .single();
+
+    if (existingProject) {
+      projectId = existingProject.id;
+    } else {
+      // 2. Fallback: Create project if it doesn't exist
+      const { data: contract } = await supabase
+        .from('contracts')
+        .select('client_id')
+        .eq('id', factory.contractId)
+        .single();
+
+      if (contract && contract.client_id) {
+        const project = await ProjectsApi.create({
+          client_id: contract.client_id,
+          contract_id: factory.contractId,
+          name: `${factory.clientName} - ${factory.templateId}`,
+          status: 'active',
+          external_tool: null,
+          external_id: null
+        });
+        projectId = project.id;
+      } else {
+        console.warn("Could not resolve contract to project. attempting to use contractId as project_id directly.");
+      }
+    }
+
+    await DeliverablesApi.create({
+      project_id: projectId,
+      title: `${factory.clientName}-${factory.templateId}`,
+      type: type,
+      status: 'awaiting_approval',
+      version: 'v1.0',
+      due_date: dueDate.toISOString(),
+    });
+
+    return {
+      ...factory,
+      status: Status.DELIVERED,
+      logs: [
+        {
+          id: generateId(),
+          timestamp: new Date().toISOString(),
+          event: 'ADVANCE',
+          message: `Pipeline completed. Created deliverable: ${factory.clientName}-${factory.templateId}`
+        },
+        ...factory.logs
+      ]
+    };
+  } catch (e) {
+    const errorMessage = (e as Error).message || String(e);
+    console.error("Failed to create deliverable", e);
+    return {
+      ...factory,
+      status: Status.BLOCKED,
+      blockers: [`Failed to create deliverable: ${errorMessage}`],
+      logs: [
+        {
+          id: generateId(),
+          timestamp: new Date().toISOString(),
+          event: 'BLOCK',
+          message: `Failed to create deliverable: ${errorMessage}`
+        },
+        ...factory.logs
+      ]
+    };
+  }
 };

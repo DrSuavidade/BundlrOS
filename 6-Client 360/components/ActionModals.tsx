@@ -43,6 +43,7 @@ interface ActionModalProps {
   isOpen: boolean;
   onClose: () => void;
   clientId: string;
+  onSuccess?: () => void;
 }
 
 export const ActionModal: React.FC<ActionModalProps> = ({
@@ -50,6 +51,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   isOpen,
   onClose,
   clientId,
+  onSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Record<string, any>>({});
@@ -200,6 +202,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           });
           break;
       }
+      onSuccess?.();
       onClose();
     } catch (error) {
       console.error("Error executing action:", error);

@@ -296,6 +296,40 @@ export const ContractsApi = {
 
         const result = data as Contract;
 
+        // Create Service Factory automatically
+        try {
+            const { data: client } = await supabase
+                .from('clients')
+                .select('name')
+                .eq('id', contract.client_id)
+                .single();
+
+            if (client) {
+                // Create Project automatically
+                await supabase
+                    .from('projects')
+                    .insert({
+                        client_id: contract.client_id,
+                        contract_id: result.id,
+                        name: `${client.name} - ${contract.title || 'Contract'}`,
+                        status: 'active',
+                        external_tool: null,
+                        external_id: null
+                    });
+
+                // Create Service Factory
+                await supabase.from('service_factories').insert({
+                    contract_id: result.id,
+                    client_name: client.name,
+                    template_id: 'null',
+                    status: 'IDLE'
+                });
+            }
+        } catch (factoryError) {
+            console.error('Failed to create service factory:', factoryError);
+            // Proceed without failing the contract creation
+        }
+
         await SystemEventsApi.create({
             type: 'contract.created',
             client_id: contract.client_id,

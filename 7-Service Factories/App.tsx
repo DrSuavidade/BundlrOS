@@ -5,8 +5,11 @@ import {
   advanceStage,
   updateDeliverableStatus,
   checkBlockers,
+  hydrateFactory,
+  createFinalDeliverable,
 } from "./services/pipelineService";
 import { PIPELINE_TEMPLATES } from "./constants";
+import TemplateSelector from "./components/TemplateSelector";
 import {
   Box,
   Play,
@@ -174,6 +177,7 @@ const App: React.FC = () => {
   const [selectedTemplateId, setSelectedTemplateId] = useState(
     PIPELINE_TEMPLATES[0].id
   );
+  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -192,6 +196,15 @@ const App: React.FC = () => {
     };
     loadFactories();
   }, []);
+
+  // Check for null template
+  useEffect(() => {
+    if (selectedFactory?.templateId === "null") {
+      setIsTemplateModalOpen(true);
+    } else {
+      setIsTemplateModalOpen(false);
+    }
+  }, [selectedFactory]);
 
   const handleBootstrap = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,9 +226,44 @@ const App: React.FC = () => {
     }
   };
 
-  const handleAdvance = async () => {
+  const handleTemplateSelection = async (templateId: string) => {
     if (!selectedFactory) return;
-    const updated = advanceStage(selectedFactory);
+
+    setIsLoading(true);
+    try {
+      const hydratedFactory = hydrateFactory(selectedFactory, templateId);
+      const saved = await FactoryService.update(hydratedFactory);
+
+      if (saved) {
+        setFactories((prev) =>
+          prev.map((f) => (f.id === saved.id ? saved : f))
+        );
+      }
+    } catch (err) {
+      console.error("Failed to update factory template", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAdvance = async () => {
+    if (!selectedFactory || !currentTemplate) return;
+
+    const currentStageIndex = currentTemplate.stages.findIndex(
+      (s) => s.id === selectedFactory.currentStageId
+    );
+    const isLastStage = currentStageIndex === currentTemplate.stages.length - 1;
+
+    let updated: Factory;
+
+    if (isLastStage) {
+      setIsLoading(true);
+      updated = await createFinalDeliverable(selectedFactory);
+      setIsLoading(false);
+    } else {
+      updated = advanceStage(selectedFactory);
+    }
+
     const saved = await FactoryService.update(updated);
     if (saved) {
       setFactories(factories.map((f) => (f.id === saved.id ? saved : f)));
@@ -315,6 +363,11 @@ const App: React.FC = () => {
                       #{selectedFactory.contractId}
                     </span>
                   </span>
+                  {currentTemplate && (
+                    <span className="text-[10px] text-[var(--color-text-secondary)] uppercase tracking-wider font-semibold mt-0.5 leading-tight opacity-75">
+                      {currentTemplate.name}
+                    </span>
+                  )}
                 </div>
               </>
             )}
@@ -335,10 +388,17 @@ const App: React.FC = () => {
                   onClick={handleAdvance}
                   disabled={
                     selectedFactory.status === Status.BLOCKED ||
-                    selectedFactory.status === Status.COMPLETED
+                    selectedFactory.status === Status.COMPLETED ||
+                    selectedFactory.status === Status.DELIVERED
                   }
                 >
-                  {t("factories.advanceStage")}
+                  {currentTemplate &&
+                  currentTemplate.stages.findIndex(
+                    (s) => s.id === selectedFactory.currentStageId
+                  ) ===
+                    currentTemplate.stages.length - 1
+                    ? "Create Deliverable"
+                    : t("factories.advanceStage")}
                   <ArrowRight size={12} className="ml-1.5" />
                 </Button>
               </>
@@ -359,49 +419,73 @@ const App: React.FC = () => {
             </div>
           ) : (
             <div className={styles.pipelineView}>
-              {/* Log Panel */}
-              <div className={styles.logPanel}>
-                <div className={styles.logPanel__header}>System Logs</div>
-                <div className={styles.logPanel__content}>
-                  {selectedFactory.logs.map((log) => (
-                    <div key={log.id} className={styles.logItem}>
-                      <div className={styles.logItem__time}>
-                        {new Date(log.timestamp).toLocaleTimeString()}
-                      </div>
-                      <div
-                        className={`${styles.logItem__message} ${
-                          styles[log.event.toLowerCase()] || ""
-                        }`}
-                      >
-                        [{log.event}] {log.message}
-                      </div>
-                    </div>
-                  ))}
+              {selectedFactory.status === Status.DELIVERED ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center p-8 space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                    <CheckSquare size={32} className="text-emerald-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
+                      Work Delivered
+                    </h3>
+                    <p className="text-sm text-[var(--color-text-secondary)]">
+                      Waiting for approval.
+                    </p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Log Panel */}
+                  <div className={styles.logPanel}>
+                    <div className={styles.logPanel__header}>System Logs</div>
+                    <div className={styles.logPanel__content}>
+                      {selectedFactory.logs.map((log) => (
+                        <div key={log.id} className={styles.logItem}>
+                          <div className={styles.logItem__time}>
+                            {new Date(log.timestamp).toLocaleTimeString()}
+                          </div>
+                          <div
+                            className={`${styles.logItem__message} ${
+                              styles[log.event.toLowerCase()] || ""
+                            }`}
+                          >
+                            [{log.event}] {log.message}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Stage Columns */}
-              <div className={styles.stagesContainer}>
-                {currentTemplate?.stages.map((stage, index) => {
-                  const currentStageIndex = currentTemplate.stages.findIndex(
-                    (s) => s.id === selectedFactory.currentStageId
-                  );
-                  const isPast = index < currentStageIndex;
-                  const isActive = index === currentStageIndex;
+                  {/* Stage Columns */}
+                  <div
+                    className={styles.stagesContainer}
+                    onWheel={(e) => {
+                      e.currentTarget.scrollLeft += e.deltaY;
+                    }}
+                  >
+                    {currentTemplate?.stages.map((stage, index) => {
+                      const currentStageIndex =
+                        currentTemplate.stages.findIndex(
+                          (s) => s.id === selectedFactory.currentStageId
+                        );
+                      const isPast = index < currentStageIndex;
+                      const isActive = index === currentStageIndex;
 
-                  return (
-                    <StageColumn
-                      key={stage.id}
-                      stage={stage}
-                      factory={selectedFactory}
-                      isActive={isActive}
-                      isPast={isPast}
-                      onUpdateDeliverable={handleDeliverableUpdate}
-                      t={t}
-                    />
-                  );
-                })}
-              </div>
+                      return (
+                        <StageColumn
+                          key={stage.id}
+                          stage={stage}
+                          factory={selectedFactory}
+                          isActive={isActive}
+                          isPast={isPast}
+                          onUpdateDeliverable={handleDeliverableUpdate}
+                          t={t}
+                        />
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           )}
         </main>
@@ -471,6 +555,13 @@ const App: React.FC = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Template Selection Modal */}
+      {isTemplateModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950">
+          <TemplateSelector onSelect={handleTemplateSelection} />
         </div>
       )}
     </div>

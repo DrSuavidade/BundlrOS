@@ -28,5 +28,9 @@
     "declaration": true,
     "noEmit": false
   },
+  "include": [
+    ".",
+    "../lib/supabase/**/*"
+  ],
   "exclude": ["dist", "node_modules"]
 }

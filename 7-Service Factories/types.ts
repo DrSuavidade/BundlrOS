@@ -3,6 +3,7 @@ export enum Status {
   ACTIVE = 'ACTIVE',
   BLOCKED = 'BLOCKED',
   COMPLETED = 'COMPLETED',
+  DELIVERED = 'DELIVERED',
 }
 
 export enum DeliverableType {
@@ -27,6 +28,8 @@ export interface StageTemplate {
 export interface PipelineTemplate {
   id: string;
   name: string;
+  category?: string;
+  iconName?: string;
   stages: StageTemplate[];
 }
 

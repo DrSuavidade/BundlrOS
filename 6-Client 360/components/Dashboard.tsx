@@ -354,6 +354,46 @@ const Dashboard: React.FC = () => {
     setInsightLoading(false);
   };
 
+  // Derived Pulse Metrics
+  const pulse = data
+    ? (() => {
+        const totalDeliverables = data.deliverables.length || 1;
+        const atRisk = data.deliverables.filter(
+          (d) => d.status === "at-risk"
+        ).length;
+        const delayed = data.deliverables.filter(
+          (d) => d.status === "delayed"
+        ).length;
+        const healthScore = Math.max(0, 100 - atRisk * 20 - delayed * 10);
+
+        const totalValue = data.contracts.reduce((acc, c) => {
+          const val = parseInt(c.value.replace(/[^0-9]/g, "")) || 0;
+          return acc + val;
+        }, 0);
+
+        const avgProgress =
+          data.deliverables.reduce((acc, d) => acc + d.progress, 0) /
+          totalDeliverables;
+        const estimatedSpend = totalValue * (avgProgress / 100);
+
+        const nextMilestone = [...data.deliverables]
+          .filter((d) => d.status !== "completed")
+          .sort(
+            (a, b) =>
+              new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+          )[0];
+
+        return {
+          healthScore,
+          totalValue,
+          estimatedSpend,
+          nextMilestone,
+          pendingApprovals: data.approvals.length,
+          avgProgress,
+        };
+      })()
+    : null;
+
   if (loading) {
     return (
       <div className={styles.loadingContainer}>
@@ -605,7 +645,7 @@ const Dashboard: React.FC = () => {
                   {t("clients.deliverables")}
                 </div>
                 <button
-                  onClick={() => navigate("/approvals")}
+                  onClick={() => navigate("/qa")}
                   className={styles.headerBtn}
                 >
                   {t("clients.viewAll")} <ArrowUpRight size={10} />
@@ -665,9 +705,34 @@ const Dashboard: React.FC = () => {
                 Client Pulse
               </div>
               <div className="flex gap-2">
-                <Badge variant="info">Q1 2026</Badge>
+                <button
+                  className="text-[10px] text-[var(--color-text-secondary)] hover:text-white flex items-center gap-1 transition-colors"
+                  onClick={handleGenerateInsight}
+                >
+                  {insightLoading ? (
+                    <Sparkles size={10} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={10} />
+                  )}
+                  {aiInsight ? "Refresh Insight" : "Generate Insight"}
+                </button>
               </div>
             </div>
+
+            {aiInsight && (
+              <div className="mx-4 mt-2 mb-2 p-3 bg-[var(--color-bg-subtle)] rounded-lg border border-[var(--color-border-subtle)]">
+                <div className="flex items-start gap-2">
+                  <Sparkles
+                    size={14}
+                    className="text-[var(--color-accent-primary)] mt-0.5 shrink-0"
+                  />
+                  <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
+                    {aiInsight}
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className={styles.sectionBody} style={{ flex: 1 }}>
               <div className={styles.pulseGrid}>
                 {/* Financial Overview */}
@@ -679,54 +744,54 @@ const Dashboard: React.FC = () => {
                 >
                   <h4 className={styles.pulseTitle}>Financial Overview</h4>
 
-                  {/* Retainer Usage */}
+                  {/* Value Delivered */}
                   <div>
                     <div className="flex justify-between items-end mb-1">
                       <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                        Retainer Usage
+                        Value Delivered
                       </span>
                       <span className="text-xs text-[var(--color-text-tertiary)]">
-                        75% Used
+                        {Math.round(pulse?.avgProgress || 0)}% Complete
                       </span>
                     </div>
                     <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2 overflow-hidden">
                       <div
-                        className="bg-[var(--color-accent-primary)] h-full"
-                        style={{ width: "75%" }}
+                        className="bg-[var(--color-accent-primary)] h-full transition-all duration-500"
+                        style={{ width: `${pulse?.avgProgress || 0}%` }}
                       ></div>
                     </div>
                     <div className="flex justify-between mt-1">
                       <span className="text-xs text-[var(--color-text-tertiary)]">
-                        $33.7k Spend
+                        ${(pulse?.estimatedSpend || 0).toLocaleString()} Value
                       </span>
                       <span className="text-xs text-[var(--color-text-tertiary)]">
-                        $45.0k Cap
+                        ${(pulse?.totalValue || 0).toLocaleString()} Total
                       </span>
                     </div>
                   </div>
 
-                  {/* Pending Invoices */}
+                  {/* Pending Approvals */}
                   <div className={styles.pulseCard}>
                     <div className="flex items-center gap-3">
                       <div
-                        className={`${styles.pulseCardIcon} ${styles.warning}`}
+                        className={`${styles.pulseCardIcon} ${
+                          (pulse?.pendingApprovals || 0) > 0
+                            ? styles.warning
+                            : "bg-emerald-500/10 text-emerald-500"
+                        }`}
                       >
-                        <DollarSign size={16} />
+                        <CheckCircle size={16} />
                       </div>
                       <div>
                         <div className="text-sm font-bold text-[var(--color-text-primary)]">
-                          Pending Invoices
+                          Pending Approvals
                         </div>
                         <div className="text-xs text-[var(--color-text-tertiary)]">
-                          2 Outstanding
+                          {(pulse?.pendingApprovals || 0) > 0
+                            ? `${pulse?.pendingApprovals} Items Waiting`
+                            : "All Clear"}
                         </div>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-mono font-bold text-[var(--color-text-primary)]">
-                        $12,450
-                      </div>
-                      <div className="text-xs text-red-400">Due in 5 days</div>
                     </div>
                   </div>
                 </div>
@@ -752,33 +817,65 @@ const Dashboard: React.FC = () => {
                           cy="32"
                           r="28"
                           fill="none"
-                          stroke="#10B981"
+                          stroke={
+                            (pulse?.healthScore || 100) > 80
+                              ? "#10B981"
+                              : (pulse?.healthScore || 100) > 50
+                              ? "#F59E0B"
+                              : "#EF4444"
+                          }
                           strokeWidth="6"
                           strokeDasharray={`${2 * Math.PI * 28}`}
-                          strokeDashoffset={`${2 * Math.PI * 28 * (1 - 0.88)}`}
+                          strokeDashoffset={`${
+                            2 *
+                            Math.PI *
+                            28 *
+                            (1 - (pulse?.healthScore || 100) / 100)
+                          }`}
                           strokeLinecap="round"
+                          className="transition-all duration-1000 ease-out"
                         />
                       </svg>
-                      <span className={styles.healthValue}>88</span>
+                      <span className={styles.healthValue}>
+                        {Math.round(pulse?.healthScore || 100)}
+                      </span>
                     </div>
                     <div>
                       <div className="text-sm font-bold text-[var(--color-text-primary)]">
-                        Exemplary Health
+                        {(pulse?.healthScore || 100) > 90
+                          ? "Excellent"
+                          : (pulse?.healthScore || 100) > 70
+                          ? "Good"
+                          : "Needs Attention"}
                       </div>
                       <div className="text-xs text-[var(--color-text-tertiary)]">
-                        NPS: 9/10 • Engagement: High
+                        Based on deliverables
                       </div>
                     </div>
                   </div>
 
-                  {/* Sentiment/Mood */}
+                  {/* Next Milestone */}
                   <div className="mt-auto">
                     <div className="text-xs text-[var(--color-text-tertiary)] mb-2">
-                      Likely Sentiment (AI Analysis)
+                      Next Key Milestone
                     </div>
                     <div className={styles.sentimentBox}>
-                      <TrendingUp size={16} />
-                      <span>Positive trends detected in last 3 calls.</span>
+                      <Calendar size={16} />
+                      <span>
+                        {pulse?.nextMilestone ? (
+                          <>
+                            <strong className="text-white">
+                              {pulse.nextMilestone.title}
+                            </strong>
+                            <span className="mx-1">•</span>
+                            {new Date(
+                              pulse.nextMilestone.dueDate
+                            ).toLocaleDateString()}
+                          </>
+                        ) : (
+                          "No active milestones"
+                        )}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1237,6 +1334,9 @@ const Dashboard: React.FC = () => {
         isOpen={!!activeAction}
         onClose={() => setActiveAction(null)}
         clientId={selectedClientId}
+        onSuccess={() => {
+          refreshDashboardData(selectedClientId);
+        }}
       />
 
       {/* Schedule Meeting Modal */}

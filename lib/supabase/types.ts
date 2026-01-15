@@ -8,7 +8,7 @@ export type ClientStatus = 'active' | 'churned' | 'lead';
 export type ContractStatus = 'draft' | 'pending' | 'active' | 'expired';
 export type ProjectStatus = 'active' | 'completed' | 'on_hold';
 export type DeliverableStatus = 'draft' | 'in_progress' | 'awaiting_approval' | 'in_qa' | 'qa_failed' | 'approved' | 'published' | 'archived';
-export type DeliverableType = 'document' | 'design' | 'code' | 'report' | 'video';
+export type DeliverableType = 'document' | 'design' | 'software' | 'report' | 'video';
 export type UserRole = 'admin' | 'am' | 'podlead' | 'qa' | 'designer' | 'dev' | 'client_approver';
 export type UserStatus = 'active' | 'pending' | 'inactive';
 export type IntakePriority = 'Low' | 'Medium' | 'High' | 'Critical';
@@ -197,6 +197,37 @@ export interface Database {
                 };
                 Update: Partial<Database['public']['Tables']['audit_logs']['Insert']>;
             };
+            service_factories: {
+                Row: {
+                    id: string;
+                    contract_id: string;
+                    client_name: string;
+                    template_id: string;
+                    current_stage_id: string | null;
+                    status: string;
+                    deliverables: Record<string, unknown>[] | null;
+                    blockers: string[] | null;
+                    logs: Record<string, unknown>[] | null;
+                    started_at: string;
+                    last_updated: string;
+                    created_at: string;
+                };
+                Insert: {
+                    id?: string;
+                    contract_id: string;
+                    client_name: string;
+                    template_id: string;
+                    current_stage_id?: string | null;
+                    status?: string;
+                    deliverables?: Record<string, unknown>[] | null;
+                    blockers?: string[] | null;
+                    logs?: Record<string, unknown>[] | null;
+                    started_at?: string;
+                    last_updated?: string;
+                    created_at?: string;
+                };
+                Update: Partial<Database['public']['Tables']['service_factories']['Insert']>;
+            };
             file_assets: {
                 Row: {
                     id: string;
@@ -272,3 +303,6 @@ export type AuditLogUpdate = Tables['audit_logs']['Update'];
 export type FileAsset = Tables['file_assets']['Row'];
 export type FileAssetInsert = Tables['file_assets']['Insert'];
 export type FileAssetUpdate = Tables['file_assets']['Update'];
+export type ServiceFactory = Tables['service_factories']['Row'];
+export type ServiceFactoryInsert = Tables['service_factories']['Insert'];
+export type ServiceFactoryUpdate = Tables['service_factories']['Update'];
