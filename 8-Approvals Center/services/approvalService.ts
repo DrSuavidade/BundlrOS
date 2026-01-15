@@ -14,6 +14,10 @@ export const ApprovalService = {
     }
   },
 
+  getCurrentUser: async () => {
+    return null; // Mock doesn't support auth yet, or could return a fake user object
+  },
+
   getAll: async (): Promise<ApprovalRequest[]> => {
     await delay(300); // Simulate network
     const data = localStorage.getItem(STORAGE_KEY);
@@ -38,7 +42,7 @@ export const ApprovalService = {
     if (index === -1) throw new Error("Approval not found");
 
     const approval = all[index];
-    
+
     // Add event
     const newEvent: ApprovalEvent = {
       id: `evt-${Date.now()}`,
@@ -60,12 +64,12 @@ export const ApprovalService = {
   },
 
   addComment: async (id: string, comment: string, actor: string): Promise<ApprovalRequest> => {
-     const all = await ApprovalService.getAll();
+    const all = await ApprovalService.getAll();
     const index = all.findIndex(a => a.id === id);
     if (index === -1) throw new Error("Approval not found");
 
     const approval = all[index];
-    
+
     const newEvent: ApprovalEvent = {
       id: `evt-${Date.now()}`,
       type: 'COMMENT_ADDED',
@@ -89,21 +93,21 @@ export const ApprovalService = {
     const all = await ApprovalService.getAll();
     const index = all.findIndex(a => a.id === id);
     if (index === -1) throw new Error("Approval not found");
-    
+
     const approval = all[index];
     const newEvent: ApprovalEvent = {
-        id: `evt-${Date.now()}`,
-        type: 'REMINDER_SENT',
-        timestamp: new Date().toISOString(),
-        description: 'Automated reminder email sent to client.',
-        actor: 'System'
+      id: `evt-${Date.now()}`,
+      type: 'REMINDER_SENT',
+      timestamp: new Date().toISOString(),
+      description: 'Automated reminder email sent to client.',
+      actor: 'System'
     };
-    
+
     const updatedApproval = {
-        ...approval,
-        history: [newEvent, ...approval.history]
+      ...approval,
+      history: [newEvent, ...approval.history]
     };
-    
+
     all[index] = updatedApproval;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   },

@@ -241,7 +241,13 @@ const App: React.FC = () => {
       {selectedDeliverable ? (
         <DeliverableDetail
           deliverable={selectedDeliverable}
-          onBack={() => setSelectedId(null)}
+          onBack={() => {
+            setSelectedId(null);
+            // Re-fetch data to ensure checklist state is up to date when re-entering
+            QAService.getDeliverables()
+              .then(setDeliverables)
+              .catch(console.error);
+          }}
           onRerun={handleRerun}
           isRunning={runningId === selectedDeliverable.id}
         />

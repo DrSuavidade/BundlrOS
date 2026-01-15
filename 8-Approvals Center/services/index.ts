@@ -15,6 +15,7 @@ const useMockBackend = import.meta.env.VITE_USE_MOCK_BACKEND === 'true';
 // Unified service interface
 interface IApprovalService {
     init: () => void;
+    getCurrentUser: () => Promise<any>;
     getAll: () => Promise<ApprovalRequest[]>;
     getById: (id: string) => Promise<ApprovalRequest | undefined>;
     getByToken: (token: string) => Promise<ApprovalRequest | undefined>;

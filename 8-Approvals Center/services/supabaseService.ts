@@ -7,11 +7,15 @@
  * Syncs status with 'deliverables' table.
  */
 
+import { createClient } from '@supabase/supabase-js';
 import {
     DeliverablesApi,
-    supabase,
     type Deliverable as SupabaseDeliverable,
 } from '@bundlros/supabase';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 import { ApprovalRequest, ApprovalStatus, ApprovalEvent, Stats } from '../types';
 
 const APPROVALS_TABLE = 'approvals';
@@ -27,6 +31,7 @@ interface ApprovalDBRow {
     asset_name?: string;
     version?: string;
     status?: string;
+    assignee_id?: string;
 }
 
 // Helper to get or create approval metadata for a deliverable
@@ -88,6 +93,8 @@ const mapToApprovalRequest = async (deliverable: SupabaseDeliverable): Promise<A
     const metadata = await getOrCreateApprovalMetadata(deliverable.id);
 
     const fileAsset = await getLatestFileAsset(deliverable.id);
+    // Prefer direct column from approval, fallback to lookup
+    const factoryAssigneeId = metadata.assignee_id || await getFactoryAssignee(deliverable.id);
 
     return {
         id: deliverable.id,
@@ -109,6 +116,7 @@ const mapToApprovalRequest = async (deliverable: SupabaseDeliverable): Promise<A
         attachmentUrl: metadata.asset_url || fileAsset?.public_url,
         attachmentSize: fileAsset?.size_bytes,
         attachmentType: fileAsset?.mime_type,
+        assigneeId: factoryAssigneeId,
     };
 };
 
@@ -133,9 +141,58 @@ const getClientName = async (deliverableId: string): Promise<string> => {
     return (data as any)?.project?.client?.name || 'Project Team';
 };
 
+const getFactoryAssignee = async (deliverableId: string): Promise<string | undefined> => {
+    // 1. Get Project's Contract ID from Deliverable
+    // Note: We cast to any because Typescript types might not reflect the deep relation fully yet
+    const { data: deliverable } = await supabase
+        .from('deliverables')
+        .select('project:projects(contract_id)')
+        .eq('id', deliverableId)
+        .single();
+
+    const contractId = (deliverable as any)?.project?.contract_id;
+    if (!contractId) return undefined;
+
+    // 2. Get Factory Assignee from Service Factory
+    const { data: factory } = await supabase
+        .from('service_factories')
+        .select('assignee_id')
+        .eq('contract_id', contractId)
+        .single();
+
+    return factory?.assignee_id;
+};
+
 export const SupabaseApprovalService = {
     init: () => {
         console.log('[Approvals] Supabase service initialized');
+    },
+
+    getCurrentUser: async () => {
+        // 1. Try Supabase Auth (Real DB Auth)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) return session.user;
+
+        // 2. Fallback to LocalStorage 'nexus_session' (Demo/Mock Auth)
+        try {
+            const localSession = localStorage.getItem('nexus_session');
+            if (localSession) {
+                const user = JSON.parse(localSession);
+                // Return a structure compatible with Supabase User
+                return {
+                    id: user.id,
+                    email: user.email,
+                    app_metadata: {},
+                    user_metadata: { ...user },
+                    aud: 'authenticated',
+                    created_at: new Date().toISOString()
+                } as any;
+            }
+        } catch (e) {
+            console.warn('Failed to parse local session', e);
+        }
+
+        return null;
     },
 
     getAll: async (): Promise<ApprovalRequest[]> => {

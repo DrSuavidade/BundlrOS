@@ -19,6 +19,7 @@ import {
   AlertCircle,
   XCircle,
   ThumbsUp,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@bundlros/ui";
 import { format } from "date-fns";
@@ -31,6 +32,7 @@ export const ApprovalDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<string>("");
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // For drafting
   const [aiDraftOpen, setAiDraftOpen] = useState(false);
@@ -47,8 +49,15 @@ export const ApprovalDetail: React.FC = () => {
   useEffect(() => {
     const fetch = async () => {
       if (!id) return;
-      const data = await ApprovalService.getById(id);
+
+      const [data, user] = await Promise.all([
+        ApprovalService.getById(id),
+        ApprovalService.getCurrentUser(),
+      ]);
+
       if (data) setApproval(data);
+      if (user) setCurrentUserId(user.id);
+
       setLoading(false);
     };
     fetch();
@@ -136,6 +145,11 @@ export const ApprovalDetail: React.FC = () => {
     );
   if (!approval) return <div className={styles.pageContainer}>Not Found</div>;
 
+  const isAssignee =
+    currentUserId &&
+    approval.assigneeId &&
+    currentUserId === approval.assigneeId;
+
   return (
     <div className={styles.pageContainer}>
       {/* Header (Simplified) */}
@@ -158,6 +172,12 @@ export const ApprovalDetail: React.FC = () => {
             <span className="text-[var(--color-text-tertiary)]">
               Created {format(new Date(approval.createdAt), "MMM d, yyyy")}
             </span>
+            <span className="text-[var(--color-text-tertiary)]">•</span>
+            {isAssignee && (
+              <span className="text-amber-500 font-medium text-xs border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 rounded">
+                You are Assignee
+              </span>
+            )}
           </p>
         </div>
         <div>
@@ -173,7 +193,7 @@ export const ApprovalDetail: React.FC = () => {
       </div>
 
       {/* ACTION HERO BANNER */}
-      {approval.status === ApprovalStatus.PENDING && (
+      {approval.status === ApprovalStatus.PENDING && !isAssignee && (
         <div className={`${styles.statusBanner} ${styles.pending}`}>
           <div className={styles.bannerContent}>
             <h2>
@@ -201,6 +221,26 @@ export const ApprovalDetail: React.FC = () => {
             >
               Approve Deliverable
             </Button>
+          </div>
+        </div>
+      )}
+
+      {approval.status === ApprovalStatus.PENDING && isAssignee && (
+        <div
+          className={`${styles.statusBanner} ${styles.pending}`}
+          style={{
+            background: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+          }}
+        >
+          <div className={styles.bannerContent}>
+            <h2>
+              <AlertTriangle className="text-white" /> Awaiting Review
+            </h2>
+            <p>
+              This item is pending approval. As the assignee, you cannot approve
+              your own work. It must be reviewed by another team member or the
+              client.
+            </p>
           </div>
         </div>
       )}

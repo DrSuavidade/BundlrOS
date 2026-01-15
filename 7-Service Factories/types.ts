@@ -53,6 +53,14 @@ export interface Factory {
   logs: LogEntry[];
   startedAt: string;
   lastUpdated: string;
+  assigneeId?: string;
+}
+
+export interface Profile {
+  id: string;
+  name: string;
+  avatar_url: string;
+  role: string;
 }
 
 export interface LogEntry {

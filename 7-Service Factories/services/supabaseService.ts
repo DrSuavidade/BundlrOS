@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { createClient } from '@supabase/supabase-js';
-import { Factory, Status, Deliverable, LogEntry } from '../types';
+import { Factory, Status, Deliverable, LogEntry, Profile } from '../types';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -21,6 +21,7 @@ const mapRowToFactory = (row: any): Factory => ({
     logs: row.logs as LogEntry[],
     startedAt: row.started_at,
     lastUpdated: row.last_updated,
+    assigneeId: row.assignee_id,
 });
 
 // Map Factory to DB Row for Insert/Update
@@ -35,6 +36,7 @@ const mapFactoryToRow = (factory: Omit<Factory, 'id'>) => ({
     logs: factory.logs,
     started_at: factory.startedAt,
     last_updated: new Date().toISOString(), // Always update timestamp
+    assignee_id: factory.assigneeId,
 });
 
 export const FactoryService = {
@@ -49,6 +51,18 @@ export const FactoryService = {
             return [];
         }
         return data.map(mapRowToFactory);
+    },
+
+    getProfiles: async (): Promise<Profile[]> => {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, name, avatar_url, role');
+
+        if (error) {
+            console.error('Error fetching profiles:', error);
+            return [];
+        }
+        return data as Profile[];
     },
 
     create: async (factory: Factory): Promise<Factory | null> => {

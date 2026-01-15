@@ -222,6 +222,23 @@ const getDeliverableTypeFromTemplate = (templateId: string): 'document' | 'desig
   }
 };
 
+export const incrementVersion = (version: string): string => {
+  if (!version) return 'v1.0';
+  const parts = version.split('.');
+
+  // Handle cases like "v1" -> "v1.1"
+  if (parts.length < 2) return `${version}.1`;
+
+  // Handle "v1.0" -> "v1.1"
+  const major = parts[0];
+  const minor = parseInt(parts[parts.length - 1]);
+
+  if (isNaN(minor)) return version; // Fallback if parsing fails
+
+  // Reconstruct with incremented minor version
+  return `${major}.${minor + 1}`;
+};
+
 export const createFinalDeliverable = async (factory: Factory): Promise<Factory> => {
   const type = getDeliverableTypeFromTemplate(factory.templateId);
 
@@ -277,11 +294,14 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
 
     if (existingDeliverable) {
       // Update existing
+      const nextVersion = incrementVersion(existingDeliverable.version);
+
       const { data: updated } = await supabase
         .from('deliverables')
         .update({
           status: 'awaiting_approval',
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          version: nextVersion
         })
         .eq('id', existingDeliverable.id)
         .select()
@@ -332,7 +352,9 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
         await supabase.from('approvals')
           .update({
             status: 'PENDING',
-            token: token
+            token: token,
+            version: deliverable.version,
+            assignee_id: factory.assigneeId
           })
           .eq('deliverable_id', deliverable.id);
       } else {
@@ -343,6 +365,8 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
           status: 'PENDING',
           title: `${factory.clientName} - ${factory.templateId} Approval`,
           description: `Please review the final deliverables for the ${factory.templateId} pipeline.`,
+          version: deliverable.version,
+          assignee_id: factory.assigneeId,
           history: [{
             id: `evt-${Date.now()}`,
             type: 'CREATED',

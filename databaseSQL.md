@@ -14,6 +14,7 @@ asset_url text,
 asset_name text,
 version text,
 status text,
+assignee_id uuid REFERENCES public.profiles(id),
 CONSTRAINT approvals_pkey PRIMARY KEY (deliverable_id),
 CONSTRAINT approvals_deliverable_id_fkey FOREIGN KEY (deliverable_id) REFERENCES public.deliverables(id)
 );
@@ -74,6 +75,7 @@ email text,
 role text,
 created_at timestamp with time zone DEFAULT now(),
 updated_at timestamp with time zone DEFAULT now(),
+phone text,
 CONSTRAINT contacts_pkey PRIMARY KEY (id),
 CONSTRAINT contacts_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id)
 );
@@ -87,6 +89,7 @@ value numeric,
 status USER-DEFINED DEFAULT 'pending'::contract_status,
 created_at timestamp with time zone DEFAULT now(),
 updated_at timestamp with time zone DEFAULT now(),
+payment_type text DEFAULT 'one_off'::text CHECK (payment_type = ANY (ARRAY['monthly'::text, 'one_off'::text])),
 CONSTRAINT contracts_pkey PRIMARY KEY (id),
 CONSTRAINT contracts_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id)
 );

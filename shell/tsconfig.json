@@ -25,7 +25,6 @@
     { "path": "../_Shared" },
     { "path": "../1-Identity & Access" },
     { "path": "../2-Core Data Model & API" },
-    { "path": "../3-Event Bus & Automation Runs" },
     { "path": "../4-File Asset Hub" },
     { "path": "../5-Unified Inbox" },
     { "path": "../6-Client 360" },
@@ -33,7 +32,6 @@
     { "path": "../8-Approvals Center" },
     { "path": "../9-QA Gates & Checks" },
     { "path": "../10-Reporting & KPIs" },
-    { "path": "../11-Capacity & SLA Radar" },
     { "path": "../12-Admin Integrations Hub" },
     { "path": "../13-Bundlr Budgets" }
   ]

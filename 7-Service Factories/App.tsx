@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Factory, Status } from "./types";
+import { Factory, Status, Profile } from "./types";
 import {
   createFactory,
   advanceStage,
@@ -30,11 +30,12 @@ import styles from "./App.module.css";
 // --- Factory List Component ---
 const FactoryList: React.FC<{
   factories: Factory[];
+  profiles: Profile[];
   selectedFactoryId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
   t: (key: string) => string;
-}> = ({ factories, selectedFactoryId, onSelect, onCreate, t }) => (
+}> = ({ factories, profiles, selectedFactoryId, onSelect, onCreate, t }) => (
   <div className={styles.sidebar}>
     <div className={styles.sidebarHeader}>
       <h2 className={styles.sidebarTitle}>
@@ -54,18 +55,16 @@ const FactoryList: React.FC<{
       {factories.map((factory) => (
         <button
           key={factory.id}
-          onClick={() => onSelect(factory.id)}
           className={`${styles.factoryItem} ${
             selectedFactoryId === factory.id ? styles.selected : ""
           }`}
+          onClick={() => onSelect(factory.id)}
+          style={{ position: "relative" }}
         >
           <div className={styles.factoryItem__header}>
             <span className={styles.factoryItem__id}>
-              #{factory.contractId}
+              #{factory.id.slice(0, 8)}
             </span>
-            {factory.status === Status.BLOCKED && (
-              <AlertOctagon size={12} className="text-amber-500" />
-            )}
             {factory.status === Status.ACTIVE && (
               <Play size={12} className="text-emerald-500" />
             )}
@@ -74,6 +73,36 @@ const FactoryList: React.FC<{
                 size={12}
                 className="text-[var(--color-accent-primary)]"
               />
+            )}
+            {factory.assigneeId && (
+              <div
+                style={{
+                  position: "absolute",
+                  bottom: "8px",
+                  right: "8px",
+                  width: 16,
+                  height: 16,
+                }}
+              >
+                {(() => {
+                  const assignee = profiles.find(
+                    (p) => p.id === factory.assigneeId
+                  );
+                  return assignee ? (
+                    <img
+                      src={
+                        assignee.avatar_url ||
+                        `https://ui-avatars.com/api/?name=${assignee.name}`
+                      }
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "50%",
+                      }}
+                    />
+                  ) : null;
+                })()}
+              </div>
             )}
           </div>
           <div className={styles.factoryItem__name}>{factory.clientName}</div>
@@ -168,6 +197,7 @@ const StageColumn: React.FC<{
 const App: React.FC = () => {
   const { t } = useLanguage();
   const [factories, setFactories] = useState<Factory[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   // Modal State
@@ -186,15 +216,24 @@ const App: React.FC = () => {
     ? PIPELINE_TEMPLATES.find((t) => t.id === selectedFactory.templateId)
     : null;
 
-  // Load factories on mount
+  // Load factories and profiles on mount
   useEffect(() => {
-    const loadFactories = async () => {
+    const loadData = async () => {
       setIsLoading(true);
-      const data = await FactoryService.getAll();
-      setFactories(data);
-      setIsLoading(false);
+      try {
+        const [factoriesData, profilesData] = await Promise.all([
+          FactoryService.getAll(),
+          FactoryService.getProfiles(),
+        ]);
+        setFactories(factoriesData);
+        setProfiles(profilesData);
+      } catch (e) {
+        console.error("Failed to load data", e);
+      } finally {
+        setIsLoading(false);
+      }
     };
-    loadFactories();
+    loadData();
   }, []);
 
   // Check for null template
@@ -223,6 +262,15 @@ const App: React.FC = () => {
       setIsBootstrapOpen(false);
       setNewClientName("");
       setNewContractId("");
+    }
+  };
+
+  const handleAssign = async (profileId: string) => {
+    if (!selectedFactory) return;
+    const updated = { ...selectedFactory, assigneeId: profileId };
+    const saved = await FactoryService.update(updated);
+    if (saved) {
+      setFactories(factories.map((f) => (f.id === saved.id ? saved : f)));
     }
   };
 
@@ -337,6 +385,7 @@ const App: React.FC = () => {
       {/* Sidebar */}
       <FactoryList
         factories={factories}
+        profiles={profiles}
         selectedFactoryId={selectedId}
         onSelect={setSelectedId}
         onCreate={() => setIsBootstrapOpen(true)}
@@ -362,6 +411,47 @@ const App: React.FC = () => {
                       {currentTemplate.name}
                     </span>
                   )}
+                </div>
+                <div className={styles.headerDivider} />
+                <div className={styles.headerContext}>
+                  <span className={styles.headerContext__label}>Assignee</span>
+                  <div
+                    style={{ display: "flex", gap: "8px", marginTop: "4px" }}
+                  >
+                    {profiles.map((p) => (
+                      <button
+                        key={p.id}
+                        onClick={() => handleAssign(p.id)}
+                        title={p.name}
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                          border:
+                            selectedFactory.assigneeId === p.id
+                              ? "2px solid var(--color-accent-primary)"
+                              : "2px solid transparent",
+                          opacity:
+                            selectedFactory.assigneeId === p.id ? 1 : 0.5,
+                          padding: 0,
+                          overflow: "hidden",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <img
+                          src={
+                            p.avatar_url ||
+                            `https://ui-avatars.com/api/?name=${p.name}`
+                          }
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                          }}
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </>
             )}

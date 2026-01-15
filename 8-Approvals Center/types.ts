@@ -28,6 +28,7 @@ export interface ApprovalRequest {
   attachmentUrl?: string;
   attachmentSize?: number;
   attachmentType?: string;
+  assigneeId?: string;
 }
 
 export interface Stats {

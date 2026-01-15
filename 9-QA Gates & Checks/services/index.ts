@@ -11,6 +11,7 @@ export interface IQAService {
     getDeliverableById: (id: string) => Promise<Deliverable | undefined>;
     runQA: (deliverableId: string, currentType: string) => Promise<QAResult>;
     getStats: () => Promise<{ passed: number; failed: number; pending: number; total: number }>;
+    saveChecklistState: (deliverableId: string, state: Record<string, boolean>) => Promise<void>;
 }
 
 // Export the Supabase service directly

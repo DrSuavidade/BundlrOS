@@ -22,8 +22,9 @@ export interface QAResult {
 export interface Deliverable {
   id: string;
   name: string;
-  type: 'landing_page' | 'api_endpoint' | 'email_template' | 'dashboard_widget';
+  type: string;
   version: string;
+  qa_checklist_state?: Record<string, boolean>; // Persisted checklist state
   owner: string;
   status: string;
   lastResult: QAResult;

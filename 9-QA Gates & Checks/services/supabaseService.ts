@@ -65,16 +65,6 @@ const mapRunToResult = (run: AutomationRun, deliverableId: string): QAResult => 
 
 // Map Supabase deliverable to local Deliverable type
 const mapToDeliverable = (d: SupabaseDeliverable, latestRun?: AutomationRun): Deliverable => {
-    const typeMap: Record<string, Deliverable['type']> = {
-        'website': 'landing_page',
-        'web_page': 'landing_page',
-        'api': 'api_endpoint',
-        'backend': 'api_endpoint',
-        'email': 'email_template',
-        'video': 'dashboard_widget',
-        'image': 'dashboard_widget',
-    };
-
     const result = latestRun
         ? mapRunToResult(latestRun, d.id)
         : createPendingResult(d.id, d.updated_at || new Date().toISOString());
@@ -82,8 +72,9 @@ const mapToDeliverable = (d: SupabaseDeliverable, latestRun?: AutomationRun): De
     return {
         id: d.id,
         name: d.title,
-        type: typeMap[d.type || ''] || 'landing_page',
+        type: d.type || 'document',
         version: d.version || 'v1.0',
+        qa_checklist_state: (d as any).qa_checklist_state || {},
         owner: 'Team', // This could come from a join with profiles/owners if available
         status: d.status,
         lastResult: result,
@@ -170,6 +161,17 @@ export const SupabaseQAService = {
             };
         } catch (error) {
             console.error('[QA] Error starting run:', error);
+            throw error;
+        }
+    },
+
+    saveChecklistState: async (deliverableId: string, state: Record<string, boolean>): Promise<void> => {
+        try {
+            await DeliverablesApi.update(deliverableId, {
+                qa_checklist_state: state
+            });
+        } catch (error) {
+            console.error('[QA] Error saving checklist state:', error);
             throw error;
         }
     },
