@@ -56,11 +56,6 @@ export const SideNav: React.FC<SideNavProps> = ({
           icon: <LayoutGrid size={18} />,
           to: "/core",
         },
-        {
-          labelKey: "sidebar.capacity",
-          icon: <Activity size={18} />,
-          to: "/capacity",
-        },
       ],
     },
     {
@@ -76,7 +71,6 @@ export const SideNav: React.FC<SideNavProps> = ({
           icon: <FileText size={18} />,
           to: "/assets",
         },
-        { labelKey: "sidebar.events", icon: <Zap size={18} />, to: "/events" },
       ],
     },
     {

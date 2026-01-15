@@ -16,7 +16,6 @@
     "react-router-dom": "^7.12.0",
     "@bundlros/module-identity": "workspace:*",
     "@bundlros/module-core": "workspace:*",
-    "@bundlros/module-events": "workspace:*",
     "@bundlros/module-assets": "workspace:*",
     "@bundlros/module-inbox": "workspace:*",
     "@bundlros/module-clients": "workspace:*",
@@ -24,7 +23,6 @@
     "@bundlros/module-approvals": "workspace:*",
     "@bundlros/module-qa": "workspace:*",
     "@bundlros/module-reporting": "workspace:*",
-    "@bundlros/module-capacity": "workspace:*",
     "@bundlros/module-admin": "workspace:*",
     "@bundlros/module-budgets": "workspace:*"
   },

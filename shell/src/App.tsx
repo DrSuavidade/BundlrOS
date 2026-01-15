@@ -5,7 +5,6 @@ import { AppShell, LanguageProvider, AuthProvider } from "@bundlros/ui";
 // Lazy load modules
 const IdentityModule = lazy(() => import("@bundlros/module-identity"));
 const CoreModule = lazy(() => import("@bundlros/module-core"));
-const EventsModule = lazy(() => import("@bundlros/module-events"));
 const AssetsModule = lazy(() => import("@bundlros/module-assets"));
 const InboxModule = lazy(() => import("@bundlros/module-inbox"));
 const ClientsModule = lazy(() => import("@bundlros/module-clients"));
@@ -13,7 +12,6 @@ const FactoriesModule = lazy(() => import("@bundlros/module-factories"));
 const ApprovalsModule = lazy(() => import("@bundlros/module-approvals"));
 const QAModule = lazy(() => import("@bundlros/module-qa"));
 const ReportingModule = lazy(() => import("@bundlros/module-reporting"));
-const CapacityModule = lazy(() => import("@bundlros/module-capacity"));
 const AdminModule = lazy(() => import("@bundlros/module-admin"));
 const BudgetsModule = lazy(() => import("@bundlros/module-budgets"));
 
@@ -44,14 +42,7 @@ const App: React.FC = () => {
                   </AppShell>
                 }
               />
-              <Route
-                path="/events/*"
-                element={
-                  <AppShell moduleName="Event Bus">
-                    <EventsModule />
-                  </AppShell>
-                }
-              />
+
               <Route
                 path="/assets/*"
                 element={
@@ -108,14 +99,7 @@ const App: React.FC = () => {
                   </AppShell>
                 }
               />
-              <Route
-                path="/capacity/*"
-                element={
-                  <AppShell moduleName="Capacity Radar">
-                    <CapacityModule />
-                  </AppShell>
-                }
-              />
+
               <Route
                 path="/admin/*"
                 element={

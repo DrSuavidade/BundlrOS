@@ -1,7 +1,6 @@
 packages:
   - "1-Identity & Access"
   - "2-Core Data Model & API"
-  - "3-Event Bus & Automation Runs"
   - "4-File Asset Hub"
   - "5-Unified Inbox"
   - "6-Client 360"
@@ -9,7 +8,6 @@ packages:
   - "8-Approvals Center"
   - "9-QA Gates & Checks"
   - "10-Reporting & KPIs"
-  - "11-Capacity & SLA Radar"
   - "12-Admin Integrations Hub"
   - "13-Bundlr Budgets"
   - "_Shared"

@@ -108,43 +108,6 @@ importers:
         specifier: ^6.2.0
         version: 6.4.1(@types/node@22.19.3)
 
-  11-Capacity & SLA Radar:
-    dependencies:
-      '@bundlros/supabase':
-        specifier: workspace:*
-        version: link:../lib/supabase
-      '@bundlros/ui':
-        specifier: workspace:*
-        version: link:../_Shared
-      '@google/genai':
-        specifier: ^1.34.0
-        version: 1.34.0
-      lucide-react:
-        specifier: ^0.562.0
-        version: 0.562.0(react@19.2.3)
-      react:
-        specifier: ^19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: ^19.2.3
-        version: 19.2.3(react@19.2.3)
-      recharts:
-        specifier: ^3.6.0
-        version: 3.6.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react-is@19.2.3)(react@19.2.3)(redux@5.0.1)
-    devDependencies:
-      '@types/node':
-        specifier: ^22.14.0
-        version: 22.19.3
-      '@vitejs/plugin-react':
-        specifier: ^5.0.0
-        version: 5.1.2(vite@6.4.1(@types/node@22.19.3))
-      typescript:
-        specifier: ~5.8.2
-        version: 5.8.3
-      vite:
-        specifier: ^6.2.0
-        version: 6.4.1(@types/node@22.19.3)
-
   12-Admin Integrations Hub:
     dependencies:
       '@bundlros/supabase':
@@ -236,43 +199,6 @@ importers:
       react-router-dom:
         specifier: ^7.12.0
         version: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-    devDependencies:
-      '@types/node':
-        specifier: ^22.14.0
-        version: 22.19.3
-      '@vitejs/plugin-react':
-        specifier: ^5.0.0
-        version: 5.1.2(vite@6.4.1(@types/node@22.19.3))
-      typescript:
-        specifier: ~5.8.2
-        version: 5.8.3
-      vite:
-        specifier: ^6.2.0
-        version: 6.4.1(@types/node@22.19.3)
-
-  3-Event Bus & Automation Runs:
-    dependencies:
-      '@bundlros/supabase':
-        specifier: workspace:*
-        version: link:../lib/supabase
-      '@bundlros/ui':
-        specifier: workspace:*
-        version: link:../_Shared
-      lucide-react:
-        specifier: ^0.562.0
-        version: 0.562.0(react@19.2.3)
-      react:
-        specifier: ^19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: ^19.2.3
-        version: 19.2.3(react@19.2.3)
-      react-router-dom:
-        specifier: ^7.12.0
-        version: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      recharts:
-        specifier: ^3.6.0
-        version: 3.6.0(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react-is@19.2.3)(react@19.2.3)(redux@5.0.1)
     devDependencies:
       '@types/node':
         specifier: ^22.14.0
@@ -542,18 +468,12 @@ importers:
       '@bundlros/module-budgets':
         specifier: workspace:*
         version: link:../13-Bundlr Budgets
-      '@bundlros/module-capacity':
-        specifier: workspace:*
-        version: link:../11-Capacity & SLA Radar
       '@bundlros/module-clients':
         specifier: workspace:*
         version: link:../6-Client 360
       '@bundlros/module-core':
         specifier: workspace:*
         version: link:../2-Core Data Model & API
-      '@bundlros/module-events':
-        specifier: workspace:*
-        version: link:../3-Event Bus & Automation Runs
       '@bundlros/module-factories':
         specifier: workspace:*
         version: link:../7-Service Factories

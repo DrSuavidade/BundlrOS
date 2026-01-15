@@ -194,11 +194,32 @@ export const updateDeliverableStatus = (factory: Factory, deliverableId: string,
 };
 
 const getDeliverableTypeFromTemplate = (templateId: string): 'document' | 'design' | 'software' | 'report' | 'video' => {
-  const t = templateId.toUpperCase();
-  if (t.includes('WEBSITE') || t.includes('AI') || t.includes('AUTOMATION') || t.includes('CHATBOT') || t.includes('WEB')) return 'software';
-  if (t.includes('DESIGN') || t.includes('ASSETS') || t.includes('CONTENT') || t.includes('CREATIVE')) return 'design';
-  if (t.includes('REPORT') || t.includes('AUDIT')) return 'report';
-  return 'document';
+  switch (templateId) {
+    // Software
+    case "TPL_AI_INTEGRATION":
+    case "TPL_AUTOMATION_BUILD":
+    case "TPL_CHATBOT_DEPLOY":
+    case "TPL_WEBSITE_BROCHURE":
+    case "TPL_WEB_SOCIAL_STARTER":
+    case "TPL_WEB_ECOM":
+    case "TPL_SAAS_MVP":
+      return "software";
+
+    // Design
+    case "TPL_CONTENT_SPRINT":
+    case "TPL_BRAND_IDENTITY":
+      return "design";
+
+    // Report
+    case "TPL_SOCIAL_RETAINER":
+    case "TPL_LAUNCH_CAMPAIGN":
+    case "TPL_WEB_MAINTENANCE":
+      return "report";
+
+    // Default Fallback
+    default:
+      return "document";
+  }
 };
 
 export const createFinalDeliverable = async (factory: Factory): Promise<Factory> => {
