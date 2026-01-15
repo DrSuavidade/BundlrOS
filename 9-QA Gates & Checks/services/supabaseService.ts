@@ -85,6 +85,7 @@ const mapToDeliverable = (d: SupabaseDeliverable, latestRun?: AutomationRun): De
         type: typeMap[d.type || ''] || 'landing_page',
         version: d.version || 'v1.0',
         owner: 'Team', // This could come from a join with profiles/owners if available
+        status: d.status,
         lastResult: result,
     };
 };

@@ -310,6 +310,14 @@
     color: rgb(59, 130, 246);
 }
 
+.resultStatus__label.awaiting {
+    color: var(--color-text-tertiary);
+}
+
+.deliverableItem.awaiting {
+    opacity: 0.5;
+}
+
 .resultStatus__issues {
     font-size: 0.5625rem;
     color: var(--color-text-tertiary);

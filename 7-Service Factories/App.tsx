@@ -357,12 +357,6 @@ const App: React.FC = () => {
                 <div className={styles.headerDivider} />
                 <div className={styles.headerContext}>
                   <span className={styles.headerContext__label}>Context</span>
-                  <span className={styles.headerContext__value}>
-                    {selectedFactory.clientName}{" "}
-                    <span className="text-[var(--color-text-tertiary)]">
-                      #{selectedFactory.contractId}
-                    </span>
-                  </span>
                   {currentTemplate && (
                     <span className="text-[10px] text-[var(--color-text-secondary)] uppercase tracking-wider font-semibold mt-0.5 leading-tight opacity-75">
                       {currentTemplate.name}

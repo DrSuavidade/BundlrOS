@@ -243,14 +243,95 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
       }
     }
 
-    await DeliverablesApi.create({
-      project_id: projectId,
-      title: `${factory.clientName}-${factory.templateId}`,
-      type: type,
-      status: 'awaiting_approval',
-      version: 'v1.0',
-      due_date: dueDate.toISOString(),
-    });
+    // Check for existing deliverable
+    const { data: existingDeliverable } = await supabase
+      .from('deliverables')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('title', `${factory.clientName}-${factory.templateId}`)
+      .maybeSingle();
+
+    let deliverable;
+    let isUpdate = false;
+
+    if (existingDeliverable) {
+      // Update existing
+      const { data: updated } = await supabase
+        .from('deliverables')
+        .update({
+          status: 'awaiting_approval',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingDeliverable.id)
+        .select()
+        .single();
+      deliverable = updated;
+      isUpdate = true;
+    } else {
+      // Create new
+      deliverable = await DeliverablesApi.create({
+        project_id: projectId,
+        title: `${factory.clientName}-${factory.templateId}`,
+        type: type,
+        status: 'awaiting_approval',
+        version: 'v1.0',
+        due_date: dueDate.toISOString(),
+      });
+    }
+
+    if (deliverable) {
+      // Initialize Approval Record
+      let clientEmail = 'client@example.com';
+      try {
+        // Try to fetch email from contract -> client connection first
+        const { data: contractData } = await supabase
+          .from('contracts')
+          .select('client:clients(email)')
+          .eq('id', factory.contractId)
+          .single();
+
+        if ((contractData?.client as any)?.email) {
+          clientEmail = (contractData!.client as any).email;
+        } else {
+          // Fallback: Try name match as requested
+          const { data: clientData } = await supabase
+            .from('clients')
+            .select('email')
+            .eq('name', factory.clientName)
+            .single();
+          if (clientData?.email) clientEmail = clientData.email;
+        }
+      } catch (e) {
+        console.warn("Could not fetch client email for approval", e);
+      }
+
+      const token = `token-${deliverable.id.slice(0, 8)}-${Date.now().toString(36)}`;
+
+      if (isUpdate) {
+        await supabase.from('approvals')
+          .update({
+            status: 'PENDING',
+            token: token
+          })
+          .eq('deliverable_id', deliverable.id);
+      } else {
+        await supabase.from('approvals').insert({
+          deliverable_id: deliverable.id,
+          token: token,
+          client_email: clientEmail,
+          status: 'PENDING',
+          title: `${factory.clientName} - ${factory.templateId} Approval`,
+          description: `Please review the final deliverables for the ${factory.templateId} pipeline.`,
+          history: [{
+            id: `evt-${Date.now()}`,
+            type: 'CREATED',
+            timestamp: new Date().toISOString(),
+            description: 'Approval request initialized via Service Factory',
+            actor: 'System'
+          }]
+        });
+      }
+    }
 
     return {
       ...factory,

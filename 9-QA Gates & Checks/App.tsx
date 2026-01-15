@@ -83,63 +83,82 @@ const Dashboard: React.FC<{
         </div>
 
         <div>
-          {deliverables.map((item) => {
-            const currentStatus =
-              isRunningId === item.id ? "running" : item.lastResult.status;
-            const issueCount = item.lastResult.checklist.filter(
-              (c) => c.status === "failed"
-            ).length;
+          {deliverables
+            .filter((item) => item.status !== "qa_failed")
+            .map((item) => {
+              const isAwaiting = item.status === "awaiting_approval";
+              const currentStatus =
+                isRunningId === item.id
+                  ? "running"
+                  : isAwaiting
+                  ? "awaiting"
+                  : item.lastResult.status;
+              const issueCount = item.lastResult.checklist.filter(
+                (c) => c.status === "failed"
+              ).length;
 
-            return (
-              <div
-                key={item.id}
-                onClick={() => onSelect(item)}
-                className={styles.deliverableItem}
-              >
-                <div className={styles.deliverableItem__main}>
-                  <div
-                    className={`${styles.statusIndicator} ${getStatusClass(
-                      currentStatus
-                    )}`}
-                  />
-                  <div className={styles.deliverableItem__content}>
-                    <h3 className={styles.deliverableItem__name}>
-                      {item.name}
-                    </h3>
-                    <div className={styles.deliverableItem__meta}>
-                      <span className={styles.typeBadge}>{item.type}</span>
-                      <span className={styles.timestamp}>
-                        <Clock size={10} />
-                        {new Date(
-                          item.lastResult.timestamp
-                        ).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={styles.deliverableItem__result}>
-                  <div className={styles.resultStatus}>
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => {
+                    if (isAwaiting) {
+                      window.location.href = `/approvals/approval/${item.id}`;
+                    } else {
+                      onSelect(item);
+                    }
+                  }}
+                  className={`${styles.deliverableItem} ${
+                    isAwaiting ? styles.awaiting : ""
+                  }`}
+                >
+                  <div className={styles.deliverableItem__main}>
                     <div
-                      className={`${
-                        styles.resultStatus__label
-                      } ${getStatusClass(currentStatus)}`}
-                    >
-                      {currentStatus === "running"
-                        ? t("qa.running") + "..."
-                        : currentStatus.toUpperCase()}
-                    </div>
-                    {currentStatus === "failed" && issueCount > 0 && (
-                      <div className={styles.resultStatus__issues}>
-                        {issueCount} {t("qa.issuesFound")}
+                      className={`${styles.statusIndicator} ${getStatusClass(
+                        currentStatus as QAStatus
+                      )} ${isAwaiting ? styles.awaiting : ""}`}
+                    />
+                    <div className={styles.deliverableItem__content}>
+                      <h3 className={styles.deliverableItem__name}>
+                        {item.name}
+                      </h3>
+                      <div className={styles.deliverableItem__meta}>
+                        <span className={styles.typeBadge}>{item.type}</span>
+                        <span className={styles.timestamp}>
+                          <Clock size={10} />
+                          {new Date(
+                            item.lastResult.timestamp
+                          ).toLocaleDateString()}
+                        </span>
                       </div>
-                    )}
+                    </div>
                   </div>
-                  <ChevronRight size={16} className={styles.arrowIcon} />
+
+                  <div className={styles.deliverableItem__result}>
+                    <div className={styles.resultStatus}>
+                      <div
+                        className={`${
+                          styles.resultStatus__label
+                        } ${getStatusClass(currentStatus as QAStatus)} ${
+                          isAwaiting ? styles.awaiting : ""
+                        }`}
+                      >
+                        {currentStatus === "running"
+                          ? t("qa.running") + "..."
+                          : isAwaiting
+                          ? "WAITING FOR APPROVAL"
+                          : currentStatus.toUpperCase()}
+                      </div>
+                      {currentStatus === "failed" && issueCount > 0 && (
+                        <div className={styles.resultStatus__issues}>
+                          {issueCount} {t("qa.issuesFound")}
+                        </div>
+                      )}
+                    </div>
+                    <ChevronRight size={16} className={styles.arrowIcon} />
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
       </div>
     </>

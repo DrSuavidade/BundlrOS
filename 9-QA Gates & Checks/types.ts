@@ -1,4 +1,4 @@
-export type QAStatus = 'passed' | 'failed' | 'running' | 'pending';
+export type QAStatus = 'passed' | 'failed' | 'running' | 'pending' | 'awaiting';
 
 export interface ChecklistItem {
   id: string;
@@ -25,5 +25,6 @@ export interface Deliverable {
   type: 'landing_page' | 'api_endpoint' | 'email_template' | 'dashboard_widget';
   version: string;
   owner: string;
+  status: string;
   lastResult: QAResult;
 }

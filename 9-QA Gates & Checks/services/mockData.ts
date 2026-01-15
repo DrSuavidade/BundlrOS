@@ -14,7 +14,7 @@ const generateChecklist = (type: string): ChecklistItem[] => {
       { id: 'vis-2', category: 'visual', label: 'Font loading', status: 'passed' },
     ];
   }
-  
+
   if (type === 'api_endpoint') {
     return [
       ...common,
@@ -33,6 +33,7 @@ export const initialDeliverables: Deliverable[] = [
     type: 'landing_page',
     version: 'v1.0.2',
     owner: 'Frontend Team',
+    status: 'qa_failed',
     lastResult: {
       id: 'qa-101',
       deliverableId: 'del-001',
@@ -48,13 +49,14 @@ export const initialDeliverables: Deliverable[] = [
     type: 'api_endpoint',
     version: 'v2.1.0',
     owner: 'Backend Team',
+    status: 'approved',
     lastResult: {
       id: 'qa-102',
       deliverableId: 'del-002',
       timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 day ago
       status: 'passed',
       score: 100,
-      checklist: generateChecklist('api_endpoint').map(i => ({...i, status: 'passed', logs: undefined, evidence: 'Verified'})),
+      checklist: generateChecklist('api_endpoint').map(i => ({ ...i, status: 'passed', logs: undefined, evidence: 'Verified' })),
     }
   },
   {
@@ -63,6 +65,7 @@ export const initialDeliverables: Deliverable[] = [
     type: 'email_template',
     version: 'v1.5',
     owner: 'Growth Team',
+    status: 'awaiting_approval',
     lastResult: {
       id: 'qa-103',
       deliverableId: 'del-003',
@@ -80,7 +83,7 @@ export const runMockQA = async (deliverableId: string, currentType: string): Pro
 
   const isPass = Math.random() > 0.3; // 70% chance to pass
   const baseList = generateChecklist(currentType);
-  
+
   const newList = baseList.map(item => ({
     ...item,
     status: isPass ? 'passed' : (Math.random() > 0.8 ? 'failed' : 'passed') as QAStatus,

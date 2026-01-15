@@ -225,6 +225,39 @@ export const SupabaseApprovalService = {
                 })
                 .eq('deliverable_id', id);
 
+            // 3. Reactivate Factory if Rejected
+            if (status === ApprovalStatus.REJECTED) {
+                try {
+                    // Find contract_id via deliverable -> project
+                    const { data: deliverableData } = await supabase
+                        .from('deliverables')
+                        .select('project_id')
+                        .eq('id', id)
+                        .single();
+
+                    if (deliverableData) {
+                        const { data: projectData } = await supabase
+                            .from('projects')
+                            .select('contract_id')
+                            .eq('id', deliverableData.project_id)
+                            .single();
+
+                        if (projectData && projectData.contract_id) {
+                            // Update factory status to ACTIVE to allow revisions
+                            await supabase
+                                .from('service_factories')
+                                .update({
+                                    status: 'active', // Reactivate factory
+                                    // Optionally append a log? simpler just to reset status for now.
+                                })
+                                .eq('contract_id', projectData.contract_id);
+                        }
+                    }
+                } catch (e) {
+                    console.error('[Approvals] Failed to reactivate factory:', e);
+                }
+            }
+
             // 3. Return fresh object
             const deliverable = await DeliverablesApi.getById(id);
             if (!deliverable) throw new Error('Deliverable lost');
