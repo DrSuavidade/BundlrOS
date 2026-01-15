@@ -5,7 +5,7 @@
     "client360": "Client 360",
     "budgets": "Budgets",
     "strategy": "Strategy",
-    "coreData": "Core Data",
+    "coreData": "Payment Hub",
     "capacity": "Capacity",
     "production": "Production",
     "factories": "Factories",
@@ -21,7 +21,7 @@
   },
   "nav": {
     "inbox": "Unified Inbox",
-    "coreData": "Core Data",
+    "coreData": "Payment Hub",
     "client360": "Client 360",
     "factories": "Service Factories",
     "approvals": "Approvals",

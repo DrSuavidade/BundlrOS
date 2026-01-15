@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import {
   Inbox,
   LayoutGrid,
@@ -10,7 +10,6 @@ import {
   CreditCard,
   Settings,
   ShieldCheck,
-  Zap,
   Activity,
   Server,
   Key,
@@ -22,14 +21,17 @@ interface SideNavProps {
   isOpen?: boolean;
   onMouseEnter?: () => void;
   onMouseLeave?: () => void;
+  onTriggerRefresh?: () => void;
 }
 
 export const SideNav: React.FC<SideNavProps> = ({
   isOpen = true,
   onMouseEnter,
   onMouseLeave,
+  onTriggerRefresh,
 }) => {
   const { t } = useLanguage();
+  const location = useLocation();
 
   const navGroups = [
     {
@@ -117,6 +119,12 @@ export const SideNav: React.FC<SideNavProps> = ({
               <NavLink
                 key={item.labelKey}
                 to={item.to}
+                onClick={(e) => {
+                  if (location.pathname === item.to) {
+                    e.preventDefault();
+                    onTriggerRefresh?.();
+                  }
+                }}
                 className={({ isActive }) =>
                   `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
                 }

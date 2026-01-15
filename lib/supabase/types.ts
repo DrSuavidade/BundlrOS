@@ -245,6 +245,20 @@ export interface Database {
                 Insert: Omit<Database['public']['Tables']['file_assets']['Row'], 'id' | 'uploaded_at'> & { id?: string };
                 Update: Partial<Database['public']['Tables']['file_assets']['Insert']>;
             };
+            notifications: {
+                Row: {
+                    id: string;
+                    user_id: string;
+                    title: string;
+                    message: string | null;
+                    type: 'info' | 'success' | 'warning' | 'error';
+                    is_read: boolean;
+                    link: string | null;
+                    created_at: string;
+                };
+                Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at'> & { id?: string };
+                Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
+            };
         };
         Functions: Record<string, never>;
         Enums: {
@@ -306,3 +320,6 @@ export type FileAssetUpdate = Tables['file_assets']['Update'];
 export type ServiceFactory = Tables['service_factories']['Row'];
 export type ServiceFactoryInsert = Tables['service_factories']['Insert'];
 export type ServiceFactoryUpdate = Tables['service_factories']['Update'];
+export type Notification = Tables['notifications']['Row'];
+export type NotificationInsert = Tables['notifications']['Insert'];
+export type NotificationUpdate = Tables['notifications']['Update'];

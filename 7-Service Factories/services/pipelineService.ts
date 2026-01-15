@@ -320,6 +320,7 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
       });
     }
 
+    let notifLog = "";
     if (deliverable) {
       // Initialize Approval Record
       let clientEmail = 'client@example.com';
@@ -376,6 +377,46 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
           }]
         });
       }
+
+
+      // Notify other users
+      let notifLog = "";
+      try {
+        const { data: users, error: userError } = await supabase.from('profiles').select('id, name');
+
+        if (userError) {
+          notifLog = `Notification Error (Fetch Profiles): ${userError.message}`;
+          console.error(notifLog);
+        } else if (users) {
+          const others = users.filter(u => u.id !== factory.assigneeId);
+          console.log(`Found ${users.length} users, sending notifications to ${others.length} others.`);
+
+          if (others.length > 0) {
+            const { error: insertError } = await supabase.from('notifications').insert(
+              others.map(user => ({
+                user_id: user.id,
+                title: "New Approval Request",
+                message: `Approval needed for ${factory.clientName} - ${factory.templateId}`,
+                type: "info",
+                link: "/approvals",
+                is_read: false
+              }))
+            );
+
+            if (insertError) {
+              notifLog = `Notification Insert Error: ${insertError.message}`;
+              console.error(notifLog);
+            } else {
+              notifLog = `Sent notifications to ${others.length} users.`;
+            }
+          } else {
+            notifLog = "No other users to notify.";
+          }
+        }
+      } catch (err) {
+        notifLog = `Notification Exception: ${String(err)}`;
+        console.warn("Failed to send notifications", err);
+      }
     }
 
     return {
@@ -386,7 +427,7 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
           id: generateId(),
           timestamp: new Date().toISOString(),
           event: 'ADVANCE',
-          message: `Pipeline completed. Created deliverable: ${factory.clientName}-${factory.templateId}`
+          message: `Pipeline completed. Created deliverable: ${factory.clientName}-${factory.templateId}. ${notifLog}`
         },
         ...factory.logs
       ]

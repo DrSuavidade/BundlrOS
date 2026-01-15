@@ -1,94 +1,113 @@
 import React, { useEffect, useState } from "react";
 import { API } from "../services";
-import { Client, Deliverable, SystemEvent } from "../types";
+import { Client, ServiceContract } from "../types";
 import {
-  Activity,
-  Clock,
-  FileCheck,
+  CreditCard,
+  Calendar,
+  DollarSign,
+  Send,
+  FileText,
   AlertCircle,
+  CheckCircle2,
+  Clock,
   TrendingUp,
-  Users,
-  Zap,
-  ArrowUpRight,
-  BarChart3,
-  Layers,
+  MoreHorizontal,
 } from "lucide-react";
-import { Link } from "react-router-dom";
 import { useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
 
-// Event Type Badge Component
-const EventTypeBadge: React.FC<{ type: string }> = ({ type }) => {
-  const getVariant = () => {
-    if (type.includes("created")) return styles.created;
-    if (type.includes("updated")) return styles.updated;
-    if (type.includes("status")) return styles.status;
-    if (type.includes("client")) return styles.client;
-    return "";
-  };
+// Helper to calculate next due date for monthly payments
+const getNextDueDate = (startDateStr: string) => {
+  if (!startDateStr) return new Date();
 
-  const formatType = (t: string) => {
-    return t.replace(/\./g, " • ").replace(/_/g, " ").toUpperCase();
-  };
+  const start = new Date(startDateStr);
+  const today = new Date();
+  const dayOfMonth = start.getDate();
 
-  return (
-    <span className={`${styles.eventBadge} ${getVariant()}`}>
-      {formatType(type)}
-    </span>
-  );
+  let nextDue = new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
+
+  // If we passed the day this month, move to next month
+  if (today.getDate() > dayOfMonth) {
+    nextDue.setMonth(nextDue.getMonth() + 1);
+  }
+
+  return nextDue;
 };
 
-// Status color mapping
-const getStatusColor = (status: string): string => {
-  switch (status) {
-    case "draft":
-      return "rgb(156, 163, 175)";
-    case "awaiting_approval":
-      return "rgb(245, 158, 11)";
-    case "approved":
-      return "rgb(59, 130, 246)";
-    case "in_qa":
-      return "rgb(168, 85, 247)";
-    case "ready":
-      return "rgb(16, 185, 129)";
-    case "published":
-      return "var(--color-accent-primary)";
-    default:
-      return "var(--color-text-tertiary)";
-  }
+// Helper to format currency
+const formatMoney = (amount: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
 };
 
 export const Dashboard: React.FC = () => {
   const { t } = useLanguage();
   const [clients, setClients] = useState<Client[]>([]);
-  const [deliverables, setDeliverables] = useState<Deliverable[]>([]);
-  const [events, setEvents] = useState<SystemEvent[]>([]);
+  const [contracts, setContracts] = useState<ServiceContract[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // Load data
   useEffect(() => {
-    API.getClients().then(setClients);
-    API.getDeliverables().then(setDeliverables);
-    API.getEvents().then(setEvents);
+    Promise.all([API.getClients(), API.getContracts()]).then(
+      ([clientsData, contractsData]) => {
+        setClients(clientsData);
+        setContracts(contractsData);
+        setLoading(false);
+      }
+    );
   }, []);
 
-  const pendingDeliverables = deliverables.filter((d) =>
-    ["draft", "awaiting_approval", "in_qa"].includes(d.status)
+  // Enrich contracts with client data and computed status
+  const enrichedContracts = contracts.map((contract) => {
+    const client = clients.find((c) => c.id === contract.client_id);
+    const nextDue =
+      contract.payment_type === "monthly"
+        ? getNextDueDate(contract.start_date)
+        : new Date(contract.end_date || contract.start_date); // Default one-off to end date
+
+    // Simple logic: If due date is within 3 days, it's "due soon"
+    const diffDays = Math.ceil(
+      (nextDue.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+    );
+    let paymentStatus = "upcoming";
+    if (diffDays < 0) paymentStatus = "overdue";
+    else if (diffDays <= 5) paymentStatus = "due_soon";
+
+    return {
+      ...contract,
+      clientName: client?.name || "Unknown Client",
+      clientEmail: client?.email,
+      nextDue,
+      paymentStatus,
+      diffDays,
+    };
+  });
+
+  const monthlyContracts = enrichedContracts
+    .filter((c) => c.payment_type === "monthly" && c.status === "active")
+    .sort((a, b) => a.nextDue.getTime() - b.nextDue.getTime());
+
+  const oneOffContracts = enrichedContracts
+    .filter((c) => c.payment_type !== "monthly" && c.status !== "expired")
+    .sort((a, b) => a.nextDue.getTime() - b.nextDue.getTime());
+
+  // Quick Stats
+  const totalMRR = monthlyContracts.reduce((acc, c) => acc + (c.value || 0), 0);
+  const totalOneOffPending = oneOffContracts.reduce(
+    (acc, c) => acc + (c.value || 0),
+    0
+  );
+  const overdueCount = enrichedContracts.filter(
+    (c) => c.paymentStatus === "overdue"
   ).length;
 
-  const publishedDeliverables = deliverables.filter(
-    (d) => d.status === "published"
-  ).length;
-
-  const statusData = [
-    { status: "draft", labelKey: "coreData.status.draft" },
-    {
-      status: "awaiting_approval",
-      labelKey: "coreData.status.awaitingApproval",
-    },
-    { status: "approved", labelKey: "coreData.status.approved" },
-    { status: "in_qa", labelKey: "coreData.status.inQa" },
-    { status: "ready", labelKey: "coreData.status.ready" },
-    { status: "published", labelKey: "coreData.status.published" },
-  ];
+  const handleAction = (action: string, clientName: string) => {
+    alert(`${action} for ${clientName}`);
+  };
 
   return (
     <div className={styles.pageContainer}>
@@ -96,36 +115,33 @@ export const Dashboard: React.FC = () => {
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1>
-            <BarChart3
-              size={22}
+            <CreditCard
+              size={28}
               className="text-[var(--color-accent-primary)]"
             />
-            {t("coreData.title")}
+            Payment Hub
           </h1>
-          <p>{t("coreData.subtitle")}</p>
+          <p>Financial overview and payment management</p>
         </div>
         <div className={styles.statusBadge}>
           <div className={styles.statusDot} />
-          {t("coreData.allSystemsOp")}
+          Systems Active
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className={styles.statsGrid}>
-        {/* Total Clients */}
         <div className={styles.statCard}>
           <div
             className={styles.statCard__glow}
             style={{ background: "rgb(59, 130, 246)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>
-              {t("coreData.totalClients")}
-            </p>
-            <p className={styles.statCard__value}>{clients.length}</p>
+            <p className={styles.statCard__label}>Monthly Recurring Revenue</p>
+            <p className={styles.statCard__value}>{formatMoney(totalMRR)}</p>
             <div className={`${styles.statCard__trend} ${styles.up}`}>
-              <TrendingUp size={10} />
-              <span>{t("coreData.thisMonth")}</span>
+              <TrendingUp size={12} />
+              <span>Active Retainers</span>
             </div>
           </div>
           <div
@@ -135,79 +151,20 @@ export const Dashboard: React.FC = () => {
               color: "rgb(59, 130, 246)",
             }}
           >
-            <Users size={18} />
+            <DollarSign size={18} />
           </div>
         </div>
 
-        {/* Active Work Items */}
-        <div className={styles.statCard}>
-          <div
-            className={styles.statCard__glow}
-            style={{ background: "rgb(245, 158, 11)" }}
-          />
-          <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>
-              {t("coreData.activeWorkItems")}
-            </p>
-            <p className={styles.statCard__value}>{pendingDeliverables}</p>
-            <div
-              className={`${styles.statCard__trend} ${
-                pendingDeliverables === 0 ? styles.up : styles.down
-              }`}
-            >
-              <TrendingUp size={10} />
-              <span>
-                {pendingDeliverables > 0
-                  ? t("coreData.needsAttention")
-                  : t("coreData.allClear")}
-              </span>
-            </div>
-          </div>
-          <div
-            className={styles.statCard__icon}
-            style={{
-              background: "rgba(245, 158, 11, 0.1)",
-              color: "rgb(245, 158, 11)",
-            }}
-          >
-            <Clock size={18} />
-          </div>
-        </div>
-
-        {/* Published Items */}
-        <div className={styles.statCard}>
-          <div
-            className={styles.statCard__glow}
-            style={{ background: "rgb(16, 185, 129)" }}
-          />
-          <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>
-              {t("coreData.publishedItems")}
-            </p>
-            <p className={styles.statCard__value}>{publishedDeliverables}</p>
-          </div>
-          <div
-            className={styles.statCard__icon}
-            style={{
-              background: "rgba(16, 185, 129, 0.1)",
-              color: "rgb(16, 185, 129)",
-            }}
-          >
-            <FileCheck size={18} />
-          </div>
-        </div>
-
-        {/* Recent Events */}
         <div className={styles.statCard}>
           <div
             className={styles.statCard__glow}
             style={{ background: "rgb(168, 85, 247)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>
-              {t("coreData.recentEvents")}
+            <p className={styles.statCard__label}>Pending One-Off</p>
+            <p className={styles.statCard__value}>
+              {formatMoney(totalOneOffPending)}
             </p>
-            <p className={styles.statCard__value}>{events.length}</p>
           </div>
           <div
             className={styles.statCard__icon}
@@ -216,160 +173,238 @@ export const Dashboard: React.FC = () => {
               color: "rgb(168, 85, 247)",
             }}
           >
-            <Zap size={18} />
+            <FileText size={18} />
+          </div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div
+            className={styles.statCard__glow}
+            style={{
+              background:
+                overdueCount > 0 ? "rgb(239, 68, 68)" : "rgb(16, 185, 129)",
+            }}
+          />
+          <div className={styles.statCard__content}>
+            <p className={styles.statCard__label}>Payment Alerts</p>
+            <p
+              className={styles.statCard__value}
+              style={{
+                color: overdueCount > 0 ? "var(--color-error)" : "inherit",
+              }}
+            >
+              {overdueCount} Overdue
+            </p>
+            <div className={styles.statCard__trend}>
+              <span>Action needed</span>
+            </div>
+          </div>
+          <div
+            className={styles.statCard__icon}
+            style={{
+              background:
+                overdueCount > 0
+                  ? "rgba(239, 68, 68, 0.1)"
+                  : "rgba(16, 185, 129, 0.1)",
+              color:
+                overdueCount > 0 ? "rgb(239, 68, 68)" : "rgb(16, 185, 129)",
+            }}
+          >
+            <AlertCircle size={18} />
           </div>
         </div>
       </div>
 
       {/* Content Grid */}
-      <div className={styles.contentGrid}>
-        {/* Activity Log */}
+      <div
+        className={styles.contentGrid}
+        style={{ gridTemplateColumns: "1fr 1fr" }}
+      >
+        {/* Recurring Payments */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionCard__header}>
             <div className={styles.sectionCard__title}>
-              <Activity
-                size={14}
-                className="text-[var(--color-accent-primary)]"
-              />
-              {t("coreData.activityLog")}
+              <Clock size={16} className="text-[var(--color-accent-primary)]" />
+              Recurring Retainers
             </div>
-            <span className={styles.sectionCard__badge}>
-              {t("coreData.last100Events")}
-            </span>
           </div>
-
           <div className={styles.sectionCard__body}>
-            {events.length === 0 ? (
+            {monthlyContracts.length === 0 ? (
               <div className={styles.emptyState}>
-                <div className={styles.emptyState__icon}>
-                  <AlertCircle size={20} />
-                </div>
-                <p className={styles.emptyState__title}>
-                  {t("coreData.noActivityYet")}
-                </p>
-                <p className={styles.emptyState__description}>
-                  {t("coreData.noActivityDesc")}
-                </p>
+                <p className={styles.emptyState__title}>No active retainers</p>
               </div>
             ) : (
-              <table className={styles.activityTable}>
-                <thead>
-                  <tr>
-                    <th style={{ width: "140px" }}>
-                      {t("coreData.timestamp")}
-                    </th>
-                    <th style={{ width: "180px" }}>
-                      {t("coreData.eventType")}
-                    </th>
-                    <th>{t("coreData.details")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {events.slice(0, 8).map((event) => (
-                    <tr key={event.id}>
-                      <td className={styles.activityTable__timestamp}>
-                        {new Date(event.timestamp).toLocaleString([], {
-                          month: "2-digit",
-                          day: "2-digit",
-                          year: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </td>
-                      <td>
-                        <EventTypeBadge type={event.type} />
-                      </td>
-                      <td className={styles.activityTable__details}>
-                        {event.details}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <div className="flex flex-col gap-3">
+                {monthlyContracts.map((contract) => (
+                  <div key={contract.id} className={styles.paymentCard}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-semibold text-[var(--color-text-primary)] text-sm">
+                          {contract.clientName}
+                        </h3>
+                        <p className="text-xs text-[var(--color-text-secondary)]">
+                          {contract.title}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
+                          contract.paymentStatus === "overdue"
+                            ? "bg-red-500/10 text-red-400 border-red-500/20"
+                            : contract.paymentStatus === "due_soon"
+                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                        }`}
+                      >
+                        {contract.paymentStatus === "overdue"
+                          ? "OVERDUE"
+                          : contract.paymentStatus === "due_soon"
+                          ? "DUE SOON"
+                          : "UPCOMING"}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider mb-0.5">
+                          Next Payment
+                        </p>
+                        <div className="flex items-center gap-1.5 text-[var(--color-text-primary)]">
+                          <Calendar
+                            size={12}
+                            className="text-[var(--color-text-tertiary)]"
+                          />
+                          <span className="text-xs font-mono">
+                            {contract.nextDue.toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-[var(--color-text-primary)]">
+                          {formatMoney(contract.value || 0)}
+                        </p>
+                        <p className="text-[10px] text-[var(--color-text-tertiary)]">
+                          /mo
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)] flex gap-2">
+                      <button
+                        onClick={() =>
+                          handleAction("Created Receipt", contract.clientName)
+                        }
+                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                      >
+                        <FileText size={10} />
+                        Receipt
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleAction("Sent Reminder", contract.clientName)
+                        }
+                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                      >
+                        <Send size={10} />
+                        Remind
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </div>
 
-        {/* Deliverable Pipeline */}
+        {/* One-Off Payments */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionCard__header}>
             <div className={styles.sectionCard__title}>
-              <Layers
-                size={14}
+              <CheckCircle2
+                size={16}
                 className="text-[var(--color-accent-primary)]"
               />
-              {t("coreData.deliverablePipeline")}
+              One-Off Projects
             </div>
           </div>
-
           <div className={styles.sectionCard__body}>
-            {statusData.map(({ status, labelKey }) => {
-              const count = deliverables.filter(
-                (d) => d.status === status
-              ).length;
-              const percentage = deliverables.length
-                ? Math.round((count / deliverables.length) * 100)
-                : 0;
-              const color = getStatusColor(status);
-
-              return (
-                <div key={status} className={styles.pipelineItem}>
-                  <div className={styles.pipelineItem__header}>
-                    <div className={styles.pipelineItem__label}>
-                      <div
-                        className={styles.pipelineItem__dot}
-                        style={{ background: color }}
-                      />
-                      <span className={styles.pipelineItem__name}>
-                        {t(labelKey)}
+            {oneOffContracts.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p className={styles.emptyState__title}>No pending projects</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {oneOffContracts.map((contract) => (
+                  <div key={contract.id} className={styles.paymentCard}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h3 className="font-semibold text-[var(--color-text-primary)] text-sm">
+                          {contract.clientName}
+                        </h3>
+                        <p className="text-xs text-[var(--color-text-secondary)]">
+                          {contract.title}
+                        </p>
+                      </div>
+                      <span className="px-2 py-0.5 rounded text-[10px] font-medium border bg-blue-500/10 text-blue-400 border-blue-500/20">
+                        PROJECT
                       </span>
                     </div>
-                    <div className={styles.pipelineItem__stats}>
-                      <span className={styles.pipelineItem__percentage}>
-                        {percentage}%
-                      </span>
-                      <span className={styles.pipelineItem__count}>
-                        {count}
-                      </span>
+
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider mb-0.5">
+                          Due Date
+                        </p>
+                        <div className="flex items-center gap-1.5 text-[var(--color-text-primary)]">
+                          <Calendar
+                            size={12}
+                            className="text-[var(--color-text-tertiary)]"
+                          />
+                          <span className="text-xs font-mono">
+                            {contract.nextDue.toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-bold text-[var(--color-text-primary)]">
+                          {formatMoney(contract.value || 0)}
+                        </p>
+                        <p className="text-[10px] text-[var(--color-text-tertiary)]">
+                          Total
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)] flex gap-2">
+                      <button
+                        onClick={() =>
+                          handleAction("Created Invoice", contract.clientName)
+                        }
+                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                      >
+                        <FileText size={10} />
+                        Invoice
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleAction("Sent Reminder", contract.clientName)
+                        }
+                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                      >
+                        <Send size={10} />
+                        Remind
+                      </button>
                     </div>
                   </div>
-                  <div className={styles.pipelineItem__bar}>
-                    <div
-                      className={styles.pipelineItem__progress}
-                      style={{ width: `${percentage}%`, background: color }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Quick Stats */}
-            <div className={styles.quickStats}>
-              <div className={styles.quickStat}>
-                <p className={styles.quickStat__label}>{t("coreData.total")}</p>
-                <p className={styles.quickStat__value}>{deliverables.length}</p>
+                ))}
               </div>
-              <div className={styles.quickStat}>
-                <p className={styles.quickStat__label}>
-                  {t("coreData.completion")}
-                </p>
-                <p className={`${styles.quickStat__value} ${styles.success}`}>
-                  {deliverables.length
-                    ? Math.round(
-                        (publishedDeliverables / deliverables.length) * 100
-                      )
-                    : 0}
-                  %
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.sectionCard__footer}>
-            <Link to="deliverables" className={styles.viewAllLink}>
-              {t("coreData.viewAllDeliverables")}
-              <ArrowUpRight size={12} />
-            </Link>
+            )}
           </div>
         </div>
       </div>

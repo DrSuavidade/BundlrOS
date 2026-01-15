@@ -36,6 +36,7 @@ export interface Client extends BaseEntity {
   code: string;
   industry: string;
   status: 'active' | 'inactive';
+  email?: string;
 }
 
 export interface Contact extends BaseEntity {
@@ -52,6 +53,7 @@ export interface ServiceContract extends BaseEntity {
   end_date: string;
   value: number;
   status: 'active' | 'pending' | 'expired';
+  payment_type?: 'monthly' | 'one_off';
 }
 
 export interface Project extends BaseEntity {

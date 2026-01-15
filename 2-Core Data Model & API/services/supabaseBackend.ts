@@ -40,6 +40,7 @@ const mapClient = (client: SupabaseClient): Client => ({
     code: client.code || '',
     industry: client.industry || '',
     status: client.status as Client['status'],
+    email: client.email || undefined,
     created_at: client.created_at,
     updated_at: client.updated_at,
     created_by: 'system' // Not tracked in Supabase schema
@@ -53,6 +54,7 @@ const mapContract = (contract: SupabaseContract): ServiceContract => ({
     end_date: contract.end_date || '',
     value: contract.value || 0,
     status: (contract.status === 'draft' ? 'pending' : contract.status) as ServiceContract['status'],
+    payment_type: (contract.payment_type as 'monthly' | 'one_off') || 'one_off',
     created_at: contract.created_at,
     updated_at: contract.updated_at,
     created_by: 'system'
@@ -136,6 +138,8 @@ export const SupabaseAPI = {
             name: data.name,
             code: data.code || null,
             industry: data.industry || null,
+            email: data.email || null,
+            nif: null,
             status: data.status as SupabaseClient['status'],
         });
         return mapClient(created);

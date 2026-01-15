@@ -16,10 +16,9 @@ import {
   Shield,
   BarChart3,
   CreditCard,
-  Zap,
-  Gauge,
   Settings2,
 } from "lucide-react";
+import { Notification, NotificationsApi } from "@bundlros/supabase";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "../../contexts/AuthContext";
 import styles from "./AppShell.module.css";
@@ -90,43 +89,60 @@ export const AppBar: React.FC<AppBarProps> = ({
       icon: CreditCard,
       path: "/budgets",
     },
-    { id: "events", titleKey: "nav.events", icon: Zap, path: "/events" },
-    {
-      id: "capacity",
-      titleKey: "nav.capacity",
-      icon: Gauge,
-      path: "/capacity",
-    },
+
     { id: "admin", titleKey: "nav.admin", icon: Settings2, path: "/admin" },
   ];
 
-  // Mock notifications
-  const mockNotifications = [
-    {
-      id: 1,
-      titleKey: "notif.newIntake",
-      time: `2 ${t("notif.timeAgo.min")}`,
-      unread: true,
-    },
-    {
-      id: 2,
-      titleKey: "notif.budgetApproved",
-      time: `15 ${t("notif.timeAgo.min")}`,
-      unread: true,
-    },
-    {
-      id: 3,
-      titleKey: "notif.qaCheck",
-      time: `1 ${t("notif.timeAgo.hour")}`,
-      unread: false,
-    },
-    {
-      id: 4,
-      titleKey: "notif.factoryStage",
-      time: `3 ${t("notif.timeAgo.hours")}`,
-      unread: false,
-    },
-  ];
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Time ago helper
+  const timeAgo = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 1) return language === "pt" ? "agora" : "now";
+    if (diffMins < 60) return `${diffMins} ${language === "pt" ? "min" : "m"}`;
+    if (diffHours < 24) return `${diffHours} ${language === "pt" ? "h" : "h"}`;
+    return `${diffDays} ${language === "pt" ? "d" : "d"}`;
+  };
+
+  // Load notifications
+  useEffect(() => {
+    if (!user) return;
+
+    const loadNotifs = async () => {
+      const data = await NotificationsApi.getByUserId(user.id);
+      setNotifications(data);
+    };
+
+    loadNotifs();
+    const interval = setInterval(loadNotifs, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const handleMarkRead = async (id: string, link: string | null) => {
+    // Optimistic update
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+
+    await NotificationsApi.markAsRead(id);
+
+    if (link) {
+      navigate(link);
+      setShowNotifications(false);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!user) return;
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    await NotificationsApi.markAllAsRead(user.id);
+  };
 
   // Filter nav items based on search
   const filteredItems = navItems.filter((item) =>
@@ -263,7 +279,7 @@ export const AppBar: React.FC<AppBarProps> = ({
     }
   };
 
-  const unreadCount = mockNotifications.filter((n) => n.unread).length;
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
 
   return (
     <>
@@ -523,30 +539,65 @@ export const AppBar: React.FC<AppBarProps> = ({
                   >
                     {t("common.notifications")}
                   </span>
-                  <span
-                    style={{
-                      fontSize: "0.5rem",
-                      fontWeight: 600,
-                      color: "var(--color-accent-primary)",
-                      background: "rgba(99, 102, 241, 0.1)",
-                      padding: "0.125rem 0.375rem",
-                      borderRadius: "999px",
-                    }}
-                  >
-                    {unreadCount} {t("common.new")}
-                  </span>
+                  {unreadCount > 0 && (
+                    <span
+                      style={{
+                        fontSize: "0.5rem",
+                        fontWeight: 600,
+                        color: "var(--color-accent-primary)",
+                        background: "rgba(99, 102, 241, 0.1)",
+                        padding: "0.125rem 0.375rem",
+                        borderRadius: "999px",
+                      }}
+                    >
+                      {unreadCount} {t("common.new")}
+                    </span>
+                  )}
                 </div>
-                <div style={{ maxHeight: "240px", overflow: "auto" }}>
-                  {mockNotifications.map((notif) => (
+                <div style={{ maxHeight: "240px", overflow: "visible" }}>
+                  {notifications.length === 0 && (
+                    <div
+                      style={{
+                        padding: "32px 16px",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        color: "var(--color-text-tertiary)",
+                      }}
+                    >
+                      <Inbox size={24} style={{ opacity: 0.5 }} />
+                      <div style={{ textAlign: "center" }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: "13px",
+                            fontWeight: 500,
+                            color: "var(--color-text-secondary)",
+                          }}
+                        >
+                          {t("No Notifications") || "All caught up!"}
+                        </p>
+                        <p
+                          style={{ margin: 0, fontSize: "11px", opacity: 0.7 }}
+                        >
+                          Check back later for new updates.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {notifications.map((notif) => (
                     <div
                       key={notif.id}
+                      onClick={() => handleMarkRead(notif.id, notif.link)}
                       style={{
                         padding: "0.625rem 0.875rem",
                         borderBottom: "1px solid var(--color-border-subtle)",
                         display: "flex",
                         gap: "0.5rem",
                         cursor: "pointer",
-                        background: notif.unread
+                        background: !notif.is_read
                           ? "rgba(99, 102, 241, 0.03)"
                           : "transparent",
                       }}
@@ -556,7 +607,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                           width: "5px",
                           height: "5px",
                           borderRadius: "50%",
-                          background: notif.unread
+                          background: !notif.is_read
                             ? "var(--color-accent-primary)"
                             : "transparent",
                           marginTop: "0.375rem",
@@ -572,8 +623,19 @@ export const AppBar: React.FC<AppBarProps> = ({
                             lineHeight: 1.4,
                           }}
                         >
-                          {t(notif.titleKey)}
+                          {notif.title}
                         </p>
+                        {notif.message && (
+                          <p
+                            style={{
+                              fontSize: "10px",
+                              color: "var(--color-text-secondary)",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {notif.message}
+                          </p>
+                        )}
                         <p
                           style={{
                             fontSize: "0.5rem",
@@ -581,12 +643,13 @@ export const AppBar: React.FC<AppBarProps> = ({
                             margin: "0.125rem 0 0 0",
                           }}
                         >
-                          {notif.time}
+                          {timeAgo(notif.created_at)}
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
+
                 <div
                   style={{
                     padding: "0.5rem 0.875rem",
@@ -595,6 +658,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                   }}
                 >
                   <button
+                    onClick={handleMarkAllRead}
                     style={{
                       background: "transparent",
                       border: "none",
@@ -604,7 +668,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                       cursor: "pointer",
                     }}
                   >
-                    {t("common.viewAll")}
+                    Mark all read
                   </button>
                 </div>
               </div>

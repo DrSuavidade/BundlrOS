@@ -194,3 +194,15 @@ created_at timestamp with time zone DEFAULT now(),
 CONSTRAINT system_events_pkey PRIMARY KEY (id),
 CONSTRAINT system_events_client_id_fkey FOREIGN KEY (client_id) REFERENCES public.clients(id)
 );
+CREATE TABLE public.notifications (
+id uuid NOT NULL DEFAULT uuid_generate_v4(),
+user_id uuid NOT NULL,
+title text NOT NULL,
+message text,
+type text DEFAULT 'info' CHECK (type = ANY (ARRAY['info'::text, 'success'::text, 'warning'::text, 'error'::text])),
+is_read boolean DEFAULT false,
+link text,
+created_at timestamp with time zone DEFAULT now(),
+CONSTRAINT notifications_pkey PRIMARY KEY (id),
+CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+);

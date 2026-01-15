@@ -11,6 +11,7 @@ interface AppShellProps {
 
 export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
@@ -36,6 +37,10 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
     navigate("/identity/dashboard");
   };
 
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className={styles.appShell}>
       {/* Background Glows for Premium Aesthetic */}
@@ -55,13 +60,17 @@ export const AppShell: React.FC<AppShellProps> = ({ children, moduleName }) => {
           isOpen={isSidebarOpen}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
+          onTriggerRefresh={handleRefresh}
         />
         <main
           className={`${styles.mainContent} ${
             isSidebarOpen ? "" : styles.mainContentExpanded
           }`}
         >
-          <div className="max-w-7xl mx-auto h-full animate-in fade-in duration-700">
+          <div
+            key={refreshKey}
+            className="max-w-7xl mx-auto h-full animate-in fade-in duration-700"
+          >
             {children}
           </div>
         </main>
