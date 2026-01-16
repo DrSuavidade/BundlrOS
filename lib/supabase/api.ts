@@ -20,6 +20,7 @@ import type {
     Profile, ProfileUpdate,
     FileAsset, FileAssetInsert, FileAssetUpdate,
     Notification, NotificationInsert, NotificationUpdate,
+    Approval,
 } from './types';
 
 // ============================================================================
@@ -847,35 +848,32 @@ export const AutomationRunsApi = {
 // ============================================================================
 
 export const NotificationsApi = {
-    async getByUserId(userId: string): Promise<Notification[]> {
-        const { data, error } = await supabase
+    async getAll(userId?: string): Promise<Notification[]> {
+        let query = supabase
             .from('notifications')
             .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false })
-            .limit(50);
+            .order('created_at', { ascending: false });
+
+        if (userId) {
+            query = query.eq('user_id', userId);
+        }
+
+        const { data, error } = await query;
 
         if (error) handleError(error);
         return (data || []) as Notification[];
     },
 
-    async markAsRead(id: string): Promise<void> {
-        const { error } = await supabase
+    async getUnread(userId: string): Promise<Notification[]> {
+        const { data, error } = await supabase
             .from('notifications')
-            .update({ is_read: true })
-            .eq('id', id);
-
-        if (error) handleError(error);
-    },
-
-    async markAllAsRead(userId: string): Promise<void> {
-        const { error } = await supabase
-            .from('notifications')
-            .update({ is_read: true })
+            .select('*')
             .eq('user_id', userId)
-            .eq('is_read', false);
+            .eq('is_read', false)
+            .order('created_at', { ascending: false });
 
         if (error) handleError(error);
+        return (data || []) as Notification[];
     },
 
     async create(notification: NotificationInsert): Promise<Notification> {
@@ -887,6 +885,63 @@ export const NotificationsApi = {
 
         if (error) handleError(error);
         return data as Notification;
+    },
+
+    async markAsRead(id: string): Promise<Notification> {
+        const { data, error } = await supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) handleError(error);
+        return data as Notification;
+    },
+
+    async markAllAsRead(userId: string): Promise<void> {
+        const { error } = await supabase
+            .from('notifications')
+            .update({ is_read: true })
+            .eq('user_id', userId);
+
+        if (error) handleError(error);
+    },
+
+    async delete(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('notifications')
+            .delete()
+            .eq('id', id);
+
+        if (error) handleError(error);
+    }
+};
+
+// ============================================================================
+// Approvals API
+// ============================================================================
+
+export const ApprovalsApi = {
+    async getAll(): Promise<Approval[]> {
+        const { data, error } = await supabase
+            .from('approvals')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) handleError(error);
+        return (data || []) as Approval[];
+    },
+
+    async getByStatus(status: string): Promise<Approval[]> {
+        const { data, error } = await supabase
+            .from('approvals')
+            .select('*')
+            .eq('status', status)
+            .order('created_at', { ascending: false });
+
+        if (error) handleError(error);
+        return (data || []) as Approval[];
     }
 };
 
@@ -1017,3 +1072,4 @@ export const API = {
     transitionDeliverable: DeliverablesApi.transitionStatus,
     getEvents: SystemEventsApi.getAll,
 };
+

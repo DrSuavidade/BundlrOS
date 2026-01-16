@@ -18,6 +18,7 @@ import {
     ProjectsApi,
     DeliverablesApi,
     ContractsApi,
+    FileAssetsApi,
     AutomationRunsApi,
     type AutomationRun
 } from '@bundlros/supabase';
@@ -53,15 +54,102 @@ const mapRunToReport = (run: AutomationRun): Report => {
     };
 };
 
+// Helper to generate history from real data records
+const generateHistoryFromRecords = (
+    records: any[],
+    dateField: string = 'created_at',
+    type: 'cumulative' | 'daily' = 'cumulative',
+    valueField?: string,
+    filterFn?: (record: any) => boolean
+): { date: string; value: number }[] => {
+    const points = 365; // Generate 1 year of history
+    const history: { date: string; value: number }[] = [];
+    const now = new Date();
+
+    // Normalize string dates to Date objects for easier comparison
+    const preparedRecords = records
+        .filter(r => filterFn ? filterFn(r) : true)
+        .map(r => ({
+            ...r,
+            _date: new Date(r[dateField])
+        }));
+
+    for (let i = points - 1; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(now.getDate() - i);
+        d.setHours(23, 59, 59, 999); // End of day comparison
+
+        // Create a consistent date string for the chart
+        const dateString = d.toISOString().split('T')[0];
+
+        let value = 0;
+        if (type === 'cumulative') {
+            // Count/Sum records created before or on this day
+            value = preparedRecords.reduce((acc, r) => {
+                if (r._date <= d) {
+                    return acc + (valueField ? (Number(r[valueField]) || 0) : 1);
+                }
+                return acc;
+            }, 0);
+        } else {
+            // Daily count/sum (records created exactly on this day)
+            value = preparedRecords.reduce((acc, r) => {
+                if (r._date.toDateString() === d.toDateString()) {
+                    return acc + (valueField ? (Number(r[valueField]) || 0) : 1);
+                }
+                return acc;
+            }, 0);
+        }
+
+        history.push({ date: dateString, value });
+    }
+
+    return history;
+};
+
+// Helper to simulate history based on current value and trend
+const generateMockHistory = (finalValue: number, trend: 'up' | 'down' | 'mixed' = 'mixed'): { date: string; value: number }[] => {
+    const points = 30;
+    const history = [];
+    let currentValue = finalValue;
+    const now = new Date();
+
+    for (let i = 0; i < points; i++) {
+        const d = new Date();
+        d.setDate(now.getDate() - (points - 1 - i));
+
+        // Add some volatility
+        const volatility = finalValue * 0.1;
+        const randomFluctuation = (Math.random() - 0.5) * volatility;
+
+        // Apply trend bias
+        let trendBias = 0;
+        if (trend === 'up') trendBias = (i / points) * (finalValue * 0.2); // Gradually increasing
+        if (trend === 'down') trendBias = -(i / points) * (finalValue * 0.2);
+
+        // Calculate historical point (working backwards from final, but we construct forward)
+        // Actually easier to just synthesize a path
+        history.push({
+            date: d.toISOString().split('T')[0],
+            value: Math.max(0, Math.round(finalValue * 0.8 + (Math.random() * finalValue * 0.4))) // Simple random walk around mean
+        });
+    }
+    // Force last point to match current value
+    history[points - 1].value = finalValue;
+
+    return history;
+};
+
 // Generate KPIs from Supabase data
 const generateKPIsFromData = async (period: string): Promise<KPIRecord[]> => {
     try {
         // Fetch all data from Supabase
-        const [clients, projects, deliverables, contracts] = await Promise.all([
+        const [clients, projects, deliverables, contracts, assets] = await Promise.all([
             ClientsApi.getAll(),
             ProjectsApi.getAll(),
             DeliverablesApi.getAll(),
             ContractsApi.getAll(),
+            FileAssetsApi.getAll(),
         ]);
 
         // Calculate KPIs from real data
@@ -70,77 +158,84 @@ const generateKPIsFromData = async (period: string): Promise<KPIRecord[]> => {
                 id: 'kpi-1',
                 name: 'Total Clients',
                 value: clients.length,
-                previousValue: Math.max(0, clients.length - Math.floor(Math.random() * 3)),
+                previousValue: Math.max(0, clients.length - 2), // Simple approximation for "last period" if we don't query explicit historical snapshots
                 unit: KPIUnit.NUMBER,
                 period,
                 category: 'Growth',
+                history: generateHistoryFromRecords(clients, 'created_at', 'cumulative')
             },
             {
                 id: 'kpi-2',
                 name: 'Active Projects',
                 value: projects.filter(p => p.status === 'active').length,
-                previousValue: Math.floor(projects.length * 0.8),
+                previousValue: 0,
                 unit: KPIUnit.NUMBER,
                 period,
                 category: 'Growth',
+                // For Active Projects, "Cumulative" creates a trend of "Total Projects Created" which is a proxy for growth
+                // Ideally we'd filter by status at that time, but we don't have historical status logs here.
+                // We'll show "Total Projects" trend.
+                history: generateHistoryFromRecords(projects, 'created_at', 'cumulative')
             },
             {
                 id: 'kpi-3',
                 name: 'Total Deliverables',
                 value: deliverables.length,
-                previousValue: Math.max(0, deliverables.length - Math.floor(Math.random() * 5)),
+                previousValue: Math.max(0, deliverables.length - 5),
                 unit: KPIUnit.NUMBER,
                 period,
                 category: 'Growth',
+                history: generateHistoryFromRecords(deliverables, 'created_at', 'cumulative')
             },
             {
                 id: 'kpi-4',
                 name: 'Deliverables Published',
                 value: deliverables.filter(d => d.status === 'published').length,
-                previousValue: Math.floor(deliverables.filter(d => d.status === 'published').length * 0.9),
+                previousValue: 0,
                 unit: KPIUnit.NUMBER,
                 period,
                 category: 'Growth',
+                history: generateHistoryFromRecords(deliverables, 'created_at', 'cumulative', undefined, d => d.status === 'published')
             },
             {
                 id: 'kpi-5',
-                name: 'Completion Rate',
-                value: deliverables.length > 0
-                    ? Math.round((deliverables.filter(d => ['published', 'approved'].includes(d.status)).length / deliverables.length) * 100)
-                    : 0,
-                previousValue: 75,
-                unit: KPIUnit.PERCENTAGE,
+                name: 'Recent Activity', // Changed from Completion Rate to something more chart-friendly for daily
+                value: deliverables.length, // Showing daily volume trend in chart
+                previousValue: 0,
+                unit: KPIUnit.NUMBER,
                 period,
                 category: 'Engagement',
+                history: generateHistoryFromRecords(deliverables, 'created_at', 'daily') // Daily volume
             },
             {
                 id: 'kpi-6',
                 name: 'Total Contract Value',
                 value: contracts.reduce((sum, c) => sum + (c.value || 0), 0),
-                previousValue: contracts.reduce((sum, c) => sum + (c.value || 0), 0) * 0.85,
+                previousValue: 0,
                 unit: KPIUnit.CURRENCY,
                 period,
                 category: 'Financial',
+                history: generateHistoryFromRecords(contracts, 'created_at', 'cumulative', 'value')
             },
             {
                 id: 'kpi-7',
                 name: 'Active Contracts',
                 value: contracts.filter(c => c.status === 'active').length,
-                previousValue: Math.floor(contracts.filter(c => c.status === 'active').length * 0.9),
+                previousValue: 0,
                 unit: KPIUnit.NUMBER,
                 period,
                 category: 'Financial',
+                history: generateHistoryFromRecords(contracts, 'created_at', 'cumulative', undefined, c => c.status === 'active')
             },
             {
                 id: 'kpi-8',
-                name: 'QA Success Rate',
-                value: deliverables.length > 0
-                    ? Math.round((deliverables.filter(d => !['qa_failed'].includes(d.status)).length / deliverables.length) * 100)
-                    : 100,
-                previousValue: 92,
-                unit: KPIUnit.PERCENTAGE,
+                name: 'Storage Usage',
+                value: assets.reduce((sum, a) => sum + (a.size_bytes || 0), 0),
+                previousValue: 0,
+                unit: KPIUnit.BYTES,
                 period,
                 category: 'Engagement',
+                history: generateHistoryFromRecords(assets, 'uploaded_at', 'cumulative', 'size_bytes')
             },
         ];
 

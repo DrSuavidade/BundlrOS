@@ -42,3 +42,23 @@ export interface AuthState {
   isAuthenticated: boolean;
   token: string | null;
 }
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string | null;
+  type: 'info' | 'success' | 'warning' | 'error';
+  isRead: boolean;
+  link: string | null;
+  createdAt: string;
+}
+
+export interface Approval {
+  deliverableId: string;
+  token: string;
+  title: string | null;
+  status: string | null;
+  assigneeId: string | null;
+  createdAt: string;
+}

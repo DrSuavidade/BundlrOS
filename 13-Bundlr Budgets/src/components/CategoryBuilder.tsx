@@ -32,6 +32,9 @@ export const CategoryBuilder: React.FC<CategoryBuilderProps> = ({
   labels,
 }) => {
   const { CATEGORIES, TIERS, TIER_DEFINITIONS, ATOMIC_SERVICES } = data;
+  const [activeCategory, setActiveCategory] = React.useState<Category>(
+    CATEGORIES[0]?.id || "marketing"
+  );
 
   const getTierDescription = (cat: Category, tier: Tier) => {
     return (
@@ -40,108 +43,145 @@ export const CategoryBuilder: React.FC<CategoryBuilderProps> = ({
     );
   };
 
+  const activeCategoryData = CATEGORIES.find((c) => c.id === activeCategory);
+
   return (
     <div>
-      {CATEGORIES.map((category) => {
-        const categoryServices = ATOMIC_SERVICES.filter(
-          (s) => s.category === category.id
-        );
-        const currentSelection = selections[category.id];
-        const isActive =
-          currentSelection && currentSelection.serviceIds.length > 0;
-        const currentTier = currentSelection?.tier || "standard";
-
-        return (
-          <div
-            key={category.id}
-            className={`${styles.categoryCard} ${
-              isActive ? styles.active : ""
-            }`}
-          >
-            {/* Header */}
-            <div className={styles.categoryHeader}>
-              <span className={styles.categoryTitle}>
-                {category.label}
-                {isActive && (
-                  <span className={styles.categoryCount}>
-                    {currentSelection.serviceIds.length}
-                  </span>
-                )}
-              </span>
-            </div>
-
-            <div className={styles.categoryBody}>
-              {/* Tier Selection */}
-              <div className={styles.tierSelector}>
-                <span className={styles.tierLabel}>
-                  {labels.selectTierScope}
+      {/* Category Tabs */}
+      <div
+        className={styles.tabNav}
+        style={{ width: "100%", overflowX: "auto", marginBottom: "1rem" }}
+      >
+        {CATEGORIES.map((cat) => {
+          const count = selections[cat.id]?.serviceIds.length || 0;
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setActiveCategory(cat.id)}
+              className={`${styles.tabButton} ${
+                activeCategory === cat.id ? styles.active : ""
+              }`}
+            >
+              {cat.label}
+              {count > 0 && (
+                <span
+                  className={styles.categoryCount}
+                  style={{ fontSize: "0.5rem", padding: "0.1rem 0.3rem" }}
+                >
+                  {count}
                 </span>
-                <div className={styles.tierButtons}>
-                  {TIERS.map((tier) => (
-                    <button
-                      key={tier.id}
-                      onClick={() => onUpdate(category.id, tier.id, undefined)}
-                      className={`${styles.tierButton} ${
-                        currentTier === tier.id ? styles.active : ""
-                      }`}
-                    >
-                      {tier.label}
-                    </button>
-                  ))}
-                </div>
+              )}
+            </button>
+          );
+        })}
+      </div>
 
-                {/* Tier Description */}
-                <div className={styles.tierDescription}>
-                  <Info
-                    size={12}
-                    className="flex-shrink-0 mt-0.5 text-[var(--color-text-tertiary)]"
-                  />
-                  <span>{getTierDescription(category.id, currentTier)}</span>
-                </div>
+      {activeCategoryData &&
+        (() => {
+          const category = activeCategoryData;
+          const categoryServices = ATOMIC_SERVICES.filter(
+            (s) => s.category === category.id
+          );
+          const currentSelection = selections[category.id];
+          const isActive =
+            currentSelection && currentSelection.serviceIds.length > 0;
+          const currentTier = currentSelection?.tier || "standard";
+
+          return (
+            <div
+              key={category.id}
+              className={`${styles.categoryCard} ${
+                isActive ? styles.active : ""
+              }`}
+            >
+              {/* Header - now just informative or removed since we have tabs? 
+                    User asked for tabs at top. Keeping header validates the context.
+                */}
+              <div className={styles.categoryHeader}>
+                <span className={styles.categoryTitle}>
+                  {category.label}
+                  {isActive && (
+                    <span className={styles.categoryCount}>
+                      {currentSelection.serviceIds.length}
+                    </span>
+                  )}
+                </span>
               </div>
 
-              {/* Service Selection */}
-              <div>
-                <span className={styles.tierLabel}>
-                  {labels.selectServices}
-                </span>
-                <div className={styles.serviceList}>
-                  {categoryServices.map((service) => {
-                    const isSelected = currentSelection?.serviceIds.includes(
-                      service.id
-                    );
-                    return (
-                      <div
-                        key={service.id}
+              <div className={styles.categoryBody}>
+                {/* Tier Selection */}
+                <div className={styles.tierSelector}>
+                  <span className={styles.tierLabel}>
+                    {labels.selectTierScope}
+                  </span>
+                  <div className={styles.tierButtons}>
+                    {TIERS.map((tier) => (
+                      <button
+                        key={tier.id}
                         onClick={() =>
-                          onUpdate(category.id, undefined, service.id)
+                          onUpdate(category.id, tier.id, undefined)
                         }
-                        className={`${styles.serviceItem} ${
-                          isSelected ? styles.selected : ""
+                        className={`${styles.tierButton} ${
+                          currentTier === tier.id ? styles.active : ""
                         }`}
                       >
-                        <div className={styles.serviceCheckbox}>
-                          {isSelected && (
-                            <Check size={12} className="text-white" />
-                          )}
-                        </div>
-                        <div className={styles.serviceInfo}>
-                          <div className={styles.serviceName}>
-                            {service.label}
+                        {tier.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Tier Description */}
+                  <div className={styles.tierDescription}>
+                    <Info
+                      size={12}
+                      className="flex-shrink-0 mt-0.5 text-[var(--color-text-tertiary)]"
+                    />
+                    <span>{getTierDescription(category.id, currentTier)}</span>
+                  </div>
+                </div>
+
+                {/* Service Selection */}
+                <div>
+                  <span className={styles.tierLabel}>
+                    {labels.selectServices}
+                  </span>
+                  <div className={styles.serviceList}>
+                    {categoryServices.map((service) => {
+                      const isSelected = currentSelection?.serviceIds.includes(
+                        service.id
+                      );
+                      return (
+                        <div
+                          key={service.id}
+                          onClick={() =>
+                            onUpdate(category.id, undefined, service.id)
+                          }
+                          className={`${styles.serviceItem} ${
+                            isSelected ? styles.selected : ""
+                          }`}
+                        >
+                          <div className={styles.serviceCheckbox}>
+                            {isSelected && (
+                              <Check size={12} className="text-white" />
+                            )}
                           </div>
-                          <div className={styles.serviceDescription}>
-                            {service.description}
+                          <div className={styles.serviceInfo}>
+                            <div className={styles.serviceName}>
+                              {service.label}
+                            </div>
+                            <div className={styles.serviceDescription}>
+                              {service.description}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })()}
     </div>
   );
 };

@@ -17,26 +17,46 @@ import {
 } from "lucide-react";
 import { useLanguage } from "@bundlros/ui";
 import styles from "./App.module.css";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+} from "recharts";
 
 // KPI Card Component
-const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
-  kpi,
-  t,
-}) => {
-  // Calculate delta percentage from value and previousValue
+const KPICard: React.FC<{
+  kpi: KPIRecord;
+  t: (key: string) => string;
+  selected?: boolean;
+  onClick?: () => void;
+}> = ({ kpi, t, selected, onClick }) => {
+  // Calculate delta percentage
   const delta =
     kpi.previousValue !== 0
       ? ((kpi.value - kpi.previousValue) / kpi.previousValue) * 100
       : 0;
   const isUp = delta >= 0;
 
-  // Format value based on unit
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 B";
+    const k = 1024;
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+  };
+
   const formatValue = (value: number, unit: KPIUnit): string => {
     switch (unit) {
       case KPIUnit.CURRENCY:
         return `€${value.toLocaleString()}`;
       case KPIUnit.PERCENTAGE:
         return `${value.toFixed(1)}%`;
+      case KPIUnit.BYTES:
+        return formatBytes(value);
       case KPIUnit.NUMBER:
       default:
         return value.toLocaleString();
@@ -46,7 +66,10 @@ const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
   const formatted = formatValue(kpi.value, kpi.unit);
 
   return (
-    <div className={styles.kpiCard}>
+    <div
+      className={`${styles.kpiCard} ${selected ? styles.selected : ""}`}
+      onClick={onClick}
+    >
       <div className={styles.kpiCard__header}>
         <span className={styles.kpiCard__label}>{kpi.name}</span>
         <span
@@ -59,9 +82,6 @@ const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
         </span>
       </div>
       <div className={styles.kpiCard__value}>{formatted}</div>
-      <div className={styles.kpiCard__footer}>
-        {t("reporting.vsLastPeriod")}
-      </div>
     </div>
   );
 };
@@ -69,50 +89,208 @@ const KPICard: React.FC<{ kpi: KPIRecord; t: (key: string) => string }> = ({
 // Dashboard View
 const DashboardView: React.FC<{
   kpis: KPIRecord[];
-  periods: string[];
-  selectedPeriod: string;
-  onSelectPeriod: (p: string) => void;
   t: (key: string) => string;
-}> = ({ kpis, periods, selectedPeriod, onSelectPeriod, t }) => {
-  const filteredKPIs = kpis.filter((k) => k.period === selectedPeriod);
+}> = ({ kpis, t }) => {
+  const [selectedKPIId, setSelectedKPIId] = useState<string | null>(null);
+  const [timeRange, setTimeRange] = useState<"1W" | "1M" | "6M" | "1Y">("1W");
+
+  // Filter keys doesn't apply the same way as before since we aren't using "selectedPeriod" from the dropdown.
+  // Instead, we show the snapshot for the current moment, but we might want to filter history by range.
+  // For now, let's just use all KPIs as the "current" view since the period selector is gone.
+  // We assume kpis passed in are the latest snapshot.
+
+  const filteredKPIs = kpis;
+
+  // Initialize selection
+  useEffect(() => {
+    if (filteredKPIs.length > 0 && !selectedKPIId) {
+      setSelectedKPIId(filteredKPIs[0].id);
+    }
+  }, [filteredKPIs, selectedKPIId]);
+
+  const activeKPI =
+    filteredKPIs.find((k) => k.id === selectedKPIId) || filteredKPIs[0];
+
+  // Filter history based on time range
+  const chartData = React.useMemo(() => {
+    if (!activeKPI?.history) return [];
+
+    const now = new Date();
+    const cutoff = new Date();
+
+    switch (timeRange) {
+      case "1W":
+        cutoff.setDate(now.getDate() - 7);
+        break;
+      case "1M":
+        cutoff.setDate(now.getDate() - 30);
+        break;
+      case "6M":
+        cutoff.setDate(now.getDate() - 180);
+        break;
+      case "1Y":
+        cutoff.setDate(now.getDate() - 365);
+        break;
+      default:
+        cutoff.setDate(now.getDate() - 7);
+    }
+
+    return activeKPI.history.filter((point) => new Date(point.date) >= cutoff);
+  }, [activeKPI, timeRange]);
 
   return (
     <>
-      <div className={styles.dashboardHeader}>
-        <div className={styles.dashboardTitle}>
-          <h2>{t("reporting.dashboardTitle")}</h2>
-          <p>
-            {t("reporting.dashboardSubtitle")}{" "}
-            <span className={styles.accentText}>{selectedPeriod}</span>
-          </p>
-        </div>
-        <div className={styles.periodControls}>
-          <div className={styles.periodSelect}>
-            <Calendar size={12} className={styles.periodSelect__icon} />
-            <select
-              value={selectedPeriod}
-              onChange={(e) => onSelectPeriod(e.target.value)}
-            >
-              {periods.map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-            <div className={styles.periodSelect__arrow} />
-          </div>
-          <button className={styles.filterButton}>
-            <Filter size={14} />
-          </button>
-        </div>
-      </div>
-
       {filteredKPIs.length > 0 ? (
-        <div className={styles.kpiGrid}>
-          {filteredKPIs.map((kpi) => (
-            <KPICard key={kpi.id} kpi={kpi} t={t} />
-          ))}
-        </div>
+        <>
+          {/* Scrollable KPI Line */}
+          <div className={styles.kpiGrid}>
+            {filteredKPIs.map((kpi) => (
+              <KPICard
+                key={kpi.id}
+                kpi={kpi}
+                t={t}
+                selected={kpi.id === activeKPI?.id}
+                onClick={() => setSelectedKPIId(kpi.id)}
+              />
+            ))}
+          </div>
+
+          {/* Chart Section */}
+          {activeKPI && (
+            <div className={styles.mainChartSection}>
+              <div
+                className={styles.chartHeader}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  paddingRight: "16px",
+                }}
+              >
+                <h3 className={styles.chartTitle}>
+                  {activeKPI.name} - Trend Analysis
+                </h3>
+                <div
+                  style={{
+                    display: "flex",
+                    background: "var(--color-bg-subtle)",
+                    padding: "2px",
+                    borderRadius: "6px",
+                    border: "1px solid var(--color-border-subtle)",
+                  }}
+                >
+                  {(["1W", "1M", "6M", "1Y"] as const).map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange(range)}
+                      style={{
+                        border: "none",
+                        background:
+                          timeRange === range
+                            ? "var(--color-bg-elevated)"
+                            : "transparent",
+                        color:
+                          timeRange === range
+                            ? "var(--color-text-primary)"
+                            : "var(--color-text-tertiary)",
+                        fontSize: "10px",
+                        fontWeight: 500,
+                        padding: "4px 8px",
+                        borderRadius: "4px",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        lineHeight: "1",
+                        boxShadow:
+                          timeRange === range
+                            ? "0 1px 2px rgba(0,0,0,0.1)"
+                            : "none",
+                      }}
+                    >
+                      {range}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div style={{ flex: 1, minHeight: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient
+                        id="colorValue"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="var(--color-accent-primary)"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="var(--color-accent-primary)"
+                          stopOpacity={0}
+                        />
+                      </linearGradient>
+                    </defs>
+                    <XAxis
+                      dataKey="date"
+                      stroke="var(--color-text-tertiary)"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                      }}
+                    />
+                    <YAxis
+                      stroke="var(--color-text-tertiary)"
+                      fontSize={10}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(value) =>
+                        activeKPI.unit === KPIUnit.CURRENCY
+                          ? `€${value.toLocaleString()}`
+                          : activeKPI.unit === KPIUnit.BYTES
+                          ? value > 1073741824
+                            ? `${(value / 1073741824).toFixed(1)}GB`
+                            : `${(value / 1048576).toFixed(1)}MB`
+                          : value.toLocaleString()
+                      }
+                    />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="rgba(255,255,255,0.05)"
+                      vertical={false}
+                    />
+                    <RechartsTooltip
+                      contentStyle={{
+                        backgroundColor: "var(--color-bg-elevated)",
+                        border: "1px solid var(--color-border-subtle)",
+                        borderRadius: "8px",
+                      }}
+                      itemStyle={{ color: "var(--color-text-primary)" }}
+                      labelStyle={{ color: "var(--color-text-tertiary)" }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="value"
+                      stroke="var(--color-accent-primary)"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorValue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className={styles.emptyState}>
           <div className={styles.emptyState__icon}>
@@ -131,10 +309,8 @@ const DashboardView: React.FC<{
 const ReportListView: React.FC<{
   reports: Report[];
   onSelectReport: (r: Report) => void;
-  onRequestReport: () => void;
-  isGenerating: boolean;
   t: (key: string) => string;
-}> = ({ reports, onSelectReport, onRequestReport, isGenerating, t }) => {
+}> = ({ reports, onSelectReport, t }) => {
   const getStatusClass = (status: ReportStatus) => {
     switch (status) {
       case ReportStatus.GENERATED:
@@ -150,30 +326,6 @@ const ReportListView: React.FC<{
 
   return (
     <>
-      <div className={styles.dashboardHeader}>
-        <div className={styles.dashboardTitle}>
-          <h2>{t("reporting.analyticReports")}</h2>
-          <p>{t("reporting.analyticReportsSubtitle")}</p>
-        </div>
-        <button
-          onClick={onRequestReport}
-          disabled={isGenerating}
-          className={styles.generateButton}
-        >
-          {isGenerating ? (
-            <>
-              <Sparkles size={12} className="animate-spin" />
-              {t("reporting.generating")}
-            </>
-          ) : (
-            <>
-              <Plus size={12} />
-              {t("reporting.generateReport")}
-            </>
-          )}
-        </button>
-      </div>
-
       {reports.length > 0 ? (
         <div className={styles.reportList}>
           {reports.map((report) => (
@@ -373,53 +525,67 @@ const App: React.FC = () => {
               className="text-[var(--color-accent-primary)]"
             />
             {view === "DASHBOARD"
-              ? t("reporting.dashboardTitle")
+              ? t("Analytics")
               : view === "REPORTS"
-              ? t("reporting.analyticReports")
+              ? t("Analytics")
               : "Report Details"}
           </h1>
-          <p>{t("reporting.dashboardSubtitle")}</p>
+        </div>
+
+        {/* Tab Navigation - Centered in Header */}
+        {view !== "REPORT_DETAIL" && (
+          <div className={styles.headerCenter}>
+            <div className={styles.tabNav}>
+              <button
+                onClick={() => setView("DASHBOARD")}
+                className={`${styles.tabButton} ${
+                  view === "DASHBOARD" ? styles.active : ""
+                }`}
+              >
+                Dashboard
+              </button>
+              <button
+                onClick={() => setView("REPORTS")}
+                className={`${styles.tabButton} ${
+                  view === "REPORTS" ? styles.active : ""
+                }`}
+              >
+                Reports
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Right Side Controls */}
+        <div className={styles.headerControls}>
+          {view === "REPORTS" && (
+            <button
+              onClick={handleRequestReport}
+              disabled={isGenerating}
+              className={styles.generateButton}
+            >
+              {isGenerating ? (
+                <>
+                  <Sparkles size={12} className="animate-spin" />
+                  {t("reporting.generating")}
+                </>
+              ) : (
+                <>
+                  <Plus size={12} />
+                  {t("reporting.generateReport")}
+                </>
+              )}
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Tab Navigation */}
-      {view !== "REPORT_DETAIL" && (
-        <div className={styles.tabNav}>
-          <button
-            onClick={() => setView("DASHBOARD")}
-            className={`${styles.tabButton} ${
-              view === "DASHBOARD" ? styles.active : ""
-            }`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => setView("REPORTS")}
-            className={`${styles.tabButton} ${
-              view === "REPORTS" ? styles.active : ""
-            }`}
-          >
-            Reports
-          </button>
-        </div>
-      )}
-
       {/* Content */}
-      {view === "DASHBOARD" && (
-        <DashboardView
-          kpis={kpis}
-          periods={periods}
-          selectedPeriod={selectedPeriod}
-          onSelectPeriod={setSelectedPeriod}
-          t={t}
-        />
-      )}
+      {view === "DASHBOARD" && <DashboardView kpis={kpis} t={t} />}
       {view === "REPORTS" && (
         <ReportListView
           reports={reports}
           onSelectReport={handleSelectReport}
-          onRequestReport={handleRequestReport}
-          isGenerating={isGenerating}
           t={t}
         />
       )}

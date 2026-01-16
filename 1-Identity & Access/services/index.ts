@@ -9,9 +9,9 @@
 const useMockBackend = import.meta.env.VITE_USE_MOCK_BACKEND === 'true';
 
 // Import the appropriate implementation
-import { UserService as MockUserService, AuditService as MockAuditService } from './store';
-import { UserService as SupabaseUserService, AuditService as SupabaseAuditService } from './supabaseStore';
-import type { User, AuditLog, UserStatus } from '../types';
+import { UserService as MockUserService, AuditService as MockAuditService, NotificationService as MockNotificationService } from './store';
+import { UserService as SupabaseUserService, AuditService as SupabaseAuditService, NotificationService as SupabaseNotificationService, ApprovalService as SupabaseApprovalService } from './supabaseStore';
+import type { User, AuditLog, UserStatus, Notification, Approval } from '../types';
 
 // Wrapper to make sync mock API compatible with async Supabase API
 const wrapSyncToAsync = <T>(fn: () => T): (() => Promise<T>) => {
@@ -31,6 +31,17 @@ interface IUserService {
 interface IAuditService {
     getAll: () => Promise<AuditLog[]>;
     log: (action: AuditLog['action'], details: string, performerId: string, performerName: string, targetId?: string) => Promise<void>;
+}
+
+interface INotificationService {
+    getAll: (userId?: string) => Promise<Notification[]>;
+    getUnread: (userId: string) => Promise<Notification[]>;
+    markAsRead: (id: string) => Promise<void>;
+    markAllAsRead: (userId: string) => Promise<void>;
+}
+
+interface IApprovalService {
+    getAll: () => Promise<Approval[]>;
 }
 
 // Export the appropriate service based on environment
@@ -53,5 +64,21 @@ export const AuditService: IAuditService = useMockBackend
         },
     }
     : SupabaseAuditService;
+
+export const NotificationService: INotificationService = useMockBackend
+    ? {
+        getAll: wrapSyncToAsync(MockNotificationService.getAll),
+        getUnread: wrapSyncToAsync(() => []), // Mock not fully implemented for filtering
+        markAsRead: async (id) => MockNotificationService.markAsRead(id),
+        markAllAsRead: async (userId) => MockNotificationService.markAllAsRead(userId),
+    }
+    : SupabaseNotificationService;
+
+// Note: Approvals are not currently mocked in local store
+export const ApprovalService: IApprovalService = useMockBackend
+    ? {
+        getAll: async () => [],
+    }
+    : SupabaseApprovalService;
 
 console.log(`[Identity Store] Using ${useMockBackend ? 'MOCK' : 'SUPABASE'} backend`);

@@ -276,115 +276,82 @@ export const ApprovalDetail: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* AI Helper Tool */}
-          <div className={styles.aiTool}>
-            <div className={styles.aiToolIcon}>
-              <Sparkles size={16} />
-            </div>
-            <div className="flex-1">
-              <div className={styles.aiToolContent}>
-                <h4>AI Assistant</h4>
-              </div>
-
-              {summary ? (
-                <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed">
-                  {summary}
-                </p>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <p className="text-sm text-[var(--color-text-secondary)] m-0">
-                    Need a quick overview? Generate a summary of this request.
-                  </p>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="!text-[var(--color-accent-primary)] !border-[var(--color-accent-primary)]/30 hover:!bg-[var(--color-accent-primary)]/5"
-                    onClick={handleGenerateSummary}
-                    isLoading={summaryLoading}
-                  >
-                    Summarize
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Description Card */}
-          <div className={styles.sectionCard}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.sectionTitle}>
-                <FileText
-                  size={14}
-                  className="text-[var(--color-accent-primary)]"
-                />
+        <div className="lg:col-span-2">
+          {/* Main Document Card */}
+          <div className={styles.documentCard}>
+            {/* Description Section */}
+            <div className={styles.documentSection}>
+              <h3 className={styles.docSectionTitle}>
+                <FileText size={16} />
                 Description
+              </h3>
+              <div className={styles.docContent}>
+                <p className="leading-relaxed whitespace-pre-wrap text-[var(--color-text-primary)]">
+                  {approval.description}
+                </p>
               </div>
             </div>
-            <div className={styles.sectionBody}>
-              <p className="text-sm text-[var(--color-text-secondary)] leading-relaxed whitespace-pre-wrap">
-                {approval.description}
-              </p>
-            </div>
-          </div>
 
-          {/* Attachments Card */}
-          <div className={styles.sectionCard}>
-            <div className={styles.sectionHeader}>
-              <div className={styles.sectionTitle}>
-                <Paperclip
-                  size={14}
-                  className="text-[var(--color-accent-primary)]"
-                />
+            <div className={styles.separator} />
+
+            {/* Attachments Section */}
+            <div className={styles.documentSection}>
+              <h3 className={styles.docSectionTitle}>
+                <Paperclip size={16} />
                 Attachments
+              </h3>
+              <div className={styles.docContent}>
+                {approval.attachmentName ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div
+                      className={styles.attachmentCard}
+                      onClick={() => {
+                        if (!approval.attachmentUrl) return;
+                        let url = approval.attachmentUrl;
+                        if (!/^https?:\/\//i.test(url)) {
+                          url = "https://" + url;
+                        }
+                        window.open(url, "_blank");
+                      }}
+                    >
+                      <div className={styles.attachmentIcon}>
+                        <FileText size={24} />
+                      </div>
+                      <div className={styles.attachmentInfo}>
+                        <div className={styles.attachmentName}>
+                          {approval.attachmentName}
+                        </div>
+                        <div className={styles.attachmentMeta}>
+                          {approval.attachmentType
+                            ? approval.attachmentType
+                                .split("/")[1]
+                                ?.toUpperCase()
+                            : "FILE"}{" "}
+                          •{" "}
+                          {approval.attachmentSize
+                            ? (approval.attachmentSize / (1024 * 1024)).toFixed(
+                                1
+                              ) + " MB"
+                            : "Unknown Size"}
+                        </div>
+                      </div>
+                      <div className={styles.attachmentAction}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="!p-1 !h-8 !w-8"
+                        >
+                          <Share2 size={14} />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-[var(--color-text-tertiary)] italic p-6 text-center border dashed border-[var(--color-border-subtle)] rounded-lg bg-[var(--color-bg-subtle)]/50">
+                    No attachments provided.
+                  </div>
+                )}
               </div>
-            </div>
-            <div className={styles.sectionBody}>
-              {approval.attachmentName ? (
-                <div className="flex items-center gap-3 p-3 border border-[var(--color-border-subtle)] rounded-lg bg-[var(--color-bg-subtle)] hover:border-[var(--color-accent-primary)] transition-colors cursor-pointer w-full">
-                  <div className="w-10 h-10 bg-[var(--color-bg-elevated)] rounded flex items-center justify-center text-[var(--color-text-secondary)] shrink-0">
-                    <FileText size={20} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-[var(--color-text-primary)]">
-                      {approval.attachmentName}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[10px] text-[var(--color-text-tertiary)] uppercase font-bold bg-[var(--color-bg-elevated)] px-1.5 py-0.5 rounded">
-                        {approval.attachmentType
-                          ? approval.attachmentType
-                              .split("/")[1]
-                              ?.toUpperCase()
-                              .slice(0, 4)
-                          : "FILE"}
-                      </span>
-                      <span className="text-[10px] text-[var(--color-text-tertiary)]">
-                        {approval.attachmentSize
-                          ? (approval.attachmentSize / (1024 * 1024)).toFixed(
-                              1
-                            ) + " MB"
-                          : ""}
-                      </span>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="!h-8"
-                    onClick={() =>
-                      approval.attachmentUrl &&
-                      window.open(approval.attachmentUrl, "_blank")
-                    }
-                    disabled={!approval.attachmentUrl}
-                  >
-                    View
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-sm text-[var(--color-text-tertiary)] italic p-4 text-center border dashed border-[var(--color-border-subtle)] rounded-lg">
-                  No attachments provided.
-                </div>
-              )}
             </div>
           </div>
         </div>

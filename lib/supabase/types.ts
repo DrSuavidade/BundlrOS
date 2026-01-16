@@ -259,6 +259,39 @@ export interface Database {
                 Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at'> & { id?: string };
                 Update: Partial<Database['public']['Tables']['notifications']['Insert']>;
             };
+            approvals: {
+                Row: {
+                    deliverable_id: string;
+                    token: string;
+                    client_email: string | null;
+                    history: Record<string, unknown>[] | null;
+                    created_at: string;
+                    updated_at: string;
+                    title: string | null;
+                    description: string | null;
+                    asset_url: string | null;
+                    asset_name: string | null;
+                    version: string | null;
+                    status: string | null;
+                    assignee_id: string | null;
+                };
+                Insert: {
+                    deliverable_id: string;
+                    token: string;
+                    client_email?: string | null;
+                    history?: Record<string, unknown>[] | null;
+                    created_at?: string;
+                    updated_at?: string;
+                    title?: string | null;
+                    description?: string | null;
+                    asset_url?: string | null;
+                    asset_name?: string | null;
+                    version?: string | null;
+                    status?: string | null;
+                    assignee_id?: string | null;
+                };
+                Update: Partial<Database['public']['Tables']['approvals']['Insert']>;
+            };
         };
         Functions: Record<string, never>;
         Enums: {
@@ -323,3 +356,6 @@ export type ServiceFactoryUpdate = Tables['service_factories']['Update'];
 export type Notification = Tables['notifications']['Row'];
 export type NotificationInsert = Tables['notifications']['Insert'];
 export type NotificationUpdate = Tables['notifications']['Update'];
+export type Approval = Tables['approvals']['Row'];
+export type ApprovalInsert = Tables['approvals']['Insert'];
+export type ApprovalUpdate = Tables['approvals']['Update'];

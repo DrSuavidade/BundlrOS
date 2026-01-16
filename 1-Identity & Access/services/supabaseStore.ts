@@ -5,8 +5,8 @@
  * Provides backward-compatible interface for UserService and AuditService.
  */
 
-import { ProfilesApi, AuditLogsApi, type Profile, type AuditLog as SupabaseAuditLog } from '@bundlros/supabase';
-import { User, AuditLog, Role, UserStatus } from '../types';
+import { ProfilesApi, AuditLogsApi, NotificationsApi, ApprovalsApi, type Profile, type AuditLog as SupabaseAuditLog, type Notification as SupabaseNotification, type Approval as SupabaseApproval } from '@bundlros/supabase';
+import { User, AuditLog, Role, UserStatus, Notification, Approval } from '../types';
 
 // Map Supabase profile to local User type
 const mapProfileToUser = (profile: Profile): User => ({
@@ -34,6 +34,26 @@ const mapSupabaseAuditLog = (log: SupabaseAuditLog): AuditLog => ({
         : 'System',
     targetId: log.target_id || undefined,
     timestamp: log.created_at,
+});
+
+const mapNotification = (n: SupabaseNotification): Notification => ({
+    id: n.id,
+    userId: n.user_id,
+    title: n.title,
+    message: n.message,
+    type: n.type,
+    isRead: n.is_read,
+    link: n.link,
+    createdAt: n.created_at,
+});
+
+const mapApproval = (a: SupabaseApproval): Approval => ({
+    deliverableId: a.deliverable_id,
+    token: a.token,
+    title: a.title,
+    status: a.status,
+    assigneeId: a.assignee_id,
+    createdAt: a.created_at,
 });
 
 export const UserService = {
@@ -166,3 +186,54 @@ export const AuditService = {
         }
     },
 };
+
+export const NotificationService = {
+    getAll: async (userId?: string): Promise<Notification[]> => {
+        try {
+            const notifications = await NotificationsApi.getAll(userId);
+            return notifications.map(mapNotification);
+        } catch (error) {
+            console.error('[NotificationService] Error fetching notifications:', error);
+            return [];
+        }
+    },
+
+    getUnread: async (userId: string): Promise<Notification[]> => {
+        try {
+            const notifications = await NotificationsApi.getUnread(userId);
+            return notifications.map(mapNotification);
+        } catch (error) {
+            console.error('[NotificationService] Error fetching unread notifications:', error);
+            return [];
+        }
+    },
+
+    markAsRead: async (id: string): Promise<void> => {
+        try {
+            await NotificationsApi.markAsRead(id);
+        } catch (error) {
+            console.error('[NotificationService] Error marking as read:', error);
+        }
+    },
+
+    markAllAsRead: async (userId: string): Promise<void> => {
+        try {
+            await NotificationsApi.markAllAsRead(userId);
+        } catch (error) {
+            console.error('[NotificationService] Error marking all as read:', error);
+        }
+    }
+};
+
+export const ApprovalService = {
+    getAll: async (): Promise<Approval[]> => {
+        try {
+            const approvals = await ApprovalsApi.getAll();
+            return approvals.map(mapApproval);
+        } catch (error) {
+            console.error('[ApprovalService] Error fetching approvals:', error);
+            return [];
+        }
+    }
+};
+

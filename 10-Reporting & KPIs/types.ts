@@ -1,7 +1,8 @@
 export enum KPIUnit {
   CURRENCY = 'CURRENCY',
   PERCENTAGE = 'PERCENTAGE',
-  NUMBER = 'NUMBER'
+  NUMBER = 'NUMBER',
+  BYTES = 'BYTES'
 }
 
 export interface KPIRecord {
@@ -12,7 +13,9 @@ export interface KPIRecord {
   unit: KPIUnit;
   period: string; // e.g., "2023-10"
   category: 'Financial' | 'Growth' | 'Engagement';
+  history?: { date: string; value: number }[];
 }
+
 
 export enum ReportStatus {
   REQUESTED = 'REQUESTED',

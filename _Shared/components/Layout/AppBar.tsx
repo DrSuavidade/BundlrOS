@@ -115,7 +115,7 @@ export const AppBar: React.FC<AppBarProps> = ({
     if (!user) return;
 
     const loadNotifs = async () => {
-      const data = await NotificationsApi.getByUserId(user.id);
+      const data = await NotificationsApi.getAll(user.id);
       setNotifications(data);
     };
 
