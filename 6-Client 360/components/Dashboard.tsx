@@ -27,6 +27,7 @@ import {
   Trash2,
   Mail,
   List,
+  Loader2,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import {
@@ -96,6 +97,8 @@ const Dashboard: React.FC = () => {
     industry: "",
     status: "active" as const,
   });
+  const [showValidation, setShowValidation] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Delete Client Modal State
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -263,29 +266,45 @@ const Dashboard: React.FC = () => {
 
   const handleCreateClient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newClient.name) return;
+    if (
+      !newClient.name ||
+      !newClient.email ||
+      !newClient.nif ||
+      !newClient.industry
+    ) {
+      setShowValidation(true);
+      return;
+    }
 
-    // Call service to create client
-    const created = await ClientService.createClient({
-      name: newClient.name,
-      code: newClient.code,
-      email: newClient.email,
-      nif: newClient.nif,
-      industry: newClient.industry,
-      status: "active",
-    });
+    try {
+      setIsCreating(true);
+      // Call service to create client
+      const created = await ClientService.createClient({
+        name: newClient.name,
+        code: newClient.code,
+        email: newClient.email,
+        nif: newClient.nif,
+        industry: newClient.industry,
+        status: "active",
+      });
 
-    setClients([...clients, { id: created.id, name: created.name }]);
-    setSelectedClientId(created.id);
-    setIsNewClientOpen(false);
-    setNewClient({
-      name: "",
-      code: "",
-      email: "",
-      nif: "",
-      industry: "",
-      status: "active",
-    });
+      setClients([...clients, { id: created.id, name: created.name }]);
+      setSelectedClientId(created.id);
+      setIsNewClientOpen(false);
+      setNewClient({
+        name: "",
+        code: "",
+        email: "",
+        nif: "",
+        industry: "",
+        status: "active",
+      });
+      setShowValidation(false);
+    } catch (error) {
+      console.error("Failed to create client:", error);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const handleDeleteClient = async () => {
@@ -1103,24 +1122,28 @@ const Dashboard: React.FC = () => {
           <div
             className="modal-overlay"
             style={{ zIndex: 9999 }}
-            onClick={() => setIsNewClientOpen(false)}
+            onClick={() => {
+              setIsNewClientOpen(false);
+              setShowValidation(false);
+            }}
           >
             <div
-              className="modal w-full max-w-md"
+              className="modal w-full max-w-2xl"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Modal Header */}
+              {/* Header */}
               <div className="modal__header">
                 <h2 className="modal__title">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center text-white">
-                      <Building2 size={18} />
-                    </div>
-                    Add New Client
+                    <Building2 size={18} className="text-gray-400" />
+                    ADD NEW CLIENT
                   </div>
                 </h2>
                 <button
-                  onClick={() => setIsNewClientOpen(false)}
+                  onClick={() => {
+                    setIsNewClientOpen(false);
+                    setShowValidation(false);
+                  }}
                   className="modal__close"
                 >
                   <X size={18} />
@@ -1133,6 +1156,18 @@ const Dashboard: React.FC = () => {
                   <label className="form-label">
                     <Building2 size={12} className="inline mr-1" />
                     Company Name
+                    {showValidation && !newClient.name && (
+                      <span
+                        style={{
+                          color: "var(--color-status-danger)",
+                          fontSize: "1.25rem",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {" "}
+                        *
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -1167,6 +1202,18 @@ const Dashboard: React.FC = () => {
                     <label className="form-label">
                       <Mail size={12} className="inline mr-1" />
                       Email
+                      {showValidation && !newClient.email && (
+                        <span
+                          style={{
+                            color: "var(--color-status-danger)",
+                            fontSize: "1.25rem",
+                            lineHeight: 1,
+                          }}
+                        >
+                          {" "}
+                          *
+                        </span>
+                      )}
                     </label>
                     <input
                       type="email"
@@ -1183,6 +1230,18 @@ const Dashboard: React.FC = () => {
                     <label className="form-label">
                       <FileText size={12} className="inline mr-1" />
                       NIF (Tax ID)
+                      {showValidation && !newClient.nif && (
+                        <span
+                          style={{
+                            color: "var(--color-status-danger)",
+                            fontSize: "1.25rem",
+                            lineHeight: 1,
+                          }}
+                        >
+                          {" "}
+                          *
+                        </span>
+                      )}
                     </label>
                     <input
                       type="text"
@@ -1199,6 +1258,18 @@ const Dashboard: React.FC = () => {
                     <label className="form-label">
                       <Tag size={12} className="inline mr-1" />
                       Industry
+                      {showValidation && !newClient.industry && (
+                        <span
+                          style={{
+                            color: "var(--color-status-danger)",
+                            fontSize: "1.25rem",
+                            lineHeight: 1,
+                          }}
+                        >
+                          {" "}
+                          *
+                        </span>
+                      )}
                     </label>
                     <input
                       type="text"
@@ -1220,16 +1291,26 @@ const Dashboard: React.FC = () => {
                 <Button
                   variant="ghost"
                   type="button"
-                  onClick={() => setIsNewClientOpen(false)}
+                  onClick={() => {
+                    setIsNewClientOpen(false);
+                    setShowValidation(false);
+                  }}
                 >
                   Cancel
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleCreateClient}
-                  leftIcon={<PlusCircle size={16} />}
+                  disabled={isCreating}
+                  leftIcon={
+                    isCreating ? (
+                      <Loader2 className="animate-spin" size={16} />
+                    ) : (
+                      <PlusCircle size={16} />
+                    )
+                  }
                 >
-                  Create Client
+                  {isCreating ? "Processing..." : "Create Client"}
                 </Button>
               </div>
             </div>

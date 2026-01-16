@@ -54,6 +54,7 @@ export interface ServiceContract extends BaseEntity {
   value: number;
   status: 'active' | 'pending' | 'expired';
   payment_type?: 'monthly' | 'one_off';
+  amount_paid?: number;
 }
 
 export interface Project extends BaseEntity {

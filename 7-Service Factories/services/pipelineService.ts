@@ -239,7 +239,7 @@ export const incrementVersion = (version: string): string => {
   return `${major}.${minor + 1}`;
 };
 
-export const createFinalDeliverable = async (factory: Factory): Promise<Factory> => {
+export const createFinalDeliverable = async (factory: Factory, folderName?: string, driveLink?: string): Promise<Factory> => {
   const type = getDeliverableTypeFromTemplate(factory.templateId);
 
   const dueDate = new Date();
@@ -355,7 +355,9 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
             status: 'PENDING',
             token: token,
             version: deliverable.version,
-            assignee_id: factory.assigneeId
+            assignee_id: factory.assigneeId,
+            asset_name: folderName || null,
+            asset_url: driveLink || null
           })
           .eq('deliverable_id', deliverable.id);
       } else {
@@ -368,6 +370,8 @@ export const createFinalDeliverable = async (factory: Factory): Promise<Factory>
           description: `Please review the final deliverables for the ${factory.templateId} pipeline.`,
           version: deliverable.version,
           assignee_id: factory.assigneeId,
+          asset_name: folderName || null,
+          asset_url: driveLink || null,
           history: [{
             id: `evt-${Date.now()}`,
             type: 'CREATED',

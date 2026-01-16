@@ -17,6 +17,7 @@ import {
   Tag,
   FileText,
   Clock,
+  Loader2,
 } from "lucide-react";
 import { AppShell, Button, useLanguage } from "@bundlros/ui";
 import styles from "./components/Inbox.module.css";
@@ -94,6 +95,8 @@ const App: React.FC = () => {
     priority: Priority.MEDIUM,
     requestor: "",
   });
+  const [showValidation, setShowValidation] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   // Load data on mount
   useEffect(() => {
@@ -123,15 +126,24 @@ const App: React.FC = () => {
 
   const handleCreateIntake = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newIntake.title || !newIntake.client) return;
+    if (
+      !newIntake.title ||
+      !newIntake.description ||
+      !newIntake.client ||
+      !newIntake.priority
+    ) {
+      setShowValidation(true);
+      return;
+    }
 
     try {
+      setIsCreating(true);
       // Create the intake in Supabase
       const createdItem = await InboxService.create({
         title: newIntake.title,
-        description: newIntake.description || "No description provided.",
+        description: newIntake.description,
         client: newIntake.client,
-        requestor: newIntake.requestor || "unknown@example.com",
+        requestor: newIntake.requestor || "NULL",
         priority: newIntake.priority,
       });
 
@@ -145,8 +157,11 @@ const App: React.FC = () => {
         priority: Priority.MEDIUM,
         requestor: "",
       });
+      setShowValidation(false);
     } catch (error) {
       console.error("[Inbox] Failed to create intake:", error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -344,7 +359,10 @@ const App: React.FC = () => {
           <div
             className="modal-overlay"
             style={{ zIndex: 9999 }}
-            onClick={() => setIsNewIntakeOpen(false)}
+            onClick={() => {
+              setIsNewIntakeOpen(false);
+              setShowValidation(false);
+            }}
           >
             <div
               className="modal w-full max-w-xl"
@@ -359,7 +377,10 @@ const App: React.FC = () => {
                   {t("inbox.newIntake")}
                 </h2>
                 <button
-                  onClick={() => setIsNewIntakeOpen(false)}
+                  onClick={() => {
+                    setIsNewIntakeOpen(false);
+                    setShowValidation(false);
+                  }}
                   className="modal__close"
                 >
                   <X size={18} />
@@ -372,6 +393,18 @@ const App: React.FC = () => {
                   <label className="form-label">
                     <FileText size={14} />
                     {t("inbox.form.title")}
+                    {showValidation && !newIntake.title && (
+                      <span
+                        style={{
+                          color: "var(--color-status-danger)",
+                          fontSize: "1.25rem",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {" "}
+                        *
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -390,8 +423,21 @@ const App: React.FC = () => {
                   <label className="form-label">
                     <FileText size={14} />
                     {t("inbox.form.description")}
+                    {showValidation && !newIntake.description && (
+                      <span
+                        style={{
+                          color: "var(--color-status-danger)",
+                          fontSize: "1.25rem",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {" "}
+                        *
+                      </span>
+                    )}
                   </label>
                   <textarea
+                    required
                     value={newIntake.description}
                     onChange={(e) =>
                       setNewIntake({
@@ -412,6 +458,18 @@ const App: React.FC = () => {
                     <label className="form-label">
                       <Building2 size={14} />
                       {t("inbox.form.client")}
+                      {showValidation && !newIntake.client && (
+                        <span
+                          style={{
+                            color: "var(--color-status-danger)",
+                            fontSize: "1.25rem",
+                            lineHeight: 1,
+                          }}
+                        >
+                          {" "}
+                          *
+                        </span>
+                      )}
                     </label>
                     <select
                       required
@@ -434,8 +492,21 @@ const App: React.FC = () => {
                     <label className="form-label">
                       <Zap size={14} />
                       {t("inbox.form.priority")}
+                      {showValidation && !newIntake.priority && (
+                        <span
+                          style={{
+                            color: "var(--color-status-danger)",
+                            fontSize: "1.25rem",
+                            lineHeight: 1,
+                          }}
+                        >
+                          {" "}
+                          *
+                        </span>
+                      )}
                     </label>
                     <select
+                      required
                       value={newIntake.priority}
                       onChange={(e) =>
                         setNewIntake({
@@ -476,7 +547,10 @@ const App: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setIsNewIntakeOpen(false)}
+                  onClick={() => {
+                    setIsNewIntakeOpen(false);
+                    setShowValidation(false);
+                  }}
                 >
                   {t("inbox.form.cancel")}
                 </Button>
@@ -484,9 +558,16 @@ const App: React.FC = () => {
                   variant="primary"
                   size="sm"
                   onClick={handleCreateIntake}
-                  leftIcon={<PlusCircle size={14} />}
+                  disabled={isCreating}
+                  leftIcon={
+                    isCreating ? (
+                      <Loader2 className="animate-spin" size={14} />
+                    ) : (
+                      <PlusCircle size={14} />
+                    )
+                  }
                 >
-                  {t("inbox.form.create")}
+                  {isCreating ? "Processing..." : t("inbox.form.create")}
                 </Button>
               </div>
             </div>

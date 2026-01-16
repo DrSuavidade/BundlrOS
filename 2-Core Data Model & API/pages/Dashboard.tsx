@@ -12,6 +12,8 @@ import {
   Clock,
   TrendingUp,
   MoreHorizontal,
+  Inbox,
+  Wallet,
 } from "lucide-react";
 import { useLanguage } from "@bundlros/ui";
 import styles from "./Dashboard.module.css";
@@ -22,12 +24,17 @@ const getNextDueDate = (startDateStr: string) => {
 
   const start = new Date(startDateStr);
   const today = new Date();
-  const dayOfMonth = start.getDate();
 
+  // If the contract starts in the future, the first payment is the start date
+  if (start > today) {
+    return start;
+  }
+
+  const dayOfMonth = start.getDate();
   let nextDue = new Date(today.getFullYear(), today.getMonth(), dayOfMonth);
 
   // If we passed the day this month, move to next month
-  if (today.getDate() > dayOfMonth) {
+  if (nextDue < today) {
     nextDue.setMonth(nextDue.getMonth() + 1);
   }
 
@@ -51,7 +58,8 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Load data
-  useEffect(() => {
+  const fetchData = () => {
+    setLoading(true);
     Promise.all([API.getClients(), API.getContracts()]).then(
       ([clientsData, contractsData]) => {
         setClients(clientsData);
@@ -59,6 +67,10 @@ export const Dashboard: React.FC = () => {
         setLoading(false);
       }
     );
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   // Enrich contracts with client data and computed status
@@ -70,12 +82,28 @@ export const Dashboard: React.FC = () => {
         : new Date(contract.end_date || contract.start_date); // Default one-off to end date
 
     // Simple logic: If due date is within 3 days, it's "due soon"
+    // > 7 days away: "Waiting Payment"
+    // <= 7 days away: "Due Soon" (or 0-7 days)
+    // < 0 days away: "Overdue"
     const diffDays = Math.ceil(
       (nextDue.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
     );
     let paymentStatus = "upcoming";
-    if (diffDays < 0) paymentStatus = "overdue";
-    else if (diffDays <= 5) paymentStatus = "due_soon";
+    let dateLabel = "Next Payment";
+
+    if (diffDays < 0) {
+      paymentStatus = "overdue";
+      dateLabel = "Overdue";
+    } else if (diffDays <= 7) {
+      paymentStatus = "due_soon";
+      dateLabel = "Due Soon";
+    } else {
+      dateLabel = "Waiting Payment";
+    }
+
+    // For projects (one-off), we might want a slightly different label logic or fallback
+    // But per user request: "if > 1 week away -> waiting payment", etc.
+    // We'll apply this uniformly.
 
     return {
       ...contract,
@@ -84,6 +112,7 @@ export const Dashboard: React.FC = () => {
       nextDue,
       paymentStatus,
       diffDays,
+      dateLabel,
     };
   });
 
@@ -98,15 +127,72 @@ export const Dashboard: React.FC = () => {
   // Quick Stats
   const totalMRR = monthlyContracts.reduce((acc, c) => acc + (c.value || 0), 0);
   const totalOneOffPending = oneOffContracts.reduce(
-    (acc, c) => acc + (c.value || 0),
+    (acc, c) => acc + (c.value || 0) - (c.amount_paid || 0),
     0
   );
   const overdueCount = enrichedContracts.filter(
     (c) => c.paymentStatus === "overdue"
   ).length;
 
+  // Calculate Total Income (Sum of all amount_paid)
+  const totalIncome = enrichedContracts.reduce(
+    (acc, c) => acc + (c.amount_paid || 0),
+    0
+  );
+
   const handleAction = (action: string, clientName: string) => {
     alert(`${action} for ${clientName}`);
+  };
+
+  const handlePayment = async (contract: ServiceContract) => {
+    try {
+      const updates: Partial<ServiceContract> = {};
+      const currentPaid = contract.amount_paid || 0;
+      const totalValue = contract.value || 0;
+
+      if (contract.payment_type === "one_off") {
+        const halfValue = totalValue / 2;
+        const newAmountPaid = currentPaid + halfValue;
+        updates.amount_paid = newAmountPaid;
+
+        // Date logic
+        const now = new Date();
+        const endDate = contract.end_date ? new Date(contract.end_date) : now;
+
+        // Calculate diff days
+        const diffTime = endDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 30) {
+          const oneMonthFromNow = new Date();
+          oneMonthFromNow.setMonth(now.getMonth() + 1);
+          updates.end_date = oneMonthFromNow.toISOString();
+        }
+
+        if (newAmountPaid >= totalValue) {
+          updates.status = "expired";
+        }
+      } else {
+        // Monthly
+        updates.amount_paid = currentPaid + totalValue;
+
+        const currentEndDate = contract.end_date
+          ? new Date(contract.end_date)
+          : new Date();
+        const nextMonth = new Date(currentEndDate);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        updates.end_date = nextMonth.toISOString();
+      }
+
+      // Update via API (requires type casting if API definition is strict)
+      await (API as any).updateContract(contract.id, updates);
+
+      // Reload data
+      fetchData();
+    } catch (error) {
+      console.error("Payment update failed:", error);
+      alert("Failed to update payment");
+    }
   };
 
   return (
@@ -213,6 +299,30 @@ export const Dashboard: React.FC = () => {
             <AlertCircle size={18} />
           </div>
         </div>
+
+        <div className={styles.statCard}>
+          <div
+            className={styles.statCard__glow}
+            style={{ background: "rgb(234, 179, 8)" }}
+          />
+          <div className={styles.statCard__content}>
+            <p className={styles.statCard__label}>Total Income</p>
+            <p className={styles.statCard__value}>{formatMoney(totalIncome)}</p>
+            <div className={`${styles.statCard__trend} ${styles.up}`}>
+              <TrendingUp size={12} />
+              <span>Total Collected</span>
+            </div>
+          </div>
+          <div
+            className={styles.statCard__icon}
+            style={{
+              background: "rgba(234, 179, 8, 0.1)",
+              color: "rgb(234, 179, 8)",
+            }}
+          >
+            <Wallet size={18} />
+          </div>
+        </div>
       </div>
 
       {/* Content Grid */}
@@ -231,83 +341,96 @@ export const Dashboard: React.FC = () => {
           <div className={styles.sectionCard__body}>
             {monthlyContracts.length === 0 ? (
               <div className={styles.emptyState}>
+                <div className={styles.emptyState__icon}>
+                  <Inbox size={24} />
+                </div>
                 <p className={styles.emptyState__title}>No active retainers</p>
+                <p className={styles.emptyState__description}>
+                  All monthly subscriptions are processing normally.
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 {monthlyContracts.map((contract) => (
                   <div key={contract.id} className={styles.paymentCard}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-semibold text-[var(--color-text-primary)] text-sm">
+                    {/* Header */}
+                    <div className={styles.cardHeader}>
+                      <div className={styles.clientInfo}>
+                        <h3 className={styles.clientName}>
                           {contract.clientName}
                         </h3>
-                        <p className="text-xs text-[var(--color-text-secondary)]">
-                          {contract.title}
-                        </p>
+                        <p className={styles.contractTitle}>{contract.title}</p>
                       </div>
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
+                        className={`${styles.statusBadge} ${
                           contract.paymentStatus === "overdue"
-                            ? "bg-red-500/10 text-red-400 border-red-500/20"
+                            ? styles.overdue
                             : contract.paymentStatus === "due_soon"
-                            ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                            : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            ? styles.due_soon
+                            : styles.waiting
                         }`}
                       >
-                        {contract.paymentStatus === "overdue"
-                          ? "OVERDUE"
-                          : contract.paymentStatus === "due_soon"
-                          ? "DUE SOON"
-                          : "UPCOMING"}
+                        {contract.dateLabel}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider mb-0.5">
-                          Next Payment
-                        </p>
-                        <div className="flex items-center gap-1.5 text-[var(--color-text-primary)]">
-                          <Calendar
-                            size={12}
-                            className="text-[var(--color-text-tertiary)]"
-                          />
-                          <span className="text-xs font-mono">
-                            {contract.nextDue.toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                            })}
+                    {/* Main Content */}
+                    <div className={styles.cardMain}>
+                      <div className={styles.amountGroup}>
+                        <span className={styles.amountLabel}>
+                          Monthly Value
+                        </span>
+                        <div className="flex items-baseline">
+                          <span className={styles.amountValue}>
+                            {formatMoney(contract.value || 0)}
                           </span>
+                          <span className={styles.amountFrequency}>/mo</span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-[var(--color-text-primary)]">
-                          {formatMoney(contract.value || 0)}
-                        </p>
-                        <p className="text-[10px] text-[var(--color-text-tertiary)]">
-                          /mo
-                        </p>
+                      <div className="flex flex-col items-end justify-end">
+                        <span className={styles.amountLabel}>Paid</span>
+                        <span className="text-sm font-medium text-[var(--color-text-secondary)]">
+                          {formatMoney(contract.amount_paid || 0)}
+                        </span>
+                      </div>
+                      <div className={styles.dateGroup}>
+                        <span className={styles.dateLabel}>Next Payment</span>
+                        <div className={styles.dateValue}>
+                          <Calendar size={12} />
+                          {contract.nextDue.toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)] flex gap-2">
+                    {/* Actions */}
+                    <div className={styles.cardActions}>
+                      <button
+                        onClick={() => handlePayment(contract)}
+                        className={styles.actionButton}
+                      >
+                        <CreditCard size={14} />
+                        Payment
+                      </button>
                       <button
                         onClick={() =>
                           handleAction("Created Receipt", contract.clientName)
                         }
-                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                        className={styles.actionButton}
                       >
-                        <FileText size={10} />
+                        <FileText size={14} />
                         Receipt
                       </button>
                       <button
                         onClick={() =>
                           handleAction("Sent Reminder", contract.clientName)
                         }
-                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                        className={styles.actionButton}
                       >
-                        <Send size={10} />
+                        <Send size={14} />
                         Remind
                       </button>
                     </div>
@@ -332,72 +455,107 @@ export const Dashboard: React.FC = () => {
           <div className={styles.sectionCard__body}>
             {oneOffContracts.length === 0 ? (
               <div className={styles.emptyState}>
+                <div className={styles.emptyState__icon}>
+                  <CheckCircle2 size={24} />
+                </div>
                 <p className={styles.emptyState__title}>No pending projects</p>
+                <p className={styles.emptyState__description}>
+                  You're all caught up! No one-off projects are currently
+                  active.
+                </p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
                 {oneOffContracts.map((contract) => (
                   <div key={contract.id} className={styles.paymentCard}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h3 className="font-semibold text-[var(--color-text-primary)] text-sm">
+                    {/* Header */}
+                    <div className={styles.cardHeader}>
+                      <div className={styles.clientInfo}>
+                        <h3 className={styles.clientName}>
                           {contract.clientName}
                         </h3>
-                        <p className="text-xs text-[var(--color-text-secondary)]">
-                          {contract.title}
-                        </p>
+                        <p className={styles.contractTitle}>{contract.title}</p>
                       </div>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-medium border bg-blue-500/10 text-blue-400 border-blue-500/20">
-                        PROJECT
+                      <span
+                        className={`${styles.statusBadge} ${
+                          contract.paymentStatus === "overdue"
+                            ? styles.overdue
+                            : contract.paymentStatus === "due_soon"
+                            ? styles.due_soon
+                            : styles.waiting
+                        }`}
+                      >
+                        {contract.dateLabel}
                       </span>
                     </div>
 
-                    <div className="flex justify-between items-end">
-                      <div>
-                        <p className="text-[10px] text-[var(--color-text-tertiary)] uppercase tracking-wider mb-0.5">
-                          Due Date
-                        </p>
-                        <div className="flex items-center gap-1.5 text-[var(--color-text-primary)]">
-                          <Calendar
-                            size={12}
-                            className="text-[var(--color-text-tertiary)]"
-                          />
-                          <span className="text-xs font-mono">
-                            {contract.nextDue.toLocaleDateString(undefined, {
-                              month: "short",
-                              day: "numeric",
-                              year: "numeric",
-                            })}
+                    {/* Main Content */}
+                    <div className={styles.cardMain}>
+                      <div className={styles.amountGroup}>
+                        <span className={styles.amountLabel}>Total Value</span>
+                        <div className="flex items-baseline">
+                          <span className={styles.amountValue}>
+                            {formatMoney(contract.value || 0)}
                           </span>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-[var(--color-text-primary)]">
-                          {formatMoney(contract.value || 0)}
-                        </p>
-                        <p className="text-[10px] text-[var(--color-text-tertiary)]">
-                          Total
-                        </p>
+                      <div className="flex flex-col items-end justify-end">
+                        <span className={styles.amountLabel}>Paid</span>
+                        <span className="text-sm font-medium text-[var(--color-text-secondary)]">
+                          {formatMoney(contract.amount_paid || 0)}
+                        </span>
+                      </div>
+                      <div className={styles.dateGroup}>
+                        <span className={styles.dateLabel}>Due Date</span>
+                        <div className={styles.dateValue}>
+                          <Calendar size={12} />
+                          {contract.nextDue.toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-3 border-t border-[var(--color-border-subtle)] flex gap-2">
+                    {/* Actions */}
+                    <div className={styles.cardActions}>
+                      <button
+                        onClick={() => handlePayment(contract)}
+                        disabled={
+                          (contract.amount_paid || 0) >= (contract.value || 0)
+                        }
+                        className={styles.actionButton}
+                        style={{
+                          opacity:
+                            (contract.amount_paid || 0) >= (contract.value || 0)
+                              ? 0.5
+                              : 1,
+                          cursor:
+                            (contract.amount_paid || 0) >= (contract.value || 0)
+                              ? "not-allowed"
+                              : "pointer",
+                        }}
+                      >
+                        <CreditCard size={14} />
+                        Payment
+                      </button>
                       <button
                         onClick={() =>
                           handleAction("Created Invoice", contract.clientName)
                         }
-                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                        className={styles.actionButton}
                       >
-                        <FileText size={10} />
+                        <FileText size={14} />
                         Invoice
                       </button>
                       <button
                         onClick={() =>
                           handleAction("Sent Reminder", contract.clientName)
                         }
-                        className="flex-1 flex items-center justify-center gap-1.5 h-7 text-[10px] font-medium bg-[var(--color-bg-subtle)] hover:bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] rounded transition-colors text-[var(--color-text-secondary)]"
+                        className={styles.actionButton}
                       >
-                        <Send size={10} />
+                        <Send size={14} />
                         Remind
                       </button>
                     </div>

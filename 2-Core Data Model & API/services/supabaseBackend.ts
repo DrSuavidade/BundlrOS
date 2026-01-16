@@ -53,6 +53,7 @@ const mapContract = (contract: SupabaseContract): ServiceContract => ({
     start_date: contract.start_date || '',
     end_date: contract.end_date || '',
     value: contract.value || 0,
+    amount_paid: (contract as any).amount_paid || 0,
     status: (contract.status === 'draft' ? 'pending' : contract.status) as ServiceContract['status'],
     payment_type: (contract.payment_type as 'monthly' | 'one_off') || 'one_off',
     created_at: contract.created_at,
@@ -149,6 +150,23 @@ export const SupabaseAPI = {
     getContracts: async (): Promise<ServiceContract[]> => {
         const contracts = await ContractsApi.getAll();
         return contracts.map(mapContract);
+    },
+
+    updateContract: async (id: string, updates: Partial<ServiceContract>): Promise<ServiceContract> => {
+        // Map local camelCase to DB snake_case if necessary, or pass directly if matching
+        // Assuming ContractsApi.update accepts partial SupabaseContract
+        // We need to inverse map the keys if they differ.
+        // Local: client_id, title, start_date, end_date, value, status, payment_type, amount_paid
+        // DB: same keys mostly.
+
+        const payload: Partial<SupabaseContract> = {
+            ...updates,
+            payment_type: updates.payment_type as any, // Cast to match DB enum if needed
+            status: updates.status as any
+        };
+
+        const updated = await ContractsApi.update(id, payload);
+        return mapContract(updated);
     },
 
     // Projects

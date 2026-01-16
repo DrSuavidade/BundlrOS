@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Factory, Status, Profile } from "./types";
 import {
   createFactory,
@@ -22,6 +23,9 @@ import {
   Anchor,
   CheckCircle,
   X,
+  Loader2,
+  Folder,
+  Link,
 } from "lucide-react";
 import { Button, useLanguage } from "@bundlros/ui";
 import { FactoryService } from "./services/supabaseService";
@@ -209,6 +213,11 @@ const App: React.FC = () => {
   );
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
+  const [isDeliverableModalOpen, setIsDeliverableModalOpen] = useState(false);
+  const [deliverableFolderName, setDeliverableFolderName] = useState("");
+  const [deliverableLink, setDeliverableLink] = useState("");
+  const [showValidation, setShowValidation] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
 
   const selectedFactory = factories.find((f) => f.id === selectedId);
@@ -305,9 +314,8 @@ const App: React.FC = () => {
     let updated: Factory;
 
     if (isLastStage) {
-      setIsLoading(true);
-      updated = await createFinalDeliverable(selectedFactory);
-      setIsLoading(false);
+      setIsDeliverableModalOpen(true);
+      return; // Stop here, wait for modal confirmation
     } else {
       updated = advanceStage(selectedFactory);
     }
@@ -315,6 +323,39 @@ const App: React.FC = () => {
     const saved = await FactoryService.update(updated);
     if (saved) {
       setFactories(factories.map((f) => (f.id === saved.id ? saved : f)));
+    }
+  };
+
+  const handleConfirmDeliverable = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFactory) return;
+
+    if (!deliverableFolderName || !deliverableLink) {
+      setShowValidation(true);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const updated = await createFinalDeliverable(
+        selectedFactory,
+        deliverableFolderName,
+        deliverableLink
+      );
+
+      const saved = await FactoryService.update(updated);
+      if (saved) {
+        setFactories(factories.map((f) => (f.id === saved.id ? saved : f)));
+      }
+
+      setIsDeliverableModalOpen(false);
+      setDeliverableFolderName("");
+      setDeliverableLink("");
+      setShowValidation(false);
+    } catch (err) {
+      console.error("Failed to create final deliverable", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -648,6 +689,129 @@ const App: React.FC = () => {
           <TemplateSelector onSelect={handleTemplateSelection} />
         </div>
       )}
+
+      {/* Deliverable Creation Modal */}
+      {isDeliverableModalOpen &&
+        createPortal(
+          <div
+            className="modal-overlay"
+            style={{ zIndex: 9999 }}
+            onClick={() => {
+              setIsDeliverableModalOpen(false);
+              setShowValidation(false);
+            }}
+          >
+            <div
+              className="modal w-full max-w-lg"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal__header">
+                <h3 className="modal__title">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center">
+                    <CheckSquare size={18} className="text-white" />
+                  </div>
+                  {t("Create Deliverable")}
+                </h3>
+                <button
+                  onClick={() => {
+                    setIsDeliverableModalOpen(false);
+                    setShowValidation(false);
+                  }}
+                  className="modal__close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <form
+                onSubmit={handleConfirmDeliverable}
+                className="modal__body space-y-4"
+              >
+                <div className="form-group">
+                  <label className="form-label">
+                    <Folder size={14} />
+                    Folder Name
+                    {showValidation && !deliverableFolderName && (
+                      <span
+                        style={{
+                          color: "var(--color-status-danger)",
+                          fontSize: "1.25rem",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {" "}
+                        *
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={deliverableFolderName}
+                    onChange={(e) => setDeliverableFolderName(e.target.value)}
+                    className="form-input"
+                    placeholder="e.g. Final Assets v1.0"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">
+                    <Link size={14} />
+                    Google Drive Link
+                    {showValidation && !deliverableLink && (
+                      <span
+                        style={{
+                          color: "var(--color-status-danger)",
+                          fontSize: "1.25rem",
+                          lineHeight: 1,
+                        }}
+                      >
+                        {" "}
+                        *
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={deliverableLink}
+                    onChange={(e) => setDeliverableLink(e.target.value)}
+                    className="form-input"
+                    placeholder="https://drive.google.com/..."
+                  />
+                </div>
+              </form>
+
+              <div className="modal__footer">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsDeliverableModalOpen(false);
+                    setShowValidation(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={handleConfirmDeliverable}
+                  disabled={isLoading}
+                  leftIcon={
+                    isLoading ? (
+                      <Loader2 className="animate-spin" size={14} />
+                    ) : (
+                      <CheckCircle size={14} />
+                    )
+                  }
+                >
+                  {isLoading ? "Processing..." : "Confirm & Create"}
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

@@ -13,6 +13,7 @@ import {
   User,
   Send,
   Star,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@bundlros/ui";
 import {
@@ -57,11 +58,13 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
+  const [showValidation, setShowValidation] = useState(false);
 
   // Reset form when modal opens/closes or type changes
   useEffect(() => {
     if (isOpen) {
       setFormData({});
+      setShowValidation(false);
       // Fetch profiles if needed for dropdowns
       if (type === "LOG_MEETING" || type === "ADD_TASK") {
         ProfilesApi.getAll().then(setProfiles).catch(console.error);
@@ -93,6 +96,65 @@ export const ActionModal: React.FC<ActionModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    let isValid = true;
+    switch (type) {
+      case "NEW_CONTRACT":
+        if (
+          !formData.title ||
+          !formData.value ||
+          !formData.payment_type ||
+          !formData.status ||
+          !formData.start_date ||
+          !formData.end_date
+        )
+          isValid = false;
+        break;
+      case "LOG_MEETING":
+        if (
+          !formData.subject ||
+          !formData.date ||
+          !formData.attendeeId ||
+          !formData.notes
+        )
+          isValid = false;
+        break;
+      case "ADD_TASK":
+        if (
+          !formData.title ||
+          !formData.assigneeId ||
+          !formData.due_date ||
+          !formData.description ||
+          !formData.priority
+        )
+          isValid = false;
+        break;
+      case "UPLOAD_ASSET":
+        if (!formData.filename || !formData.category) isValid = false;
+        // Also check if file is present if it's a new upload, but formData.file handles that
+        if (!formData.file) isValid = false;
+        break;
+      case "SEND_EMAIL":
+        if (!formData.to || !formData.subject || !formData.message)
+          isValid = false;
+        break;
+      case "REPORT_BUG":
+        if (
+          !formData.title ||
+          !formData.severity ||
+          !formData.system ||
+          !formData.description
+        )
+          isValid = false;
+        break;
+    }
+
+    if (!isValid) {
+      setShowValidation(true);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -218,7 +280,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
         return (
           <>
             <div className="form-group">
-              <label className="form-label">Contract Title</label>
+              <label className="form-label">
+                Contract Title
+                {showValidation && !formData.title && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
                 className="form-input"
@@ -226,12 +302,25 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 autoFocus
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
-                required
               />
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="form-group">
-                <label className="form-label">Value ($)</label>
+                <label className="form-label">
+                  Value ($)
+                  {showValidation && !formData.value && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <input
                   type="number"
                   className="form-input"
@@ -241,7 +330,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Payment</label>
+                <label className="form-label">
+                  Payment
+                  {showValidation && !formData.payment_type && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <select
                   className="form-select"
                   value={formData.payment_type || "one_off"}
@@ -252,7 +355,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Status</label>
+                <label className="form-label">
+                  Status
+                  {showValidation && !formData.status && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <select
                   className="form-select"
                   value={formData.status || "pending"}
@@ -266,7 +383,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Start Date</label>
+                <label className="form-label">
+                  Start Date
+                  {showValidation && !formData.start_date && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <input
                   type="date"
                   className="form-input"
@@ -275,7 +406,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">End Date</label>
+                <label className="form-label">
+                  End Date
+                  {showValidation && !formData.end_date && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <input
                   type="date"
                   className="form-input"
@@ -290,7 +435,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
         return (
           <>
             <div className="form-group">
-              <label className="form-label">Meeting Subject</label>
+              <label className="form-label">
+                Meeting Subject
+                {showValidation && !formData.subject && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
                 className="form-input"
@@ -298,22 +457,48 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 autoFocus
                 value={formData.subject || ""}
                 onChange={(e) => handleChange("subject", e.target.value)}
-                required
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Date & Time</label>
+                <label className="form-label">
+                  Date & Time
+                  {showValidation && !formData.date && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <input
                   type="datetime-local"
                   className="form-input"
                   value={formData.date || ""}
                   onChange={(e) => handleChange("date", e.target.value)}
-                  required
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Attendees (Performer)</label>
+                <label className="form-label">
+                  Attendees (Performer)
+                  {showValidation && !formData.attendeeId && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <select
                   className="form-select"
                   value={formData.attendeeId || ""}
@@ -338,7 +523,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Notes / Outcome</label>
+              <label className="form-label">
+                Notes / Outcome
+                {showValidation && !formData.notes && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <textarea
                 className="form-input"
                 rows={4}
@@ -353,7 +552,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
         return (
           <>
             <div className="form-group">
-              <label className="form-label">Task Title</label>
+              <label className="form-label">
+                Task Title
+                {showValidation && !formData.title && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
                 className="form-input"
@@ -361,12 +574,25 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 autoFocus
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
-                required
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Assignee</label>
+                <label className="form-label">
+                  Assignee
+                  {showValidation && !formData.assigneeId && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <select
                   className="form-select"
                   value={formData.assigneeId || ""}
@@ -381,7 +607,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Due Date</label>
+                <label className="form-label">
+                  Due Date
+                  {showValidation && !formData.due_date && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <input
                   type="date"
                   className="form-input"
@@ -391,7 +631,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Description</label>
+              <label className="form-label">
+                Description
+                {showValidation && !formData.description && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <textarea
                 className="form-input"
                 rows={4}
@@ -401,7 +655,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Priority</label>
+              <label className="form-label">
+                Priority
+                {showValidation && !formData.priority && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <div className="flex gap-2">
                 {["Low", "Medium", "High", "Critical"].map((p) => (
                   <label
@@ -453,24 +721,63 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 {formData.file
                   ? formData.file.name
                   : "Click to upload or drag and drop"}
+                {showValidation && !formData.file && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
               </p>
               <p className="text-xs text-gray-500 mt-1">
                 SVG, PNG, JPG or PDF (max. 10MB)
               </p>
             </div>
             <div className="form-group mt-4">
-              <label className="form-label">Asset Name</label>
+              <label className="form-label">
+                Asset Name
+                {showValidation && !formData.filename && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
                 className="form-input"
                 placeholder="Filename"
                 value={formData.filename || ""}
                 onChange={(e) => handleChange("filename", e.target.value)}
-                required
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Category</label>
+              <label className="form-label">
+                Category
+                {showValidation && !formData.category && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <select
                 className="form-select"
                 value={formData.category || "Brand Guidelines"}
@@ -488,7 +795,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
         return (
           <>
             <div className="form-group">
-              <label className="form-label">To</label>
+              <label className="form-label">
+                To
+                {showValidation && !formData.to && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <div className="relative">
                 <input
                   type="text"
@@ -508,7 +829,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Subject</label>
+              <label className="form-label">
+                Subject
+                {showValidation && !formData.subject && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
                 className="form-input"
@@ -518,7 +853,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Message</label>
+              <label className="form-label">
+                Message
+                {showValidation && !formData.message && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <textarea
                 className="form-input"
                 rows={6}
@@ -533,7 +882,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
         return (
           <>
             <div className="form-group">
-              <label className="form-label">Issue Title</label>
+              <label className="form-label">
+                Issue Title
+                {showValidation && !formData.title && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <input
                 type="text"
                 className="form-input"
@@ -541,12 +904,25 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 autoFocus
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
-                required
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
-                <label className="form-label">Severity</label>
+                <label className="form-label">
+                  Severity
+                  {showValidation && !formData.severity && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <select
                   className="form-select text-red-400"
                   value={formData.severity || "Medium"}
@@ -559,7 +935,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Affected System</label>
+                <label className="form-label">
+                  Affected System
+                  {showValidation && !formData.system && (
+                    <span
+                      style={{
+                        color: "var(--color-status-danger)",
+                        fontSize: "1.25rem",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {" "}
+                      *
+                    </span>
+                  )}
+                </label>
                 <select
                   className="form-select"
                   value={formData.system || "Frontend"}
@@ -573,7 +963,21 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
             </div>
             <div className="form-group">
-              <label className="form-label">Description</label>
+              <label className="form-label">
+                Description
+                {showValidation && !formData.description && (
+                  <span
+                    style={{
+                      color: "var(--color-status-danger)",
+                      fontSize: "1.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {" "}
+                    *
+                  </span>
+                )}
+              </label>
               <textarea
                 className="form-input"
                 rows={4}
@@ -650,9 +1054,12 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               variant="primary"
               type="submit"
               disabled={loading}
-              className="min-w-[100px]"
+              className="min-w-[120px]"
+              leftIcon={
+                loading ? <Loader2 className="animate-spin" size={14} /> : null
+              }
             >
-              {loading ? "Saving..." : "Save"}
+              {loading ? "Processing..." : "Save"}
             </Button>
           </div>
         </form>
