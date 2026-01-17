@@ -29,6 +29,7 @@ import {
   type IntakePriority,
   type Profile,
 } from "@bundlros/supabase";
+import { useLanguage } from "../../_Shared/contexts/LanguageContext";
 
 export type ActionType =
   | "NEW_CONTRACT"
@@ -59,6 +60,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [clientEmail, setClientEmail] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
+  const { t } = useLanguage();
 
   // Reset form when modal opens/closes or type changes
   useEffect(() => {
@@ -281,7 +283,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           <>
             <div className="form-group">
               <label className="form-label">
-                Contract Title
+                {t("actionModals.newContract.title")}
                 {showValidation && !formData.title && (
                   <span
                     style={{
@@ -298,7 +300,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <input
                 type="text"
                 className="form-input"
-                placeholder="e.g. Q4 2026 Retainer"
+                placeholder={t("actionModals.placeholders.contractTitle")}
                 autoFocus
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
@@ -307,7 +309,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             <div className="grid grid-cols-3 gap-4">
               <div className="form-group">
                 <label className="form-label">
-                  Value ($)
+                  {t("actionModals.newContract.value")}
                   {showValidation && !formData.value && (
                     <span
                       style={{
@@ -324,14 +326,14 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 <input
                   type="number"
                   className="form-input"
-                  placeholder="50000"
+                  placeholder={t("actionModals.placeholders.value")}
                   value={formData.value || ""}
                   onChange={(e) => handleChange("value", e.target.value)}
                 />
               </div>
               <div className="form-group">
                 <label className="form-label">
-                  Payment
+                  {t("actionModals.newContract.payment")}
                   {showValidation && !formData.payment_type && (
                     <span
                       style={{
@@ -350,13 +352,17 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   value={formData.payment_type || "one_off"}
                   onChange={(e) => handleChange("payment_type", e.target.value)}
                 >
-                  <option value="one_off">Regular (2x)</option>
-                  <option value="monthly">Monthly</option>
+                  <option value="one_off">
+                    {t("actionModals.newContract.paymentTypes.regular")}
+                  </option>
+                  <option value="monthly">
+                    {t("actionModals.newContract.paymentTypes.monthly")}
+                  </option>
                 </select>
               </div>
               <div className="form-group">
                 <label className="form-label">
-                  Status
+                  {t("actionModals.newContract.status")}
                   {showValidation && !formData.status && (
                     <span
                       style={{
@@ -375,16 +381,22 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   value={formData.status || "pending"}
                   onChange={(e) => handleChange("status", e.target.value)}
                 >
-                  <option value="pending">Pending</option>
-                  <option value="active">Active</option>
-                  <option value="expired">Expired</option>
+                  <option value="pending">
+                    {t("actionModals.newContract.statuses.pending")}
+                  </option>
+                  <option value="active">
+                    {t("actionModals.newContract.statuses.active")}
+                  </option>
+                  <option value="expired">
+                    {t("actionModals.newContract.statuses.expired")}
+                  </option>
                 </select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">
-                  Start Date
+                  {t("actionModals.newContract.startDate")}
                   {showValidation && !formData.start_date && (
                     <span
                       style={{
@@ -407,7 +419,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
               <div className="form-group">
                 <label className="form-label">
-                  End Date
+                  {t("actionModals.newContract.endDate")}
                   {showValidation && !formData.end_date && (
                     <span
                       style={{
@@ -436,7 +448,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           <>
             <div className="form-group">
               <label className="form-label">
-                Meeting Subject
+                {t("actionModals.logMeeting.subject")}
                 {showValidation && !formData.subject && (
                   <span
                     style={{
@@ -453,7 +465,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <input
                 type="text"
                 className="form-input"
-                placeholder="e.g. Weekly Sync"
+                placeholder={t("actionModals.placeholders.meetingSubject")}
                 autoFocus
                 value={formData.subject || ""}
                 onChange={(e) => handleChange("subject", e.target.value)}
@@ -462,7 +474,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">
-                  Date & Time
+                  {t("actionModals.logMeeting.dateTime")}
                   {showValidation && !formData.date && (
                     <span
                       style={{
@@ -485,7 +497,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
               <div className="form-group">
                 <label className="form-label">
-                  Attendees (Performer)
+                  {t("actionModals.logMeeting.attendees")}
                   {showValidation && !formData.attendeeId && (
                     <span
                       style={{
@@ -504,12 +516,12 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   value={formData.attendeeId || ""}
                   onChange={(e) => {
                     const selectedProfile = profiles.find(
-                      (p) => p.id === e.target.value
+                      (p) => p.id === e.target.value,
                     );
                     handleChange("attendeeId", e.target.value);
                     handleChange(
                       "attendees",
-                      selectedProfile ? selectedProfile.name : ""
+                      selectedProfile ? selectedProfile.name : "",
                     );
                   }}
                 >
@@ -524,7 +536,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             </div>
             <div className="form-group">
               <label className="form-label">
-                Notes / Outcome
+                {t("actionModals.logMeeting.notes")}
                 {showValidation && !formData.notes && (
                   <span
                     style={{
@@ -541,7 +553,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <textarea
                 className="form-input"
                 rows={4}
-                placeholder="Key takeaways..."
+                placeholder={t("actionModals.placeholders.notes")}
                 value={formData.notes || ""}
                 onChange={(e) => handleChange("notes", e.target.value)}
               />
@@ -553,7 +565,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           <>
             <div className="form-group">
               <label className="form-label">
-                Task Title
+                {t("actionModals.addTask.title")}
                 {showValidation && !formData.title && (
                   <span
                     style={{
@@ -570,7 +582,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <input
                 type="text"
                 className="form-input"
-                placeholder="e.g. Update Brand Assets"
+                placeholder={t("actionModals.placeholders.taskTitle")}
                 autoFocus
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
@@ -579,7 +591,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">
-                  Assignee
+                  {t("actionModals.addTask.assignee")}
                   {showValidation && !formData.assigneeId && (
                     <span
                       style={{
@@ -598,7 +610,9 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   value={formData.assigneeId || ""}
                   onChange={(e) => handleChange("assigneeId", e.target.value)}
                 >
-                  <option value="">Unassigned</option>
+                  <option value="">
+                    {t("actionModals.addTask.unassigned")}
+                  </option>
                   {profiles.map((profile) => (
                     <option key={profile.id} value={profile.id}>
                       {profile.name || profile.email}
@@ -608,7 +622,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
               <div className="form-group">
                 <label className="form-label">
-                  Due Date
+                  {t("actionModals.addTask.dueDate")}
                   {showValidation && !formData.due_date && (
                     <span
                       style={{
@@ -632,7 +646,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             </div>
             <div className="form-group">
               <label className="form-label">
-                Description
+                {t("actionModals.addTask.description")}
                 {showValidation && !formData.description && (
                   <span
                     style={{
@@ -649,14 +663,14 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <textarea
                 className="form-input"
                 rows={4}
-                placeholder="Task details..."
+                placeholder={t("actionModals.placeholders.description")}
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
               />
             </div>
             <div className="form-group">
               <label className="form-label">
-                Priority
+                {t("actionModals.addTask.priority")}
                 {showValidation && !formData.priority && (
                   <span
                     style={{
@@ -720,7 +734,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <p className="text-sm font-medium text-white">
                 {formData.file
                   ? formData.file.name
-                  : "Click to upload or drag and drop"}
+                  : t("actionModals.uploadAsset.dragDrop")}
                 {showValidation && !formData.file && (
                   <span
                     style={{
@@ -735,12 +749,12 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 )}
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                SVG, PNG, JPG or PDF (max. 10MB)
+                {t("actionModals.uploadAsset.formats")}
               </p>
             </div>
             <div className="form-group mt-4">
               <label className="form-label">
-                Asset Name
+                {t("actionModals.uploadAsset.title")}
                 {showValidation && !formData.filename && (
                   <span
                     style={{
@@ -757,14 +771,14 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <input
                 type="text"
                 className="form-input"
-                placeholder="Filename"
+                placeholder={t("actionModals.placeholders.filename")}
                 value={formData.filename || ""}
                 onChange={(e) => handleChange("filename", e.target.value)}
               />
             </div>
             <div className="form-group">
               <label className="form-label">
-                Category
+                {t("actionModals.uploadAsset.category")}
                 {showValidation && !formData.category && (
                   <span
                     style={{
@@ -796,7 +810,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           <>
             <div className="form-group">
               <label className="form-label">
-                To
+                {t("actionModals.sendEmail.to")}
                 {showValidation && !formData.to && (
                   <span
                     style={{
@@ -815,7 +829,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   type="text"
                   list="email-suggestions"
                   className="form-input"
-                  placeholder="client@example.com"
+                  placeholder={t("actionModals.placeholders.emailTo")}
                   value={formData.to || ""}
                   onChange={(e) => handleChange("to", e.target.value)}
                   autoFocus
@@ -830,7 +844,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             </div>
             <div className="form-group">
               <label className="form-label">
-                Subject
+                {t("actionModals.sendEmail.subject")}
                 {showValidation && !formData.subject && (
                   <span
                     style={{
@@ -847,14 +861,14 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <input
                 type="text"
                 className="form-input"
-                placeholder="Subject line"
+                placeholder={t("actionModals.placeholders.emailSubject")}
                 value={formData.subject || ""}
                 onChange={(e) => handleChange("subject", e.target.value)}
               />
             </div>
             <div className="form-group">
               <label className="form-label">
-                Message
+                {t("actionModals.sendEmail.message")}
                 {showValidation && !formData.message && (
                   <span
                     style={{
@@ -871,7 +885,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <textarea
                 className="form-input"
                 rows={6}
-                placeholder="Type your message here..."
+                placeholder={t("actionModals.placeholders.emailMessage")}
                 value={formData.message || ""}
                 onChange={(e) => handleChange("message", e.target.value)}
               />
@@ -883,7 +897,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           <>
             <div className="form-group">
               <label className="form-label">
-                Issue Title
+                {t("actionModals.reportBug.title")}
                 {showValidation && !formData.title && (
                   <span
                     style={{
@@ -900,7 +914,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <input
                 type="text"
                 className="form-input"
-                placeholder="e.g. Login failing on staging"
+                placeholder={t("actionModals.placeholders.bugTitle")}
                 autoFocus
                 value={formData.title || ""}
                 onChange={(e) => handleChange("title", e.target.value)}
@@ -909,7 +923,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="form-group">
                 <label className="form-label">
-                  Severity
+                  {t("actionModals.reportBug.severity")}
                   {showValidation && !formData.severity && (
                     <span
                       style={{
@@ -936,7 +950,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               </div>
               <div className="form-group">
                 <label className="form-label">
-                  Affected System
+                  {t("actionModals.reportBug.system")}
                   {showValidation && !formData.system && (
                     <span
                       style={{
@@ -964,7 +978,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
             </div>
             <div className="form-group">
               <label className="form-label">
-                Description
+                {t("actionModals.reportBug.description")}
                 {showValidation && !formData.description && (
                   <span
                     style={{
@@ -981,7 +995,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
               <textarea
                 className="form-input"
                 rows={4}
-                placeholder="Steps to reproduce..."
+                placeholder={t("actionModals.placeholders.steps")}
                 value={formData.description || ""}
                 onChange={(e) => handleChange("description", e.target.value)}
               />
@@ -996,23 +1010,47 @@ export const ActionModal: React.FC<ActionModalProps> = ({
   const getHeader = () => {
     switch (type) {
       case "NEW_CONTRACT":
-        return { title: "New Contract", icon: FileText, color: "bg-blue-500" };
+        return {
+          title: t("actionModals.titles.newContract"),
+          icon: FileText,
+          color: "bg-blue-500",
+        };
       case "LOG_MEETING":
         return {
-          title: "Log Meeting",
+          title: t("actionModals.titles.logMeeting"),
           icon: Briefcase,
           color: "bg-purple-500",
         };
       case "ADD_TASK":
-        return { title: "Add Task", icon: CheckCircle, color: "bg-green-500" };
+        return {
+          title: t("actionModals.titles.addTask"),
+          icon: CheckCircle,
+          color: "bg-green-500",
+        };
       case "UPLOAD_ASSET":
-        return { title: "Upload Asset", icon: ImageIcon, color: "bg-pink-500" };
+        return {
+          title: t("actionModals.titles.uploadAsset"),
+          icon: ImageIcon,
+          color: "bg-pink-500",
+        };
       case "SEND_EMAIL":
-        return { title: "Send Email", icon: Send, color: "bg-orange-500" };
+        return {
+          title: t("actionModals.titles.sendEmail"),
+          icon: Send,
+          color: "bg-orange-500",
+        };
       case "REPORT_BUG":
-        return { title: "Report Bug", icon: AlertCircle, color: "bg-red-500" };
+        return {
+          title: t("actionModals.titles.reportBug"),
+          icon: AlertCircle,
+          color: "bg-red-500",
+        };
       default:
-        return { title: "Action", icon: Star, color: "bg-gray-500" };
+        return {
+          title: t("actionModals.titles.default"),
+          icon: Star,
+          color: "bg-gray-500",
+        };
     }
   };
 
@@ -1048,7 +1086,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
           {/* Footer */}
           <div className="modal__footer">
             <Button variant="ghost" type="button" onClick={onClose}>
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               variant="primary"
@@ -1059,12 +1097,12 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                 loading ? <Loader2 className="animate-spin" size={14} /> : null
               }
             >
-              {loading ? "Processing..." : "Save"}
+              {loading ? t("common.processing") : t("common.save")}
             </Button>
           </div>
         </form>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };

@@ -1,3 +1,14 @@
 @import "../_Shared/styles/global.css";
 
 /* Module 6: Client 360 overrides */
+
+/* Make date inputs use dark color scheme (white icons) */
+input[type="date"],
+input[type="datetime-local"] {
+    color-scheme: dark;
+}
+
+/* Compact modal footer */
+.modal__footer {
+    padding: 0.75rem 1.25rem !important;
+}

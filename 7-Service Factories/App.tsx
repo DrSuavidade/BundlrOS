@@ -90,7 +90,7 @@ const FactoryList: React.FC<{
               >
                 {(() => {
                   const assignee = profiles.find(
-                    (p) => p.id === factory.assigneeId
+                    (p) => p.id === factory.assigneeId,
                   );
                   return assignee ? (
                     <img
@@ -134,23 +134,25 @@ const StageColumn: React.FC<{
 }> = ({ stage, factory, isActive, isPast, onUpdateDeliverable, t }) => {
   const isBlocked = isActive && factory.status === Status.BLOCKED;
   const relevantDeliverables = factory.deliverables.filter((d) =>
-    stage.requiredDeliverables.includes(d.id)
+    stage.requiredDeliverables.includes(d.id),
   );
 
   const stateClass = isBlocked
     ? "blocked"
     : isActive
-    ? "active"
-    : isPast
-    ? "past"
-    : "";
+      ? "active"
+      : isPast
+        ? "past"
+        : "";
 
   return (
     <div className={`${styles.stageColumn} ${styles[stateClass] || ""}`}>
       <div className={styles.stageColumn__header}>
         <div className="flex items-center gap-2">
           <div className={styles.stageNumber}>{stage.order + 1}</div>
-          <span className={styles.stageName}>{stage.name}</span>
+          <span className={styles.stageName}>
+            {t(`factories.templates.${factory.templateId}.stages.${stage.id}`)}
+          </span>
         </div>
         {isBlocked && (
           <AlertTriangle size={14} className="text-amber-500 animate-pulse" />
@@ -176,7 +178,7 @@ const StageColumn: React.FC<{
                 {d.type === "DOCUMENT" && <FileText size={12} />}
                 {d.type === "COMPONENT" && <Box size={12} />}
                 {d.type === "ASSET" && <Anchor size={12} />}
-                {d.name}
+                {t(`factories.deliverables.${d.id}`)}
               </span>
               <span className={styles.deliverableCard__status}>{d.status}</span>
             </div>
@@ -209,7 +211,7 @@ const App: React.FC = () => {
   const [newClientName, setNewClientName] = useState("");
   const [newContractId, setNewContractId] = useState("");
   const [selectedTemplateId, setSelectedTemplateId] = useState(
-    PIPELINE_TEMPLATES[0].id
+    PIPELINE_TEMPLATES[0].id,
   );
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
 
@@ -260,7 +262,7 @@ const App: React.FC = () => {
     const newFactoryTemplate = createFactory(
       newContractId,
       newClientName,
-      selectedTemplateId
+      selectedTemplateId,
     );
 
     // Save to DB
@@ -293,7 +295,7 @@ const App: React.FC = () => {
 
       if (saved) {
         setFactories((prev) =>
-          prev.map((f) => (f.id === saved.id ? saved : f))
+          prev.map((f) => (f.id === saved.id ? saved : f)),
         );
       }
     } catch (err) {
@@ -307,7 +309,7 @@ const App: React.FC = () => {
     if (!selectedFactory || !currentTemplate) return;
 
     const currentStageIndex = currentTemplate.stages.findIndex(
-      (s) => s.id === selectedFactory.currentStageId
+      (s) => s.id === selectedFactory.currentStageId,
     );
     const isLastStage = currentStageIndex === currentTemplate.stages.length - 1;
     let updated: Factory;
@@ -367,7 +369,7 @@ const App: React.FC = () => {
       const updated = await createFinalDeliverable(
         selectedFactory,
         deliverableFolderName,
-        deliverableLink
+        deliverableLink,
       );
 
       const saved = await FactoryService.update(updated);
@@ -390,7 +392,7 @@ const App: React.FC = () => {
     if (!selectedFactory) return;
 
     const deliverable = selectedFactory.deliverables.find(
-      (d) => d.id === deliverableId
+      (d) => d.id === deliverableId,
     );
     if (!deliverable) return;
 
@@ -401,7 +403,7 @@ const App: React.FC = () => {
     const updated = updateDeliverableStatus(
       selectedFactory,
       deliverableId,
-      nextStatus
+      nextStatus,
     );
 
     const blockers = checkBlockers(updated);
@@ -439,7 +441,7 @@ const App: React.FC = () => {
           const saved = await FactoryService.update(updated);
           if (saved) {
             setFactories((prev) =>
-              prev.map((f) => (f.id === saved.id ? saved : f))
+              prev.map((f) => (f.id === saved.id ? saved : f)),
             );
           }
         }
@@ -467,22 +469,26 @@ const App: React.FC = () => {
           <div className="flex items-center">
             <h1 className={styles.headerTitle}>
               <Terminal size={14} className="text-emerald-500" />
-              Pipeline Manager
+              {t("factories.pipelineManager")}
             </h1>
             {selectedFactory && (
               <>
                 <div className={styles.headerDivider} />
                 <div className={styles.headerContext}>
-                  <span className={styles.headerContext__label}>Context</span>
+                  <span className={styles.headerContext__label}>
+                    {t("factories.context")}
+                  </span>
                   {currentTemplate && (
                     <span className="text-[10px] text-[var(--color-text-secondary)] uppercase tracking-wider font-semibold mt-0.5 leading-tight opacity-75">
-                      {currentTemplate.name}
+                      {t(`factories.templates.${currentTemplate.id}.name`)}
                     </span>
                   )}
                 </div>
                 <div className={styles.headerDivider} />
                 <div className={styles.headerContext}>
-                  <span className={styles.headerContext__label}>Assignee</span>
+                  <span className={styles.headerContext__label}>
+                    {t("factories.assignee")}
+                  </span>
                   <div
                     style={{ display: "flex", gap: "8px", marginTop: "4px" }}
                   >
@@ -546,10 +552,10 @@ const App: React.FC = () => {
                 >
                   {currentTemplate &&
                   currentTemplate.stages.findIndex(
-                    (s) => s.id === selectedFactory.currentStageId
+                    (s) => s.id === selectedFactory.currentStageId,
                   ) ===
                     currentTemplate.stages.length - 1
-                    ? "Create Deliverable"
+                    ? t("factories.createDeliverable")
                     : t("factories.advanceStage")}
                   <ArrowRight size={12} className="ml-1.5" />
                 </Button>
@@ -578,10 +584,10 @@ const App: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-[var(--color-text-primary)]">
-                      Work Delivered
+                      {t("factories.workDelivered")}
                     </h3>
                     <p className="text-sm text-[var(--color-text-secondary)]">
-                      Waiting for approval.
+                      {t("factories.waitingApproval")}
                     </p>
                   </div>
                 </div>
@@ -589,7 +595,9 @@ const App: React.FC = () => {
                 <>
                   {/* Log Panel */}
                   <div className={styles.logPanel}>
-                    <div className={styles.logPanel__header}>System Logs</div>
+                    <div className={styles.logPanel__header}>
+                      {t("factories.systemLogs")}
+                    </div>
                     <div className={styles.logPanel__content}>
                       {selectedFactory.logs.map((log) => (
                         <div key={log.id} className={styles.logItem}>
@@ -618,7 +626,7 @@ const App: React.FC = () => {
                     {currentTemplate?.stages.map((stage, index) => {
                       const currentStageIndex =
                         currentTemplate.stages.findIndex(
-                          (s) => s.id === selectedFactory.currentStageId
+                          (s) => s.id === selectedFactory.currentStageId,
                         );
                       const isPast = index < currentStageIndex;
                       const isActive = index === currentStageIndex;
@@ -692,9 +700,9 @@ const App: React.FC = () => {
                   onChange={(e) => setSelectedTemplateId(e.target.value)}
                   className="form-select w-full"
                 >
-                  {PIPELINE_TEMPLATES.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
+                  {PIPELINE_TEMPLATES.map((tpl) => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {t(`factories.templates.${tpl.id}.name`)}
                     </option>
                   ))}
                 </select>
@@ -737,7 +745,7 @@ const App: React.FC = () => {
                   <div className="w-8 h-8 rounded-lg bg-[var(--color-accent-primary)] flex items-center justify-center">
                     <CheckSquare size={18} className="text-white" />
                   </div>
-                  {t("Create Deliverable")}
+                  {t("factories.createDeliverable")}
                 </h3>
                 <button
                   onClick={() => {
@@ -756,7 +764,7 @@ const App: React.FC = () => {
                 <div className="form-group">
                   <label className="form-label">
                     <Folder size={14} />
-                    Folder Name
+                    {t("factories.folderName")}
                     {showValidation && !deliverableFolderName && (
                       <span
                         style={{
@@ -783,7 +791,7 @@ const App: React.FC = () => {
                 <div className="form-group">
                   <label className="form-label">
                     <Link size={14} />
-                    Google Drive Link
+                    {t("factories.driveLink")}
                     {showValidation && !deliverableLink && (
                       <span
                         style={{
@@ -837,7 +845,7 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

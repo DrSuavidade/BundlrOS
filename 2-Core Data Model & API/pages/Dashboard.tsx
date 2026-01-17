@@ -65,7 +65,7 @@ export const Dashboard: React.FC = () => {
         setClients(clientsData);
         setContracts(contractsData);
         setLoading(false);
-      }
+      },
     );
   };
 
@@ -86,19 +86,19 @@ export const Dashboard: React.FC = () => {
     // <= 7 days away: "Due Soon" (or 0-7 days)
     // < 0 days away: "Overdue"
     const diffDays = Math.ceil(
-      (nextDue.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+      (nextDue.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24),
     );
     let paymentStatus = "upcoming";
-    let dateLabel = "Next Payment";
+    let dateLabel = t("coreData.nextPayment");
 
     if (diffDays < 0) {
       paymentStatus = "overdue";
-      dateLabel = "Overdue";
+      dateLabel = t("coreData.paymentStatus.overdue");
     } else if (diffDays <= 7) {
       paymentStatus = "due_soon";
-      dateLabel = "Due Soon";
+      dateLabel = t("coreData.paymentStatus.dueSoon");
     } else {
-      dateLabel = "Waiting Payment";
+      dateLabel = t("coreData.paymentStatus.waitingPayment");
     }
 
     // For projects (one-off), we might want a slightly different label logic or fallback
@@ -107,7 +107,7 @@ export const Dashboard: React.FC = () => {
 
     return {
       ...contract,
-      clientName: client?.name || "Unknown Client",
+      clientName: client?.name || t("coreData.unknownClient"),
       clientEmail: client?.email,
       nextDue,
       paymentStatus,
@@ -128,16 +128,16 @@ export const Dashboard: React.FC = () => {
   const totalMRR = monthlyContracts.reduce((acc, c) => acc + (c.value || 0), 0);
   const totalOneOffPending = oneOffContracts.reduce(
     (acc, c) => acc + (c.value || 0) - (c.amount_paid || 0),
-    0
+    0,
   );
   const overdueCount = enrichedContracts.filter(
-    (c) => c.paymentStatus === "overdue"
+    (c) => c.paymentStatus === "overdue",
   ).length;
 
   // Calculate Total Income (Sum of all amount_paid)
   const totalIncome = enrichedContracts.reduce(
     (acc, c) => acc + (c.amount_paid || 0),
-    0
+    0,
   );
 
   const handleAction = (action: string, clientName: string) => {
@@ -205,12 +205,12 @@ export const Dashboard: React.FC = () => {
               size={22}
               style={{ color: "var(--color-accent-primary)" }}
             />
-            Payment Hub
+            {t("coreData.paymentHub")}
           </h1>
         </div>
         <div className={styles.statusBadge}>
           <div className={styles.statusDot} />
-          Systems Active
+          {t("coreData.systemsActive")}
         </div>
       </div>
 
@@ -222,11 +222,11 @@ export const Dashboard: React.FC = () => {
             style={{ background: "rgb(59, 130, 246)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Monthly Recurring Revenue</p>
+            <p className={styles.statCard__label}>{t("coreData.mrr")}</p>
             <p className={styles.statCard__value}>{formatMoney(totalMRR)}</p>
             <div className={`${styles.statCard__trend} ${styles.up}`}>
               <TrendingUp size={12} />
-              <span>Active Retainers</span>
+              <span>{t("coreData.activeRetainers")}</span>
             </div>
           </div>
           <div
@@ -246,7 +246,9 @@ export const Dashboard: React.FC = () => {
             style={{ background: "rgb(168, 85, 247)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Pending One-Off</p>
+            <p className={styles.statCard__label}>
+              {t("coreData.pendingOneOff")}
+            </p>
             <p className={styles.statCard__value}>
               {formatMoney(totalOneOffPending)}
             </p>
@@ -271,17 +273,19 @@ export const Dashboard: React.FC = () => {
             }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Payment Alerts</p>
+            <p className={styles.statCard__label}>
+              {t("coreData.paymentAlerts")}
+            </p>
             <p
               className={styles.statCard__value}
               style={{
                 color: overdueCount > 0 ? "var(--color-error)" : "inherit",
               }}
             >
-              {overdueCount} Overdue
+              {overdueCount} {t("coreData.paymentStatus.overdue")}
             </p>
             <div className={styles.statCard__trend}>
-              <span>Action needed</span>
+              <span>{t("coreData.actionNeeded")}</span>
             </div>
           </div>
           <div
@@ -305,11 +309,13 @@ export const Dashboard: React.FC = () => {
             style={{ background: "rgb(234, 179, 8)" }}
           />
           <div className={styles.statCard__content}>
-            <p className={styles.statCard__label}>Total Income</p>
+            <p className={styles.statCard__label}>
+              {t("coreData.totalIncome")}
+            </p>
             <p className={styles.statCard__value}>{formatMoney(totalIncome)}</p>
             <div className={`${styles.statCard__trend} ${styles.up}`}>
               <TrendingUp size={12} />
-              <span>Total Collected</span>
+              <span>{t("coreData.totalCollected")}</span>
             </div>
           </div>
           <div
@@ -334,7 +340,7 @@ export const Dashboard: React.FC = () => {
           <div className={styles.sectionCard__header}>
             <div className={styles.sectionCard__title}>
               <Clock size={16} className="text-[var(--color-accent-primary)]" />
-              Recurring Retainers
+              {t("coreData.recurringRetainers")}
             </div>
           </div>
           <div className={styles.sectionCard__body}>
@@ -343,9 +349,11 @@ export const Dashboard: React.FC = () => {
                 <div className={styles.emptyState__icon}>
                   <Inbox size={24} />
                 </div>
-                <p className={styles.emptyState__title}>No active retainers</p>
+                <p className={styles.emptyState__title}>
+                  {t("coreData.noActiveRetainers")}
+                </p>
                 <p className={styles.emptyState__description}>
-                  All monthly subscriptions are processing normally.
+                  {t("coreData.noActiveRetainersDesc")}
                 </p>
               </div>
             ) : (
@@ -365,8 +373,8 @@ export const Dashboard: React.FC = () => {
                           contract.paymentStatus === "overdue"
                             ? styles.overdue
                             : contract.paymentStatus === "due_soon"
-                            ? styles.due_soon
-                            : styles.waiting
+                              ? styles.due_soon
+                              : styles.waiting
                         }`}
                       >
                         {contract.dateLabel}
@@ -377,7 +385,7 @@ export const Dashboard: React.FC = () => {
                     <div className={styles.cardMain}>
                       <div className={styles.amountGroup}>
                         <span className={styles.amountLabel}>
-                          Monthly Value
+                          {t("coreData.monthlyValue")}
                         </span>
                         <div className="flex items-baseline">
                           <span className={styles.amountValue}>
@@ -387,13 +395,17 @@ export const Dashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex flex-col items-end justify-end">
-                        <span className={styles.amountLabel}>Paid</span>
+                        <span className={styles.amountLabel}>
+                          {t("coreData.paid")}
+                        </span>
                         <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                           {formatMoney(contract.amount_paid || 0)}
                         </span>
                       </div>
                       <div className={styles.dateGroup}>
-                        <span className={styles.dateLabel}>Next Payment</span>
+                        <span className={styles.dateLabel}>
+                          {t("coreData.nextPayment")}
+                        </span>
                         <div className={styles.dateValue}>
                           <Calendar size={12} />
                           {contract.nextDue.toLocaleDateString(undefined, {
@@ -412,7 +424,7 @@ export const Dashboard: React.FC = () => {
                         className={styles.actionButton}
                       >
                         <CreditCard size={14} />
-                        Payment
+                        {t("coreData.payment")}
                       </button>
                       <button
                         onClick={() =>
@@ -421,7 +433,7 @@ export const Dashboard: React.FC = () => {
                         className={styles.actionButton}
                       >
                         <FileText size={14} />
-                        Receipt
+                        {t("coreData.receipt")}
                       </button>
                       <button
                         onClick={() =>
@@ -430,7 +442,7 @@ export const Dashboard: React.FC = () => {
                         className={styles.actionButton}
                       >
                         <Send size={14} />
-                        Remind
+                        {t("coreData.remind")}
                       </button>
                     </div>
                   </div>
@@ -448,7 +460,7 @@ export const Dashboard: React.FC = () => {
                 size={16}
                 className="text-[var(--color-accent-primary)]"
               />
-              One-Off Projects
+              {t("coreData.oneOffProjects")}
             </div>
           </div>
           <div className={styles.sectionCard__body}>
@@ -457,10 +469,11 @@ export const Dashboard: React.FC = () => {
                 <div className={styles.emptyState__icon}>
                   <CheckCircle2 size={24} />
                 </div>
-                <p className={styles.emptyState__title}>No pending projects</p>
+                <p className={styles.emptyState__title}>
+                  {t("coreData.noPendingProjects")}
+                </p>
                 <p className={styles.emptyState__description}>
-                  You're all caught up! No one-off projects are currently
-                  active.
+                  {t("coreData.noPendingProjectsDesc")}
                 </p>
               </div>
             ) : (
@@ -480,8 +493,8 @@ export const Dashboard: React.FC = () => {
                           contract.paymentStatus === "overdue"
                             ? styles.overdue
                             : contract.paymentStatus === "due_soon"
-                            ? styles.due_soon
-                            : styles.waiting
+                              ? styles.due_soon
+                              : styles.waiting
                         }`}
                       >
                         {contract.dateLabel}
@@ -491,7 +504,9 @@ export const Dashboard: React.FC = () => {
                     {/* Main Content */}
                     <div className={styles.cardMain}>
                       <div className={styles.amountGroup}>
-                        <span className={styles.amountLabel}>Total Value</span>
+                        <span className={styles.amountLabel}>
+                          {t("coreData.totalValue")}
+                        </span>
                         <div className="flex items-baseline">
                           <span className={styles.amountValue}>
                             {formatMoney(contract.value || 0)}
@@ -499,13 +514,17 @@ export const Dashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="flex flex-col items-end justify-end">
-                        <span className={styles.amountLabel}>Paid</span>
+                        <span className={styles.amountLabel}>
+                          {t("coreData.paid")}
+                        </span>
                         <span className="text-sm font-medium text-[var(--color-text-secondary)]">
                           {formatMoney(contract.amount_paid || 0)}
                         </span>
                       </div>
                       <div className={styles.dateGroup}>
-                        <span className={styles.dateLabel}>Due Date</span>
+                        <span className={styles.dateLabel}>
+                          {t("coreData.dueDate")}
+                        </span>
                         <div className={styles.dateValue}>
                           <Calendar size={12} />
                           {contract.nextDue.toLocaleDateString(undefined, {
@@ -537,7 +556,7 @@ export const Dashboard: React.FC = () => {
                         }}
                       >
                         <CreditCard size={14} />
-                        Payment
+                        {t("coreData.payment")}
                       </button>
                       <button
                         onClick={() =>
@@ -546,7 +565,7 @@ export const Dashboard: React.FC = () => {
                         className={styles.actionButton}
                       >
                         <FileText size={14} />
-                        Invoice
+                        {t("coreData.invoice")}
                       </button>
                       <button
                         onClick={() =>
@@ -555,7 +574,7 @@ export const Dashboard: React.FC = () => {
                         className={styles.actionButton}
                       >
                         <Send size={14} />
-                        Remind
+                        {t("coreData.remind")}
                       </button>
                     </div>
                   </div>

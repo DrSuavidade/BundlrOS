@@ -2,6 +2,7 @@ import React from "react";
 import { IntakeItem, Priority } from "../types";
 import { Badge } from "./Badge";
 import { Clock, MessageSquare, AlertCircle, User } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "./Inbox.module.css";
 
 interface IntakeListProps {
@@ -15,16 +16,17 @@ export const IntakeList: React.FC<IntakeListProps> = ({
   onSelect,
   selectedId,
 }) => {
+  const { t, language } = useLanguage();
+
   if (items.length === 0) {
     return (
       <div className={styles.emptyState}>
         <div className={styles.emptyState__icon}>
           <MessageSquare size={36} />
         </div>
-        <p className={styles.emptyState__title}>No intake items found</p>
+        <p className={styles.emptyState__title}>{t("inbox.list.emptyTitle")}</p>
         <p className={styles.emptyState__description}>
-          Try adjusting your search or filter criteria to find what you're
-          looking for
+          {t("inbox.list.emptyDesc")}
         </p>
       </div>
     );
@@ -44,13 +46,13 @@ export const IntakeList: React.FC<IntakeListProps> = ({
         </colgroup>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Status</th>
-            <th>Priority</th>
-            <th>Subject</th>
-            <th>Client</th>
-            <th>SLA Due</th>
-            <th>Owner</th>
+            <th>{t("inbox.list.id")}</th>
+            <th>{t("inbox.list.status")}</th>
+            <th>{t("inbox.list.priority")}</th>
+            <th>{t("inbox.list.subject")}</th>
+            <th>{t("inbox.list.client")}</th>
+            <th>{t("inbox.list.slaDue")}</th>
+            <th>{t("inbox.list.owner")}</th>
           </tr>
         </thead>
         <tbody>
@@ -100,10 +102,13 @@ export const IntakeList: React.FC<IntakeListProps> = ({
                         isBreached ? styles.slaBreached : ""
                       }`}
                     >
-                      {slaDate.toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}{" "}
+                      {slaDate.toLocaleDateString(
+                        language === "pt" ? "pt-PT" : "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                        },
+                      )}{" "}
                       {slaDate.getHours()}:
                       {slaDate.getMinutes().toString().padStart(2, "0")}
                     </span>

@@ -21,7 +21,7 @@ import {
   Plus,
 } from "lucide-react";
 import styles from "./Dashboard.module.css";
-import { Badge } from "@bundlros/ui";
+import { Badge, useLanguage } from "@bundlros/ui";
 import { ContactsApi } from "../../lib/supabase/api";
 
 interface PanelProps {
@@ -43,6 +43,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
   clientId,
   onRefresh,
 }) => {
+  const { t } = useLanguage();
   // State for Contact Management
   const [viewMode, setViewMode] = useState<"list" | "add" | "edit">("list");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -152,7 +153,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
             })();
 
           return matchesSearch && matchesFilter;
-        })
+        }),
       );
     }
   }, [data, searchTerm, activeFilter, type]);
@@ -164,14 +165,14 @@ export const DetailPanel: React.FC<PanelProps> = ({
     actions = [
       {
         id: "view_all",
-        label: "View All",
+        label: t("clients.detailPanel.actions.viewAll"),
         icon: List,
         active: viewMode === "list",
         onClick: () => setViewMode("list"),
       },
       {
         id: "add_new",
-        label: "Add New",
+        label: t("clients.detailPanel.actions.addNew"),
         icon: Plus,
         active: viewMode === "add",
         onClick: () => {
@@ -181,7 +182,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
       },
       {
         id: "edit",
-        label: "Edit",
+        label: t("clients.detailPanel.actions.edit"),
         icon: Pencil,
         disabled: !selectedId || viewMode !== "list",
         active: viewMode === "edit",
@@ -189,7 +190,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
       },
       {
         id: "delete",
-        label: "Delete",
+        label: t("clients.detailPanel.actions.delete"),
         icon: Trash2,
         disabled: !selectedId || viewMode !== "list",
         active: false,
@@ -200,28 +201,28 @@ export const DetailPanel: React.FC<PanelProps> = ({
     actions = [
       {
         id: "all",
-        label: "All",
+        label: t("clients.detailPanel.actions.all"),
         icon: List,
         active: activeFilter === "all",
         onClick: () => setActiveFilter("all"),
       },
       {
         id: "active",
-        label: "Active",
+        label: t("clients.detailPanel.actions.active"),
         icon: CheckCircle,
         active: activeFilter === "active",
         onClick: () => setActiveFilter("active"),
       },
       {
         id: "draft",
-        label: "Drafts",
+        label: t("clients.detailPanel.actions.drafts"),
         icon: FileText,
         active: activeFilter === "draft",
         onClick: () => setActiveFilter("draft"),
       },
       {
         id: "expired",
-        label: "Past",
+        label: t("clients.detailPanel.actions.past"),
         icon: Layers,
         active: activeFilter === "expired",
         onClick: () => setActiveFilter("expired"),
@@ -231,28 +232,28 @@ export const DetailPanel: React.FC<PanelProps> = ({
     actions = [
       {
         id: "all",
-        label: "All",
+        label: t("clients.detailPanel.actions.all"),
         icon: Activity,
         active: activeFilter === "all",
         onClick: () => setActiveFilter("all"),
       },
       {
         id: "email",
-        label: "Emails",
+        label: t("clients.detailPanel.actions.emails"),
         icon: Mail,
         active: activeFilter === "email",
         onClick: () => setActiveFilter("email"),
       },
       {
         id: "meeting",
-        label: "Meetings",
+        label: t("clients.detailPanel.actions.meetings"),
         icon: Briefcase,
         active: activeFilter === "meeting",
         onClick: () => setActiveFilter("meeting"),
       },
       {
         id: "system",
-        label: "System",
+        label: t("clients.detailPanel.actions.system"),
         icon: Sparkles,
         active: activeFilter === "system",
         onClick: () => setActiveFilter("system"),
@@ -283,10 +284,10 @@ export const DetailPanel: React.FC<PanelProps> = ({
             <div className="flex gap-1.5 mb-1 items-center">
               <span className="text-[10px] uppercase font-bold tracking-wider text-[var(--color-text-tertiary)] bg-[var(--color-bg-subtle)] px-1.5 py-0.5 rounded">
                 {type === "contracts"
-                  ? "Contracts"
+                  ? t("clients.contracts")
                   : type === "contacts"
-                  ? "Contacts"
-                  : "Activity Log"}
+                    ? t("clients.contacts")
+                    : t("clients.detailPanel.activityLog")}
               </span>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--color-bg-elevated)] text-[var(--color-text-tertiary)] font-mono border border-[var(--color-border-subtle)]">
                 {filteredData.length}
@@ -328,7 +329,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                 />
                 <input
                   type="text"
-                  placeholder="Filter list..."
+                  placeholder={t("clients.detailPanel.filterList")}
                   className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] placeholder-[var(--color-text-tertiary)] transition-all"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -340,9 +341,11 @@ export const DetailPanel: React.FC<PanelProps> = ({
                   <div className={styles.emptyState__icon}>
                     <Search size={24} />
                   </div>
-                  <p className={styles.emptyState__title}>No results found</p>
+                  <p className={styles.emptyState__title}>
+                    {t("clients.detailPanel.noResults")}
+                  </p>
                   <p className={styles.emptyState__description}>
-                    Try adjusting your filter
+                    {t("clients.detailPanel.adjustFilter")}
                   </p>
                 </div>
               )}
@@ -359,7 +362,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                       onClick={() =>
                         type === "contacts" && item.id
                           ? setSelectedId(
-                              item.id === selectedId ? null : item.id
+                              item.id === selectedId ? null : item.id,
                             )
                           : null
                       }
@@ -380,7 +383,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                           </div>
                           <div className="flex justify-between items-end">
                             <div className="text-xs text-[var(--color-text-secondary)]">
-                              Expires: {item.endDate}
+                              {t("clients.expires")}: {item.endDate}
                             </div>
                             <div className="text-sm font-bold font-mono text-[var(--color-text-primary)]">
                               {item.value}
@@ -422,8 +425,8 @@ export const DetailPanel: React.FC<PanelProps> = ({
                                     item.type === "meeting"
                                       ? "rgb(168, 85, 247)"
                                       : item.type === "email"
-                                      ? "rgb(249, 115, 22)"
-                                      : "rgb(59, 130, 246)",
+                                        ? "rgb(249, 115, 22)"
+                                        : "rgb(59, 130, 246)",
                                 }}
                               />
                               <span className="text-[10px] font-mono text-[var(--color-text-tertiary)]">
@@ -455,7 +458,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-                    Full Name
+                    {t("clients.detailPanel.form.fullName")}
                   </label>
                   <input
                     className="w-full px-3 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
@@ -463,13 +466,13 @@ export const DetailPanel: React.FC<PanelProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
-                    placeholder="e.g. John Doe"
+                    placeholder={t("actionModals.placeholders.taskTitle")}
                   />
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-                    Role
+                    {t("clients.detailPanel.form.role")}
                   </label>
                   <input
                     className="w-full px-3 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
@@ -477,14 +480,14 @@ export const DetailPanel: React.FC<PanelProps> = ({
                     onChange={(e) =>
                       setFormData({ ...formData, role: e.target.value })
                     }
-                    placeholder="e.g. Product Manager"
+                    placeholder={t("actionModals.placeholders.taskTitle")}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-                      Email
+                      {t("clients.detailPanel.form.email")}
                     </label>
                     <input
                       className="w-full px-3 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
@@ -492,12 +495,12 @@ export const DetailPanel: React.FC<PanelProps> = ({
                       onChange={(e) =>
                         setFormData({ ...formData, email: e.target.value })
                       }
-                      placeholder="john@example.com"
+                      placeholder={t("actionModals.placeholders.emailTo")}
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-semibold text-[var(--color-text-secondary)] uppercase tracking-wider">
-                      Phone
+                      {t("clients.detailPanel.form.phone")}
                     </label>
                     <input
                       className="w-full px-3 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)]"
@@ -515,7 +518,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                     onClick={() => setViewMode("list")}
                     className="px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-elevated)] rounded-lg transition-colors"
                   >
-                    Cancel
+                    {t("clients.detailPanel.form.cancel")}
                   </button>
                   <button
                     onClick={async () => {
@@ -555,7 +558,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                     }}
                     className="px-4 py-2 text-sm font-medium text-white bg-[var(--color-accent-primary)] hover:bg-[var(--color-accent-secondary)] rounded-lg shadow-lg shadow-indigo-500/20 transition-all"
                   >
-                    Save Contact
+                    {t("clients.detailPanel.form.saveContact")}
                   </button>
                 </div>
               </div>
@@ -598,7 +601,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                   color: "var(--color-text-primary)",
                 }}
               >
-                Delete Contact
+                {t("clients.detailPanel.form.deleteTitle")}
               </h3>
               <p
                 style={{
@@ -608,8 +611,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                   lineHeight: 1.5,
                 }}
               >
-                Are you sure you want to delete this contact? This action cannot
-                be undone.
+                {t("clients.detailPanel.form.deleteBody")}
               </p>
               <div
                 style={{
@@ -630,7 +632,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
                     cursor: "pointer",
                   }}
                 >
-                  Cancel
+                  {t("clients.detailPanel.form.cancel")}
                 </button>
                 <button
                   onClick={confirmDelete}
@@ -645,14 +647,14 @@ export const DetailPanel: React.FC<PanelProps> = ({
                     cursor: "pointer",
                   }}
                 >
-                  Delete Contact
+                  {t("clients.detailPanel.form.deleteButton")}
                 </button>
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>,
-    document.body
+    document.body,
   );
 };

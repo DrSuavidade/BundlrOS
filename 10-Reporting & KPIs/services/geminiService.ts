@@ -24,9 +24,13 @@ const FREE_MODELS = [
   "google/gemini-2.0-flash-thinking-exp:free", // One last potential backup
 ];
 
+// Define a basic Report type for now, assuming it will be defined elsewhere or inferred.
+// This is a placeholder to make the new function signatures syntactically correct.
+
 export const generateReportNarrative = async (
   period: string,
-  kpis: KPIRecord[]
+  kpis: KPIRecord[],
+  lang: string = 'en'
 ): Promise<string> => {
   const apiKey = getApiKey();
 
@@ -55,6 +59,7 @@ export const generateReportNarrative = async (
     5. Use valid Markdown formatting. Use H2 (##) for section headers like "Financial Performance", "Growth Trajectory", and "Strategic Recommendations".
     6. Keep it concise, elegant, and readable. Avoid bullet point overload. Use paragraphs.
     7. Conclude with a brief sentiment analysis of the business health.
+    8. Write the response in ${lang === 'pt' ? 'Portuguese (Portugal)' : 'English'}.
   `;
 
   let lastError: any = null;
@@ -127,6 +132,23 @@ export const generateReportNarrative = async (
 
   // Fallback if all AI attempts fail
   console.error("All AI models failed. Returning fallback template.", lastError);
+
+  if (lang === 'pt') {
+    return `# Resumo Executivo - ${period} (Modo Offline)
+
+**Nota:** O serviço de IA está atualmente com tráfego elevado. Este é um espaço reservado gerado automaticamente com base nos seus dados.
+
+## Desempenho Financeiro
+Os seus KPIs indicam atividade nestas áreas:
+${kpis.slice(0, 3).map(k => `- **${k.name}**: ${k.value} ${k.unit}`).join('\n')}
+
+## Recomendações
+- Por favor tente gerar este relatório novamente em alguns minutos quando a capacidade da IA restaurar.
+- Reveja os KPIs específicos no dashboard para insights detalhados.
+
+*Gerado pelo Sistema de Fallback BundlrOS*`;
+  }
+
   return `# Executive Summary - ${period} (Offline Mode)
 
 **Note:** The AI service is currently experiencing high traffic. This is an automatically generated placeholder based on your data.

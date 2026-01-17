@@ -297,7 +297,7 @@ export const SupabaseReportingService = {
         }
     },
 
-    createReport: async (title: string, period: string): Promise<Report> => {
+    createReport: async (title: string, period: string, lang: string = 'en'): Promise<Report> => {
         const kpis = await generateKPIsFromData(period);
 
         // Create automation run to act as the report
@@ -308,7 +308,7 @@ export const SupabaseReportingService = {
         // Generate narrative using Gemini
         let narrative = "";
         try {
-            narrative = await generateReportNarrative(period, kpis);
+            narrative = await generateReportNarrative(period, kpis, lang);
         } catch (e) {
             console.error("Failed to generate AI narrative, falling back to basic summary.", e);
             narrative = `# Executive Summary - ${period}\n\nBased on the data, the company has seen ${kpis[0].value > 10 ? 'steady growth' : 'stable performance'}. Total contract value is ${kpis[5].value > 0 ? 'healthy' : 'pending'}.\n\n## Financial Performance\nRecurring revenue is tracking against targets.`;

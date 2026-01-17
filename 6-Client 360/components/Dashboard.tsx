@@ -212,7 +212,7 @@ const Dashboard: React.FC = () => {
       // Merge and sort
       const merged = [...mappedEvents, ...mappedLogs].sort(
         (a, b) =>
-          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
 
       setActivities(merged);
@@ -240,20 +240,96 @@ const Dashboard: React.FC = () => {
   }, []);
 
   // Function to refresh dashboard data (exposed for child components)
-  const refreshDashboardData = (clientId: string) => {
+  const refreshDashboardData = async (clientId: string) => {
     if (!clientId) return Promise.resolve();
     setLoading(true);
-    // Only reset AI insight if we are switching clients, maybe?
-    // Actually simpler to just reload data.
-    // If we call this from DetailPanel, we might NOT want to clear AI insight or full loading state visually if possible,
-    // but for now let's keep consistency.
 
-    // Actually, if I just want to update contacts, fetching everything is fine.
+    try {
+      // Refresh client data
+      const clientData = await ClientService.fetchClientData(clientId);
+      setData(clientData);
 
-    return ClientService.fetchClientData(clientId).then((d) => {
-      setData(d);
+      // Also refresh activities (system events and audit logs)
+      const [events, logs] = await Promise.all([
+        ClientService.getSystemEvents(clientId),
+        ClientService.getAuditLogs(clientId),
+      ]);
+
+      // Map events to stream format
+      const mappedEvents = events.map((e: any) => {
+        let type = "system";
+        let title = e.type.replace(".", " ").toUpperCase();
+        let notes = "";
+
+        if (e.type === "email.send") {
+          type = "email";
+          title = "Email Sent";
+          const payload = e.payload || {};
+          notes = payload.subject
+            ? `Subject: ${payload.subject}`
+            : "No subject";
+        } else if (e.type.includes("meeting")) {
+          type = "meeting";
+        }
+
+        return {
+          id: e.id,
+          type,
+          title,
+          notes,
+          timestamp: e.created_at,
+          displayTimestamp: new Date(e.created_at).toLocaleDateString(),
+        };
+      });
+
+      // Map logs to stream format (looking for MEETING_LOGGED)
+      const mappedLogs = logs.map((l: any) => {
+        let type = "system";
+        let title = l.action.replace("_", " ");
+        let notes = "";
+
+        // Safe detail parsing
+        let details = l.details;
+        if (typeof details === "string") {
+          try {
+            details = JSON.parse(details);
+          } catch (e) {
+            details = {};
+          }
+        }
+        details = details || {};
+
+        if (l.action === "MEETING_LOGGED") {
+          type = "meeting";
+          title = "Meeting Logged";
+          notes = details.subject ? `Topic: ${details.subject}` : "No details";
+          if (details.attendees) notes += ` • With: ${details.attendees}`;
+        }
+
+        return {
+          id: l.id,
+          type,
+          title,
+          notes:
+            notes ||
+            (typeof l.details === "string"
+              ? l.details
+              : JSON.stringify(l.details)),
+          timestamp: l.created_at,
+          displayTimestamp: new Date(l.created_at).toLocaleDateString(),
+        };
+      });
+
+      // Merge and sort
+      const merged = [...mappedEvents, ...mappedLogs].sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+      );
+
+      setActivities(merged);
+    } finally {
       setLoading(false);
-    });
+    }
   };
 
   // Fetch client data when selection changes
@@ -340,10 +416,10 @@ const Dashboard: React.FC = () => {
     if (!selectedSidebarContact || !selectedClientId) return;
 
     const contact = data?.contacts?.find(
-      (c: any) => c.id === selectedSidebarContact
+      (c: any) => c.id === selectedSidebarContact,
     );
     if (!contact?.email) {
-      alert("Selected contact does not have an email address.");
+      alert(t("clients.invalidEmail")); // Need to add this key or just use generic error
       return;
     }
 
@@ -378,10 +454,10 @@ const Dashboard: React.FC = () => {
     ? (() => {
         const totalDeliverables = data.deliverables.length || 1;
         const atRisk = data.deliverables.filter(
-          (d) => d.status === "at-risk"
+          (d) => d.status === "at-risk",
         ).length;
         const delayed = data.deliverables.filter(
-          (d) => d.status === "delayed"
+          (d) => d.status === "delayed",
         ).length;
         const healthScore = Math.max(0, 100 - atRisk * 20 - delayed * 10);
 
@@ -399,7 +475,7 @@ const Dashboard: React.FC = () => {
           .filter((d) => d.status !== "completed")
           .sort(
             (a, b) =>
-              new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+              new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
           )[0];
 
         return {
@@ -503,7 +579,9 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 <div className={styles.clientMeta}>
-                  <span>{data ? data.industry : "Unknown Industry"}</span>
+                  <span>
+                    {data ? data.industry : t("clients.unknownIndustry")}
+                  </span>
                   <span>•</span>
                   <span>{t("clients.overview")}</span>
                 </div>
@@ -543,7 +621,7 @@ const Dashboard: React.FC = () => {
 
           <div className={styles.statusBadge}>
             <div className={styles.statusDot} />
-            Active Engagement
+            {t("clients.activeEngagement")}
           </div>
         </div>
       </header>
@@ -555,32 +633,32 @@ const Dashboard: React.FC = () => {
         {[
           {
             icon: FileText,
-            label: "New Contract",
+            label: t("actionModals.titles.newContract"),
             type: "NEW_CONTRACT" as ActionType,
           },
           {
             icon: Briefcase,
-            label: "Log Meeting",
+            label: t("actionModals.titles.logMeeting"),
             type: "LOG_MEETING" as ActionType,
           },
           {
             icon: CheckCircle,
-            label: "Add Task",
+            label: t("actionModals.titles.addTask"),
             type: "ADD_TASK" as ActionType,
           },
           {
             icon: ImageIcon,
-            label: "Upload Asset",
+            label: t("actionModals.titles.uploadAsset"),
             type: "UPLOAD_ASSET" as ActionType,
           },
           {
             icon: MessageSquare,
-            label: "Send Email",
+            label: t("actionModals.titles.sendEmail"),
             type: "SEND_EMAIL" as ActionType,
           },
           {
             icon: AlertCircle,
-            label: "Report Bug",
+            label: t("actionModals.titles.reportBug"),
             type: "REPORT_BUG" as ActionType,
           },
         ].map(({ icon: Icon, label, type }) => (
@@ -618,7 +696,7 @@ const Dashboard: React.FC = () => {
                     setDetailPanel({
                       isOpen: true,
                       type: "contracts",
-                      title: "All Contracts",
+                      title: t("clients.allContracts"),
                       data: data.contracts,
                     })
                   }
@@ -630,23 +708,22 @@ const Dashboard: React.FC = () => {
               <div className={styles.sectionBody}>
                 {data.contracts.slice(0, 2).map((c) => (
                   <div key={c.id} className={styles.contractItem}>
-                    <div>
+                    <div className={styles.contractIcon}>
+                      <FileText size={16} />
+                    </div>
+                    <div className={styles.contractInfo}>
                       <div className={styles.contractName}>{c.title}</div>
                       <div className={styles.contractExpiry}>
-                        Expires {c.endDate}
+                        {t("clients.expires")} {c.endDate}
                       </div>
                     </div>
-                    <div>
+                    <div className={styles.contractRight}>
                       <div className={styles.contractValue}>{c.value}</div>
-                      <div className={styles.contractStatus}>
-                        <Badge
-                          variant={
-                            c.status === "active" ? "success" : "warning"
-                          }
-                        >
-                          {c.status}
-                        </Badge>
-                      </div>
+                      <Badge
+                        variant={c.status === "active" ? "success" : "warning"}
+                      >
+                        {c.status}
+                      </Badge>
                     </div>
                   </div>
                 ))}
@@ -673,35 +750,60 @@ const Dashboard: React.FC = () => {
               <div className={styles.sectionBody}>
                 {data.deliverables.slice(0, 2).map((d) => (
                   <div key={d.id} className={styles.deliverableItem}>
-                    <div className={styles.deliverableHeader}>
-                      <span className={styles.deliverableName}>{d.title}</span>
-                      <span
-                        className={styles.deliverableProgress}
-                        style={{
-                          color:
-                            d.status === "at-risk"
-                              ? "var(--color-status-danger)"
-                              : d.status === "completed"
-                              ? "rgb(16, 185, 129)"
-                              : "var(--color-accent-primary)",
-                        }}
-                      >
-                        {d.progress}%
-                      </span>
-                    </div>
-                    <div className={styles.progressBar}>
+                    <div className={styles.deliverableRow}>
                       <div
-                        className={styles.progressFill}
+                        className={styles.deliverableIcon}
                         style={{
-                          width: `${d.progress}%`,
                           background:
+                            d.status === "completed"
+                              ? "rgba(16, 185, 129, 0.1)"
+                              : d.status === "at-risk"
+                                ? "rgba(239, 68, 68, 0.1)"
+                                : "rgba(99, 102, 241, 0.1)",
+                          color:
                             d.status === "completed"
                               ? "rgb(16, 185, 129)"
                               : d.status === "at-risk"
-                              ? "rgb(239, 68, 68)"
-                              : "var(--color-accent-primary)",
+                                ? "rgb(239, 68, 68)"
+                                : "var(--color-accent-primary)",
                         }}
-                      />
+                      >
+                        <Target size={16} />
+                      </div>
+                      <div className={styles.deliverableContent}>
+                        <div className={styles.deliverableHeader}>
+                          <span className={styles.deliverableName}>
+                            {d.title}
+                          </span>
+                          <span
+                            className={styles.deliverableProgress}
+                            style={{
+                              color:
+                                d.status === "at-risk"
+                                  ? "var(--color-status-danger)"
+                                  : d.status === "completed"
+                                    ? "rgb(16, 185, 129)"
+                                    : "var(--color-accent-primary)",
+                            }}
+                          >
+                            {d.progress}%
+                          </span>
+                        </div>
+                        <div className={styles.progressBar}>
+                          <div
+                            className={styles.progressFill}
+                            style={{
+                              width: `${d.progress}%`,
+                              background:
+                                d.status === "completed"
+                                  ? "rgb(16, 185, 129)"
+                                  : d.status === "at-risk"
+                                    ? "rgb(239, 68, 68)"
+                                    : "var(--color-accent-primary)",
+                            }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -709,194 +811,216 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Engagement Chart */}
-          {/* Financials & Health (Client Pulse) */}
-          <div
-            className={styles.sectionCard}
-            style={{ flex: 1, display: "flex", flexDirection: "column" }}
-          >
-            <div className={styles.sectionHeader}>
-              <div className={styles.sectionTitle}>
+          {/* Client Pulse - Modern Dashboard Style */}
+          <div className={styles.pulseContainer}>
+            {/* Header */}
+            <div className={styles.pulseHeader}>
+              <div className={styles.pulseHeaderTitle}>
                 <Activity
-                  size={14}
-                  className="text-[var(--color-accent-primary)]"
+                  size={16}
+                  style={{ color: "var(--color-accent-primary)" }}
                 />
-                Client Pulse
+                <span>{t("clients.clientPulse")}</span>
               </div>
-              <div className="flex gap-2">
-                <button
-                  className="text-[10px] text-[var(--color-text-secondary)] hover:text-white flex items-center gap-1 transition-colors"
-                  onClick={handleGenerateInsight}
-                >
-                  {insightLoading ? (
-                    <Sparkles size={10} className="animate-spin" />
-                  ) : (
-                    <Sparkles size={10} />
-                  )}
-                  {aiInsight ? "Refresh Insight" : "Generate Insight"}
-                </button>
-              </div>
+              <button
+                className={styles.pulseAiButton}
+                onClick={handleGenerateInsight}
+              >
+                {insightLoading ? (
+                  <Sparkles size={12} className="animate-spin" />
+                ) : (
+                  <Sparkles size={12} />
+                )}
+                {aiInsight ? t("clients.refresh") : t("clients.aiInsight")}
+              </button>
             </div>
 
+            {/* AI Insight Banner */}
             {aiInsight && (
-              <div className="mx-4 mt-2 mb-2 p-3 bg-[var(--color-bg-subtle)] rounded-lg border border-[var(--color-border-subtle)]">
-                <div className="flex items-start gap-2">
-                  <Sparkles
-                    size={14}
-                    className="text-[var(--color-accent-primary)] mt-0.5 shrink-0"
-                  />
-                  <div className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                    {aiInsight}
-                  </div>
-                </div>
+              <div className={styles.pulseInsight}>
+                <Sparkles
+                  size={14}
+                  style={{
+                    color: "var(--color-accent-primary)",
+                    flexShrink: 0,
+                  }}
+                />
+                <p>{aiInsight}</p>
               </div>
             )}
 
-            <div className={styles.sectionBody} style={{ flex: 1 }}>
-              <div className={styles.pulseGrid}>
-                {/* Financial Overview */}
-                <div
-                  className={`${styles.pulseCol} ${styles.pulseColbordered} pr-6`}
-                  style={{
-                    borderRight: "1px solid var(--color-border-subtle)",
-                  }}
-                >
-                  <h4 className={styles.pulseTitle}>Financial Overview</h4>
-
-                  {/* Value Delivered */}
-                  <div>
-                    <div className="flex justify-between items-end mb-1">
-                      <span className="text-sm font-medium text-[var(--color-text-primary)]">
-                        Value Delivered
-                      </span>
-                      <span className="text-xs text-[var(--color-text-tertiary)]">
-                        {Math.round(pulse?.avgProgress || 0)}% Complete
-                      </span>
-                    </div>
-                    <div className="w-full bg-[var(--color-bg-subtle)] rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-[var(--color-accent-primary)] h-full transition-all duration-500"
-                        style={{ width: `${pulse?.avgProgress || 0}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between mt-1">
-                      <span className="text-xs text-[var(--color-text-tertiary)]">
-                        ${(pulse?.estimatedSpend || 0).toLocaleString()} Value
-                      </span>
-                      <span className="text-xs text-[var(--color-text-tertiary)]">
-                        ${(pulse?.totalValue || 0).toLocaleString()} Total
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Pending Approvals */}
-                  <div className={styles.pulseCard}>
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`${styles.pulseCardIcon} ${
-                          (pulse?.pendingApprovals || 0) > 0
-                            ? styles.warning
-                            : "bg-emerald-500/10 text-emerald-500"
-                        }`}
-                      >
-                        <CheckCircle size={16} />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-[var(--color-text-primary)]">
-                          Pending Approvals
-                        </div>
-                        <div className="text-xs text-[var(--color-text-tertiary)]">
-                          {(pulse?.pendingApprovals || 0) > 0
-                            ? `${pulse?.pendingApprovals} Items Waiting`
-                            : "All Clear"}
-                        </div>
-                      </div>
-                    </div>
+            {/* Stats Grid */}
+            <div className={styles.pulseStatsGrid}>
+              {/* Health Score */}
+              <div
+                className={`${styles.pulseStatCard} ${styles.pulseStatCardLarge}`}
+              >
+                <div className={styles.pulseHealthRing}>
+                  <svg viewBox="0 0 80 80">
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="34"
+                      fill="none"
+                      stroke="var(--color-border-subtle)"
+                      strokeWidth="6"
+                    />
+                    <circle
+                      cx="40"
+                      cy="40"
+                      r="34"
+                      fill="none"
+                      stroke={
+                        (pulse?.healthScore || 100) > 80
+                          ? "#10B981"
+                          : (pulse?.healthScore || 100) > 50
+                            ? "#F59E0B"
+                            : "#EF4444"
+                      }
+                      strokeWidth="6"
+                      strokeDasharray={`${2 * Math.PI * 34}`}
+                      strokeDashoffset={`${
+                        2 *
+                        Math.PI *
+                        34 *
+                        (1 - (pulse?.healthScore || 100) / 100)
+                      }`}
+                      strokeLinecap="round"
+                      style={{
+                        transform: "rotate(-90deg)",
+                        transformOrigin: "center",
+                        transition: "stroke-dashoffset 1s ease-out",
+                      }}
+                    />
+                  </svg>
+                  <div className={styles.pulseHealthValue}>
+                    <span className={styles.pulseHealthNumber}>
+                      {Math.round(pulse?.healthScore || 100)}
+                    </span>
+                    <span className={styles.pulseHealthLabel}>
+                      {t("clients.health")}
+                    </span>
                   </div>
                 </div>
-
-                {/* Client Health */}
-                <div className={styles.pulseCol}>
-                  <h4 className={styles.pulseTitle}>Client Health</h4>
-
-                  {/* Health Score */}
-                  <div className="flex items-center gap-4">
-                    <div className={styles.healthCircle}>
-                      <svg className="w-full h-full transform -rotate-90">
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="28"
-                          fill="none"
-                          stroke="var(--color-border-subtle)"
-                          strokeWidth="6"
-                        />
-                        <circle
-                          cx="32"
-                          cy="32"
-                          r="28"
-                          fill="none"
-                          stroke={
-                            (pulse?.healthScore || 100) > 80
-                              ? "#10B981"
-                              : (pulse?.healthScore || 100) > 50
-                              ? "#F59E0B"
-                              : "#EF4444"
-                          }
-                          strokeWidth="6"
-                          strokeDasharray={`${2 * Math.PI * 28}`}
-                          strokeDashoffset={`${
-                            2 *
-                            Math.PI *
-                            28 *
-                            (1 - (pulse?.healthScore || 100) / 100)
-                          }`}
-                          strokeLinecap="round"
-                          className="transition-all duration-1000 ease-out"
-                        />
-                      </svg>
-                      <span className={styles.healthValue}>
-                        {Math.round(pulse?.healthScore || 100)}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-[var(--color-text-primary)]">
-                        {(pulse?.healthScore || 100) > 90
-                          ? "Excellent"
+                <div className={styles.pulseStatInfo}>
+                  <span className={styles.pulseStatLabel}>
+                    {t("clients.clientStatus")}
+                  </span>
+                  <span
+                    className={styles.pulseStatStatus}
+                    style={{
+                      color:
+                        (pulse?.healthScore || 100) > 90
+                          ? "#10B981"
                           : (pulse?.healthScore || 100) > 70
-                          ? "Good"
-                          : "Needs Attention"}
-                      </div>
-                      <div className="text-xs text-[var(--color-text-tertiary)]">
-                        Based on deliverables
-                      </div>
-                    </div>
-                  </div>
+                            ? "#F59E0B"
+                            : "#EF4444",
+                    }}
+                  >
+                    {(pulse?.healthScore || 100) > 90
+                      ? t("clients.status.excellent")
+                      : (pulse?.healthScore || 100) > 70
+                        ? t("clients.status.good")
+                        : t("clients.status.needsAttention")}
+                  </span>
+                </div>
+              </div>
 
-                  {/* Next Milestone */}
-                  <div className="mt-auto">
-                    <div className="text-xs text-[var(--color-text-tertiary)] mb-2">
-                      Next Key Milestone
-                    </div>
-                    <div className={styles.sentimentBox}>
-                      <Calendar size={16} />
-                      <span>
-                        {pulse?.nextMilestone ? (
-                          <>
-                            <strong className="text-white">
-                              {pulse.nextMilestone.title}
-                            </strong>
-                            <span className="mx-1">•</span>
-                            {new Date(
-                              pulse.nextMilestone.dueDate
-                            ).toLocaleDateString()}
-                          </>
-                        ) : (
-                          "No active milestones"
-                        )}
-                      </span>
-                    </div>
+              {/* Value Delivered */}
+              <div className={styles.pulseStatCard}>
+                <div
+                  className={styles.pulseStatIcon}
+                  style={{
+                    background: "rgba(99, 102, 241, 0.1)",
+                    color: "var(--color-accent-primary)",
+                  }}
+                >
+                  <Target size={18} />
+                </div>
+                <div className={styles.pulseStatContent}>
+                  <span className={styles.pulseStatValue}>
+                    ${(pulse?.estimatedSpend || 0).toLocaleString()}
+                  </span>
+                  <span className={styles.pulseStatLabel}>
+                    {t("clients.valueDelivered")}
+                  </span>
+                  <div className={styles.pulseMiniProgress}>
+                    <div
+                      className={styles.pulseMiniProgressFill}
+                      style={{ width: `${pulse?.avgProgress || 0}%` }}
+                    />
                   </div>
+                </div>
+              </div>
+
+              {/* Total Contract Value */}
+              <div className={styles.pulseStatCard}>
+                <div
+                  className={styles.pulseStatIcon}
+                  style={{
+                    background: "rgba(16, 185, 129, 0.1)",
+                    color: "#10B981",
+                  }}
+                >
+                  <FileText size={18} />
+                </div>
+                <div className={styles.pulseStatContent}>
+                  <span className={styles.pulseStatValue}>
+                    ${(pulse?.totalValue || 0).toLocaleString()}
+                  </span>
+                  <span className={styles.pulseStatLabel}>
+                    {t("clients.totalContract")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Pending Approvals */}
+              <div className={styles.pulseStatCard}>
+                <div
+                  className={styles.pulseStatIcon}
+                  style={{
+                    background:
+                      (pulse?.pendingApprovals || 0) > 0
+                        ? "rgba(245, 158, 11, 0.1)"
+                        : "rgba(16, 185, 129, 0.1)",
+                    color:
+                      (pulse?.pendingApprovals || 0) > 0
+                        ? "#F59E0B"
+                        : "#10B981",
+                  }}
+                >
+                  <CheckCircle size={18} />
+                </div>
+                <div className={styles.pulseStatContent}>
+                  <span className={styles.pulseStatValue}>
+                    {pulse?.pendingApprovals || 0}
+                  </span>
+                  <span className={styles.pulseStatLabel}>
+                    {(pulse?.pendingApprovals || 0) > 0
+                      ? t("clients.pendingApprovals")
+                      : t("clients.allClear")}
+                  </span>
+                </div>
+              </div>
+
+              {/* Logged Meetings */}
+              <div className={styles.pulseStatCard}>
+                <div
+                  className={styles.pulseStatIcon}
+                  style={{
+                    background: "rgba(168, 85, 247, 0.1)",
+                    color: "#A855F7",
+                  }}
+                >
+                  <Briefcase size={18} />
+                </div>
+                <div className={styles.pulseStatContent}>
+                  <span className={styles.pulseStatValue}>
+                    {activities.filter((a) => a.type === "meeting").length}
+                  </span>
+                  <span className={styles.pulseStatLabel}>
+                    {t("clients.loggedMeetings")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -919,7 +1043,7 @@ const Dashboard: React.FC = () => {
                   size={14}
                   className="text-[var(--color-accent-primary)]"
                 />
-                Activity Stream
+                {t("clients.activity")}
               </div>
               <div className={styles.streamFilter}>
                 <span
@@ -928,7 +1052,7 @@ const Dashboard: React.FC = () => {
                   }`}
                   onClick={() => setActivityFilter("all")}
                 >
-                  All
+                  {t("All")}
                 </span>
                 <span
                   className={`${styles.streamFilterItem} ${
@@ -936,7 +1060,7 @@ const Dashboard: React.FC = () => {
                   }`}
                   onClick={() => setActivityFilter("email")}
                 >
-                  Emails
+                  {t("Emails")}
                 </span>
                 <span
                   className={`${styles.streamFilterItem} ${
@@ -944,7 +1068,7 @@ const Dashboard: React.FC = () => {
                   }`}
                   onClick={() => setActivityFilter("meeting")}
                 >
-                  Meetings
+                  {t("Meetings")}
                 </span>
               </div>
             </div>
@@ -954,9 +1078,11 @@ const Dashboard: React.FC = () => {
                   <div className={styles.emptyState__icon}>
                     <MessageSquare size={24} />
                   </div>
-                  <p className={styles.emptyState__title}>No activity found</p>
+                  <p className={styles.emptyState__title}>
+                    {t("clients.noActivity")}
+                  </p>
                   <p className={styles.emptyState__description}>
-                    No recent emails or meetings for this filter.
+                    {t("clients.noActivityDesc")}
                   </p>
                 </div>
               )}
@@ -970,8 +1096,8 @@ const Dashboard: React.FC = () => {
                           event.type === "meeting"
                             ? "rgb(168, 85, 247)"
                             : event.type === "email"
-                            ? "rgb(249, 115, 22)"
-                            : "rgb(59, 130, 246)",
+                              ? "rgb(249, 115, 22)"
+                              : "rgb(59, 130, 246)",
                       }}
                     />
                     <div className={styles.streamLine} />
@@ -1001,7 +1127,7 @@ const Dashboard: React.FC = () => {
                     })
                   }
                 >
-                  View All History
+                  {t("clients.viewHistory")}
                   <ArrowUpRight size={14} />
                 </button>
               </div>
@@ -1012,7 +1138,7 @@ const Dashboard: React.FC = () => {
           <div className={styles.teamCard}>
             <div className="flex justify-between items-center mb-3">
               <h3 className={styles.teamTitle} style={{ marginBottom: 0 }}>
-                Client Contacts
+                {t("clients.clientContacts")}
               </h3>
               <button
                 className={styles.teamAddBtn}
@@ -1020,12 +1146,12 @@ const Dashboard: React.FC = () => {
                   setDetailPanel({
                     isOpen: true,
                     type: "contacts",
-                    title: "Client Contacts",
+                    title: t("clients.clientContacts"),
                     data: data?.contacts || [],
                   })
                 }
               >
-                <List size={12} /> View All
+                <List size={12} /> {t("clients.viewAll")}
               </button>
             </div>
 
@@ -1037,16 +1163,10 @@ const Dashboard: React.FC = () => {
                   return (
                     <div
                       key={contact.id || idx}
-                      className={`${
-                        styles.teamMember
-                      } group cursor-pointer transition-all ${
-                        isSelected
-                          ? "bg-[rgba(255,255,255,0.15)] shadow-sm"
-                          : "hover:bg-[rgba(255,255,255,0.05)]"
-                      }`}
+                      className={`${styles.teamMember} ${isSelected ? styles.selected : ""} group`}
                       onClick={() =>
                         setSelectedSidebarContact(
-                          isSelected ? null : contact.id
+                          isSelected ? null : contact.id,
                         )
                       }
                     >
@@ -1109,7 +1229,8 @@ const Dashboard: React.FC = () => {
                 disabled={!selectedSidebarContact}
                 onClick={() => setScheduleModalOpen(true)}
               >
-                <Calendar size={14} className="mr-2" /> Schedule Meeting
+                <Calendar size={14} className="mr-2" />{" "}
+                {t("clients.scheduleMeeting")}
               </Button>
             </div>
           </div>
@@ -1136,7 +1257,7 @@ const Dashboard: React.FC = () => {
                 <h2 className="modal__title">
                   <div className="flex items-center gap-2">
                     <Building2 size={18} className="text-gray-400" />
-                    ADD NEW CLIENT
+                    {t("clients.addNewClient")}
                   </div>
                 </h2>
                 <button
@@ -1155,7 +1276,7 @@ const Dashboard: React.FC = () => {
                 <div className="form-group">
                   <label className="form-label">
                     <Building2 size={12} className="inline mr-1" />
-                    Company Name
+                    {t("clients.companyName")}
                     {showValidation && !newClient.name && (
                       <span
                         style={{
@@ -1185,7 +1306,7 @@ const Dashboard: React.FC = () => {
                   <div className="form-group">
                     <label className="form-label">
                       <Hash size={12} className="inline mr-1" />
-                      Client Code
+                      {t("clients.clientCode")}
                     </label>
                     <input
                       type="text"
@@ -1201,7 +1322,7 @@ const Dashboard: React.FC = () => {
                   <div className="form-group">
                     <label className="form-label">
                       <Mail size={12} className="inline mr-1" />
-                      Email
+                      {t("clients.email")}
                       {showValidation && !newClient.email && (
                         <span
                           style={{
@@ -1229,7 +1350,7 @@ const Dashboard: React.FC = () => {
                   <div className="form-group">
                     <label className="form-label">
                       <FileText size={12} className="inline mr-1" />
-                      NIF (Tax ID)
+                      {t("clients.nif")}
                       {showValidation && !newClient.nif && (
                         <span
                           style={{
@@ -1257,7 +1378,7 @@ const Dashboard: React.FC = () => {
                   <div className="form-group">
                     <label className="form-label">
                       <Tag size={12} className="inline mr-1" />
-                      Industry
+                      {t("clients.industry")}
                       {showValidation && !newClient.industry && (
                         <span
                           style={{
@@ -1296,7 +1417,7 @@ const Dashboard: React.FC = () => {
                     setShowValidation(false);
                   }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   variant="primary"
@@ -1310,12 +1431,14 @@ const Dashboard: React.FC = () => {
                     )
                   }
                 >
-                  {isCreating ? "Processing..." : "Create Client"}
+                  {isCreating
+                    ? t("common.processing")
+                    : t("clients.createClient")}
                 </Button>
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Delete Confirmation Modal */}
@@ -1354,7 +1477,7 @@ const Dashboard: React.FC = () => {
                   color: "var(--color-text-primary)",
                 }}
               >
-                Confirm Deletion
+                {t("clients.confirmDeletion")}
               </h3>
               <p
                 style={{
@@ -1364,8 +1487,7 @@ const Dashboard: React.FC = () => {
                   lineHeight: 1.5,
                 }}
               >
-                Are you sure you want to delete this client? This action cannot
-                be undone and will remove all associated data.
+                {t("clients.deleteConfirmation")}
               </p>
               <div
                 style={{
@@ -1386,7 +1508,7 @@ const Dashboard: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleDeleteClient}
@@ -1401,12 +1523,12 @@ const Dashboard: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  Delete Client
+                  {t("clients.deleteClient")}
                 </button>
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Action Modal */}
@@ -1456,7 +1578,7 @@ const Dashboard: React.FC = () => {
                   color: "var(--color-text-primary)",
                 }}
               >
-                Schedule Meeting via AI
+                {t("clients.scheduleMeetingAI")}
               </h3>
               <p
                 style={{
@@ -1466,8 +1588,7 @@ const Dashboard: React.FC = () => {
                   lineHeight: 1.5,
                 }}
               >
-                An AI-generated message will be sent to this contact's email to
-                initiate scheduling. Are you sure you want to continue?
+                {t("clients.scheduleMeetingAIDesc")}
               </p>
               <div
                 style={{
@@ -1488,7 +1609,7 @@ const Dashboard: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button
                   onClick={handleScheduleMeeting}
@@ -1508,7 +1629,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
 
       {/* Detail Slide-over Panel */}
@@ -1521,10 +1642,10 @@ const Dashboard: React.FC = () => {
           detailPanel.type === "contacts"
             ? data?.contacts || []
             : detailPanel.type === "contracts"
-            ? data?.contracts || []
-            : detailPanel.type === "activity"
-            ? activities
-            : detailPanel.data
+              ? data?.contracts || []
+              : detailPanel.type === "activity"
+                ? activities
+                : detailPanel.data
         }
         clientId={selectedClientId}
         onRefresh={() => {

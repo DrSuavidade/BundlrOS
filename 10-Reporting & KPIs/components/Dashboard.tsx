@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { KPIRecord } from "../types";
 import KPICard from "./KPICard";
 import { Calendar, Filter } from "lucide-react";
+import { useLanguage } from "../../_Shared/contexts/LanguageContext";
 
 interface DashboardProps {
   kpis: KPIRecord[];
@@ -16,6 +17,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   selectedPeriod,
   onSelectPeriod,
 }) => {
+  const { t } = useLanguage();
   const filteredKPIs = kpis.filter((k) => k.period === selectedPeriod);
 
   return (
@@ -23,10 +25,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-[var(--color-border-subtle)]">
         <div>
           <h1 className="text-3xl font-bold text-[var(--color-text-primary)] tracking-tight">
-            Intelligence Dashboard
+            {t("reporting.intelligenceDashboard")}
           </h1>
           <p className="text-[var(--color-text-tertiary)] mt-2 font-medium text-sm">
-            Real-time performance metrics for{" "}
+            {t("reporting.metricsFor")}
             <span className="text-[var(--color-accent-primary)] font-bold">
               {selectedPeriod}
             </span>
@@ -71,7 +73,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <Calendar className="w-8 h-8 text-[var(--color-text-tertiary)] opacity-20" />
           </div>
           <p className="text-[var(--color-text-tertiary)] font-bold uppercase tracking-widest text-xs font-mono">
-            No telemetry data for this period
+            {t("reporting.noData")}
           </p>
         </div>
       )}

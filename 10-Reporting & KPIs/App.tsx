@@ -77,7 +77,11 @@ const KPICard: React.FC<{
       onClick={onClick}
     >
       <div className={styles.kpiCard__header}>
-        <span className={styles.kpiCard__label}>{kpi.name}</span>
+        <span className={styles.kpiCard__label}>
+          {KPI_NAME_MAPPING[kpi.name]
+            ? t(KPI_NAME_MAPPING[kpi.name])
+            : kpi.name}
+        </span>
         <span
           className={`${styles.kpiCard__trend} ${
             isUp ? styles.up : styles.down
@@ -93,6 +97,17 @@ const KPICard: React.FC<{
 };
 
 // Dashboard View
+const KPI_NAME_MAPPING: Record<string, string> = {
+  "Total Clients": "reporting.kpis.totalClients",
+  "Active Projects": "reporting.kpis.activeProjects",
+  "Total Deliverables": "reporting.kpis.totalDeliverables",
+  "Deliverables Published": "reporting.kpis.deliverablesPublished",
+  "Recent Activity": "reporting.kpis.recentActivity",
+  "Total Contract Value": "reporting.kpis.totalContractValue",
+  "Active Contracts": "reporting.kpis.activeContracts",
+  "Storage Usage": "reporting.kpis.storageUsage",
+};
+
 const DashboardView: React.FC<{
   kpis: KPIRecord[];
   t: (key: string) => string;
@@ -174,7 +189,10 @@ const DashboardView: React.FC<{
                 }}
               >
                 <h3 className={styles.chartTitle}>
-                  {activeKPI.name} - Trend Analysis
+                  {KPI_NAME_MAPPING[activeKPI.name]
+                    ? t(KPI_NAME_MAPPING[activeKPI.name])
+                    : activeKPI.name}{" "}
+                  - {t("reporting.trendAnalysis")}
                 </h3>
                 <div
                   style={{
@@ -263,10 +281,10 @@ const DashboardView: React.FC<{
                         activeKPI.unit === KPIUnit.CURRENCY
                           ? `€${value.toLocaleString()}`
                           : activeKPI.unit === KPIUnit.BYTES
-                          ? value > 1073741824
-                            ? `${(value / 1073741824).toFixed(1)}GB`
-                            : `${(value / 1048576).toFixed(1)}MB`
-                          : value.toLocaleString()
+                            ? value > 1073741824
+                              ? `${(value / 1073741824).toFixed(1)}GB`
+                              : `${(value / 1048576).toFixed(1)}MB`
+                            : value.toLocaleString()
                       }
                     />
                     <CartesianGrid
@@ -302,9 +320,7 @@ const DashboardView: React.FC<{
           <div className={styles.emptyState__icon}>
             <Calendar size={24} />
           </div>
-          <p className={styles.emptyState__text}>
-            {t("reporting.noTelemetry")}
-          </p>
+          <p className={styles.emptyState__text}>{t("reporting.noData")}</p>
         </div>
       )}
     </>
@@ -320,6 +336,8 @@ const DeleteConfirmationModal: React.FC<{
   title: string;
   description: string;
 }> = ({ isOpen, onClose, onConfirm, isDeleting, title, description }) => {
+  const { t } = useLanguage();
+
   if (!isOpen) return null;
 
   return createPortal(
@@ -387,7 +405,7 @@ const DeleteConfirmationModal: React.FC<{
               cursor: "pointer",
             }}
           >
-            Cancel
+            {t("reporting.deleteModal.cancel")}
           </button>
           <button
             onClick={onConfirm}
@@ -408,18 +426,20 @@ const DeleteConfirmationModal: React.FC<{
             }}
           >
             {isDeleting && <Loader2 className="animate-spin" size={12} />}
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting
+              ? t("reporting.deleteModal.deleting")
+              : t("reporting.deleteModal.confirm")}
           </button>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 };
 
 // Main App
 const App: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [view, setView] = useState<ViewState>("DASHBOARD");
   const [periods, setPeriods] = useState<string[]>([]);
   const [selectedPeriod, setSelectedPeriod] = useState<string>("");
@@ -479,7 +499,8 @@ const App: React.FC = () => {
     try {
       const newReport = await ReportingService.createReport(
         `Executive Summary - ${selectedPeriod}`,
-        selectedPeriod
+        selectedPeriod,
+        language,
       );
       setReports((prev) => [newReport, ...prev]);
     } catch (e) {
@@ -492,8 +513,8 @@ const App: React.FC = () => {
   const handleApproveReport = (id: string) => {
     setReports((prev) =>
       prev.map((r) =>
-        r.id === id ? { ...r, status: ReportStatus.APPROVED } : r
-      )
+        r.id === id ? { ...r, status: ReportStatus.APPROVED } : r,
+      ),
     );
   };
 
@@ -506,8 +527,8 @@ const App: React.FC = () => {
               status: ReportStatus.SENT,
               sentAt: new Date().toISOString(),
             }
-          : r
-      )
+          : r,
+      ),
     );
   };
 
@@ -540,7 +561,7 @@ const App: React.FC = () => {
           // @ts-ignore
           await ReportingService.deleteReport(deleteModal.targetId);
           setReports((prev) =>
-            prev.filter((r) => r.id !== deleteModal.targetId)
+            prev.filter((r) => r.id !== deleteModal.targetId),
           );
           if (view === "REPORT_DETAIL") {
             setView("REPORTS");
@@ -566,10 +587,10 @@ const App: React.FC = () => {
               style={{ color: "var(--color-accent-primary)" }}
             />
             {view === "DASHBOARD"
-              ? t("Analytics")
+              ? t("reporting.dashboard")
               : view === "REPORTS"
-              ? t("Analytics")
-              : "Report Details"}
+                ? t("reporting.reports")
+                : t("reporting.reportDetails")}
           </h1>
         </div>
 
@@ -583,7 +604,7 @@ const App: React.FC = () => {
                   view === "DASHBOARD" ? styles.active : ""
                 }`}
               >
-                Dashboard
+                {t("reporting.dashboard")}
               </button>
               <button
                 onClick={() => setView("REPORTS")}
@@ -591,7 +612,7 @@ const App: React.FC = () => {
                   view === "REPORTS" ? styles.active : ""
                 }`}
               >
-                Reports
+                {t("reporting.reports")}
               </button>
             </div>
           </div>
@@ -631,12 +652,14 @@ const App: React.FC = () => {
         onConfirm={confirmDelete}
         isDeleting={isDeleting}
         title={
-          deleteModal.type === "all" ? "Delete All Reports?" : "Delete Report?"
+          deleteModal.type === "all"
+            ? t("reporting.deleteModal.titleAll")
+            : t("reporting.deleteModal.titleSingle")
         }
         description={
           deleteModal.type === "all"
-            ? "Are you sure you want to delete all reports? This action cannot be undone."
-            : "Are you sure you want to delete this report? This action cannot be undone."
+            ? t("reporting.deleteModal.descAll")
+            : t("reporting.deleteModal.descSingle")
         }
       />
     </div>

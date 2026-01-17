@@ -21,13 +21,14 @@ import {
   ThumbsUp,
   AlertTriangle,
 } from "lucide-react";
-import { Button } from "@bundlros/ui";
+import { Button, useLanguage } from "@bundlros/ui";
 import { format } from "date-fns";
 import styles from "./ApprovalDetail.module.css";
 
 export const ApprovalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [approval, setApproval] = useState<ApprovalRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<string>("");
@@ -78,7 +79,7 @@ export const ApprovalDetail: React.FC = () => {
       approval.id,
       confirmModal.action,
       "",
-      "Admin"
+      "Admin",
     );
     const updated = await ApprovalService.getById(approval.id);
     if (updated) setApproval(updated);
@@ -97,7 +98,7 @@ export const ApprovalDetail: React.FC = () => {
     if (!approval) return;
     const url = `${window.location.origin}/#/verify/${approval.token}`;
     navigator.clipboard.writeText(url);
-    alert("Client verification link copied to clipboard!");
+    alert(t("approvals.details.clipboard"));
   };
 
   const handleSendReminder = async () => {
@@ -111,10 +112,10 @@ export const ApprovalDetail: React.FC = () => {
     setDraftType(type);
     setAiDraftOpen(true);
     setDrafting(true);
-    setDraftContent("AI is thinking...");
+    setDraftContent(t("approvals.details.aiThinking"));
     const text = await GeminiService.draftResponse(
       type,
-      approval?.title + " - " + approval?.description || ""
+      approval?.title + " - " + approval?.description || "",
     );
     setDraftContent(text);
     setDrafting(false);
@@ -129,7 +130,7 @@ export const ApprovalDetail: React.FC = () => {
         ? ApprovalStatus.APPROVED
         : ApprovalStatus.REJECTED,
       draftContent,
-      "Admin"
+      "Admin",
     );
     const updated = await ApprovalService.getById(approval.id);
     if (updated) setApproval(updated);
@@ -143,7 +144,12 @@ export const ApprovalDetail: React.FC = () => {
         <Loader2 className="animate-spin text-[var(--color-accent-primary)]" />
       </div>
     );
-  if (!approval) return <div className={styles.pageContainer}>Not Found</div>;
+  if (!approval)
+    return (
+      <div className={styles.pageContainer}>
+        {t("approvals.details.notFound")}
+      </div>
+    );
 
   const isAssignee =
     currentUserId &&
@@ -158,13 +164,13 @@ export const ApprovalDetail: React.FC = () => {
           <button
             onClick={() => navigate("/approvals")}
             className={styles.backButton}
-            title="Back to Approvals"
+            title={t("approvals.details.back")}
           >
             <ArrowLeft size={16} />
           </button>
           <h1>{approval.title}</h1>
           <p className="flex items-center gap-2">
-            Reference:{" "}
+            {t("approvals.details.reference")}:{" "}
             <span className="font-mono text-[var(--color-text-secondary)]">
               #{approval.id.slice(0, 8)}
             </span>
@@ -175,7 +181,7 @@ export const ApprovalDetail: React.FC = () => {
             <span className="text-[var(--color-text-tertiary)]">•</span>
             {isAssignee && (
               <span className="text-amber-500 font-medium text-xs border border-amber-500/20 bg-amber-500/10 px-1.5 py-0.5 rounded">
-                You are Assignee
+                {t("approvals.details.assignee")}
               </span>
             )}
           </p>
@@ -187,7 +193,7 @@ export const ApprovalDetail: React.FC = () => {
             leftIcon={<Share2 size={14} />}
             onClick={handleCopyLink}
           >
-            Share
+            {t("approvals.details.share")}
           </Button>
         </div>
       </div>
@@ -197,12 +203,10 @@ export const ApprovalDetail: React.FC = () => {
         <div className={`${styles.statusBanner} ${styles.pending}`}>
           <div className={styles.bannerContent}>
             <h2>
-              <AlertCircle className="text-white" /> Action Required
+              <AlertCircle className="text-white" />{" "}
+              {t("approvals.details.actionRequired")}
             </h2>
-            <p>
-              This item is currently pending approval. Please review the details
-              below.
-            </p>
+            <p>{t("approvals.details.pendingDesc")}</p>
           </div>
           <div className={styles.bannerActions}>
             <Button
@@ -211,7 +215,7 @@ export const ApprovalDetail: React.FC = () => {
               isLoading={loading}
               className="!bg-white/10 !border-white/20 !text-white hover:!bg-white/20"
             >
-              Reject
+              {t("approvals.details.reject")}
             </Button>
             <Button
               variant="primary"
@@ -219,7 +223,7 @@ export const ApprovalDetail: React.FC = () => {
               isLoading={loading}
               className="!bg-white !text-emerald-600 hover:!bg-white/90 !border-white shadow-lg"
             >
-              Approve Deliverable
+              {t("approvals.details.approveDeliverable")}
             </Button>
           </div>
         </div>
@@ -234,13 +238,10 @@ export const ApprovalDetail: React.FC = () => {
         >
           <div className={styles.bannerContent}>
             <h2>
-              <AlertTriangle className="text-white" /> Awaiting Review
+              <AlertTriangle className="text-white" />{" "}
+              {t("approvals.details.awaitingReview")}
             </h2>
-            <p>
-              This item is pending approval. As the assignee, you cannot approve
-              your own work. It must be reviewed by another team member or the
-              client.
-            </p>
+            <p>{t("approvals.details.assigneeWarning")}</p>
           </div>
         </div>
       )}
@@ -249,11 +250,10 @@ export const ApprovalDetail: React.FC = () => {
         <div className={`${styles.statusBanner} ${styles.approved}`}>
           <div className={styles.bannerContent}>
             <h2>
-              <CheckCircle className="text-white" /> Approved
+              <CheckCircle className="text-white" />{" "}
+              {t("approvals.details.approvedTitle")}
             </h2>
-            <p>
-              This deliverable has been approved and moved to the next stage.
-            </p>
+            <p>{t("approvals.details.approvedDesc")}</p>
           </div>
           <div className={styles.bannerActions}>
             {/* View Certificate or Next Steps could go here */}
@@ -265,11 +265,10 @@ export const ApprovalDetail: React.FC = () => {
         <div className={`${styles.statusBanner} ${styles.rejected}`}>
           <div className={styles.bannerContent}>
             <h2>
-              <XCircle className="text-white" /> Rejected
+              <XCircle className="text-white" />{" "}
+              {t("approvals.details.rejectedTitle")}
             </h2>
-            <p>
-              This request has been rejected. It has been returned to drafts.
-            </p>
+            <p>{t("approvals.details.rejectedDesc")}</p>
           </div>
         </div>
       )}
@@ -283,7 +282,7 @@ export const ApprovalDetail: React.FC = () => {
             <div className={styles.documentSection}>
               <h3 className={styles.docSectionTitle}>
                 <FileText size={16} />
-                Description
+                {t("approvals.details.description")}
               </h3>
               <div className={styles.docContent}>
                 <p className="leading-relaxed whitespace-pre-wrap text-[var(--color-text-primary)]">
@@ -298,7 +297,7 @@ export const ApprovalDetail: React.FC = () => {
             <div className={styles.documentSection}>
               <h3 className={styles.docSectionTitle}>
                 <Paperclip size={16} />
-                Attachments
+                {t("approvals.details.attachments")}
               </h3>
               <div className={styles.docContent}>
                 {approval.attachmentName ? (
@@ -330,7 +329,7 @@ export const ApprovalDetail: React.FC = () => {
                           •{" "}
                           {approval.attachmentSize
                             ? (approval.attachmentSize / (1024 * 1024)).toFixed(
-                                1
+                                1,
                               ) + " MB"
                             : "Unknown Size"}
                         </div>
@@ -352,7 +351,7 @@ export const ApprovalDetail: React.FC = () => {
                       <Paperclip size={20} />
                     </div>
                     <span className={styles.emptyState__text}>
-                      No attachments provided.
+                      {t("approvals.details.noAttachments")}
                     </span>
                   </div>
                 )}
@@ -371,7 +370,7 @@ export const ApprovalDetail: React.FC = () => {
                   size={14}
                   style={{ color: "var(--color-accent-primary)" }}
                 />
-                Details
+                {t("approvals.viewDetails")}
               </div>
             </div>
             <div className={styles.sectionBody}>
@@ -384,7 +383,9 @@ export const ApprovalDetail: React.FC = () => {
                     <User size={16} style={{ color: "rgb(34, 211, 238)" }} />
                   </div>
                   <div className={styles.detailCard__content}>
-                    <span className={styles.detailCard__label}>Client</span>
+                    <span className={styles.detailCard__label}>
+                      {t("approvals.details.client")}
+                    </span>
                     <span className={styles.detailCard__value}>
                       {approval.clientName}
                     </span>
@@ -399,7 +400,9 @@ export const ApprovalDetail: React.FC = () => {
                     <Clock size={16} style={{ color: "rgb(251, 191, 36)" }} />
                   </div>
                   <div className={styles.detailCard__content}>
-                    <span className={styles.detailCard__label}>Due Date</span>
+                    <span className={styles.detailCard__label}>
+                      {t("approvals.details.dueDate")}
+                    </span>
                     <span className={styles.detailCard__value}>
                       {format(new Date(approval.dueDate), "MMM d, yyyy")}
                     </span>
@@ -422,7 +425,7 @@ export const ApprovalDetail: React.FC = () => {
                     leftIcon={<Bell size={14} />}
                     onClick={handleSendReminder}
                   >
-                    Send Reminder
+                    {t("approvals.details.sendReminder")}
                   </Button>
                 </div>
               )}
@@ -437,7 +440,7 @@ export const ApprovalDetail: React.FC = () => {
                   size={14}
                   style={{ color: "var(--color-accent-primary)" }}
                 />
-                Activity
+                {t("approvals.details.activity")}
               </div>
             </div>
             <div className={styles.sectionBody}>
@@ -501,7 +504,7 @@ export const ApprovalDetail: React.FC = () => {
                     draftType === "APPROVE" ? "text-indigo-400" : "text-red-400"
                   }
                 />
-                AI Draft Assistant
+                {t("approvals.details.aiDraft")}
               </div>
               <button
                 onClick={() => setAiDraftOpen(false)}
@@ -512,7 +515,7 @@ export const ApprovalDetail: React.FC = () => {
             </div>
             <div className={styles.sectionBody}>
               <p className="text-sm text-[var(--color-text-secondary)] mb-4">
-                Review the generated message before sending.
+                {t("approvals.details.reviewMessage")}
               </p>
               <textarea
                 className="w-full h-32 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg p-3 text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] resize-none"
@@ -526,7 +529,7 @@ export const ApprovalDetail: React.FC = () => {
                   size="sm"
                   onClick={() => setAiDraftOpen(false)}
                 >
-                  Cancel
+                  {t("approvals.details.cancel")}
                 </Button>
                 <Button
                   variant={draftType === "APPROVE" ? "primary" : "danger"}
@@ -534,7 +537,7 @@ export const ApprovalDetail: React.FC = () => {
                   onClick={handleDecision}
                   isLoading={drafting}
                 >
-                  Confirm
+                  {t("approvals.details.confirm")}
                 </Button>
               </div>
             </div>
@@ -579,8 +582,8 @@ export const ApprovalDetail: React.FC = () => {
                 }}
               >
                 {confirmModal.action === ApprovalStatus.APPROVED
-                  ? "Confirm Approval"
-                  : "Confirm Rejection"}
+                  ? t("approvals.details.confirmApproval")
+                  : t("approvals.details.confirmRejection")}
               </h3>
               <p
                 style={{
@@ -591,8 +594,8 @@ export const ApprovalDetail: React.FC = () => {
                 }}
               >
                 {confirmModal.action === ApprovalStatus.APPROVED
-                  ? "Are you sure you want to approve this deliverable? This action will notify the client."
-                  : "Are you sure you want to reject this deliverable? It will be returned to the draft stage."}
+                  ? t("approvals.details.approvalBody")
+                  : t("approvals.details.rejectionBody")}
               </p>
               <div
                 style={{
@@ -615,7 +618,7 @@ export const ApprovalDetail: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  Cancel
+                  {t("approvals.details.cancel")}
                 </button>
                 <button
                   onClick={performAction}
@@ -633,12 +636,12 @@ export const ApprovalDetail: React.FC = () => {
                     cursor: "pointer",
                   }}
                 >
-                  Confirm
+                  {t("approvals.details.confirm")}
                 </button>
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </div>
   );

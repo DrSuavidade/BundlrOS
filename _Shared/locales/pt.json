@@ -45,6 +45,7 @@
     "close": "fechar",
     "noResults": "Nenhum resultado encontrado",
     "loading": "A carregar...",
+    "processing": "A processar...",
     "save": "Guardar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
@@ -69,7 +70,13 @@
     "export": "Exportar",
     "import": "Importar",
     "download": "Descarregar",
-    "upload": "Carregar"
+    "upload": "Carregar",
+    "timeRanges": {
+      "1W": "1S",
+      "1M": "1M",
+      "6M": "6M",
+      "1Y": "1A"
+    }
   },
   "notif": {
     "newIntake": "Novo intake de cliente recebido",
@@ -95,6 +102,10 @@
     "userDistribution": "Distribuição de Utilizadores por Função",
     "recentActivity": "Atividade Recente",
     "noRecentActivity": "Sem atividade recente",
+    "unreadNotifications": "Notificações Não Lidas",
+    "pendingApprovals": "Aprovações Pendentes",
+    "activityTrends": "Tendências de Atividade",
+    "recentNotifications": "Notificações Recentes",
     "users": "Utilizadores",
     "iamContext": "Contexto IAM",
     "iamDashboard": "Painel IAM",
@@ -195,6 +206,37 @@
       "published": "Publicado",
       "archived": "Arquivado"
     },
+    "paymentHub": "Hub de Pagamentos",
+    "systemsActive": "Sistemas Ativos",
+    "mrr": "Receita Mensal Recorrente",
+    "activeRetainers": "Retentores Ativos",
+    "pendingOneOff": "Pendente Único",
+    "paymentAlerts": "Alertas de Pagamento",
+    "actionNeeded": "Ação necessária",
+    "totalIncome": "Rendimento Total",
+    "totalCollected": "Total Cobrado",
+    "recurringRetainers": "Retentores Recorrentes",
+    "noActiveRetainers": "Sem retentores ativos",
+    "noActiveRetainersDesc": "Todas as subscrições mensais estão a ser processadas normalmente.",
+    "oneOffProjects": "Projetos Únicos",
+    "noPendingProjects": "Sem projetos pendentes",
+    "noPendingProjectsDesc": "Está tudo em dia! Nenhum projeto único está ativo no momento.",
+    "monthlyValue": "Valor Mensal",
+    "totalValue": "Valor Total",
+    "paid": "Pago",
+    "nextPayment": "Próximo Pagamento",
+    "dueDate": "Data de Vencimento",
+    "payment": "Pagamento",
+    "receipt": "Recibo",
+    "remind": "Lembrar",
+    "invoice": "Fatura",
+    "unknownClient": "Cliente Desconhecido",
+    "paymentStatus": {
+      "upcoming": "Próximo",
+      "overdue": "Em Atraso",
+      "dueSoon": "Vence em Breve",
+      "waitingPayment": "Aguardando Pagamento"
+    },
     "deliverablesList": {
       "title": "Entregáveis",
       "subtitle": "Gerir entregáveis do projeto",
@@ -261,6 +303,17 @@
       "create": "Criar Intake",
       "cancel": "Cancelar"
     },
+    "list": {
+      "id": "ID",
+      "status": "Estado",
+      "priority": "Prioridade",
+      "subject": "Assunto",
+      "client": "Cliente",
+      "slaDue": "Prazo SLA",
+      "owner": "Responsável",
+      "emptyTitle": "Nenhum item de intake encontrado",
+      "emptyDesc": "Tente ajustar a sua pesquisa ou filtros para encontrar o que procura"
+    },
     "panel": {
       "assignMe": "Atribuir a Mim",
       "startWork": "Iniciar Trabalho",
@@ -304,6 +357,46 @@
     "contacts": "Contactos",
     "projects": "Projetos",
     "billing": "Faturação",
+    "activeEngagement": "Envolvimento Ativo",
+    "allContracts": "Todos os Contratos",
+    "contracts": "Contratos",
+    "expires": "Expira",
+    "deliverables": "Entregáveis",
+    "unknownIndustry": "Indústria Desconhecida",
+    "clientPulse": "Pulso do Cliente",
+    "refresh": "Atualizar",
+    "aiInsight": "Insight IA",
+    "health": "Saúde",
+    "clientStatus": "Estado do Cliente",
+    "status": {
+      "excellent": "Excelente",
+      "good": "Bom",
+      "needsAttention": "Requer Atenção"
+    },
+    "valueDelivered": "Valor Entregue",
+    "totalContract": "Contrato Total",
+    "pendingApprovals": "Aprovações Pendentes",
+    "allClear": "Tudo Limpo",
+    "loggedMeetings": "Reuniões Registadas",
+    "activity": "Atividade",
+    "noActivity": "Nenhuma atividade encontrada",
+    "noActivityDesc": "Não há emails ou reuniões recentes para este filtro.",
+    "viewHistory": "Ver Todo o Histórico",
+    "clientContacts": "Contactos do Cliente",
+    "scheduleMeeting": "Agendar Reunião",
+    "addNewClient": "ADICIONAR NOVO CLIENTE",
+    "companyName": "Nome da Empresa",
+    "clientCode": "Código do Cliente",
+    "email": "Email",
+    "nif": "NIF",
+    "industry": "Indústria",
+    "createClient": "Criar Cliente",
+    "confirmDeletion": "Confirmar Eliminação",
+    "deleteConfirmation": "Tem a certeza que deseja eliminar este cliente? Esta ação não pode ser desfeita e removerá todos os dados associados.",
+    "deleteClient": "Eliminar Cliente",
+    "scheduleMeetingAI": "Agendar Reunião via IA",
+    "scheduleMeetingAIDesc": "Uma mensagem gerada por IA será enviada para o email deste contacto para iniciar o agendamento. Tem a certeza que deseja continuar?",
+    "viewAll": "Ver Tudo",
     "notes": "Notas",
     "addClient": "Adicionar Cliente",
     "clientDetails": "Detalhes do Cliente",
@@ -317,16 +410,44 @@
     "thisMonth": "este mês",
     "projectTimeline": "Evolução do Projeto",
     "recentActivity": "Atividade Recente",
-    "viewAll": "Ver tudo",
     "aiInsights": "Insights de IA",
     "generateInsight": "Gerar Insight",
     "generating": "A gerar...",
     "askAI": "Perguntar à IA sobre este cliente",
     "keyStats": "Estatísticas Chave",
-    "deliverables": "Entregáveis",
-    "assets": "Ficheiros",
+    "assets": "Ativos",
     "interactions": "Interações",
-    "contracts": "Contratos"
+    "totalValue": "Valor Total",
+    "detailPanel": {
+      "activityLog": "Registo de Atividade",
+      "filterList": "Filtrar lista...",
+      "noResults": "Nenhum resultado encontrado",
+      "adjustFilter": "Tente ajustar o seu filtro",
+      "actions": {
+        "viewAll": "Ver Tudo",
+        "addNew": "Adicionar Novo",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "all": "Todos",
+        "active": "Ativos",
+        "drafts": "Rascunhos",
+        "past": "Passados",
+        "emails": "Emails",
+        "meetings": "Reuniões",
+        "system": "Sistema"
+      },
+      "form": {
+        "fullName": "Nome Completo",
+        "role": "Função",
+        "email": "Email",
+        "phone": "Telefone",
+        "saveContact": "Guardar Contacto",
+        "cancel": "Cancelar",
+        "deleteTitle": "Eliminar Contacto",
+        "deleteBody": "Tem a certeza que pretende eliminar este contacto? Esta ação não pode ser desfeita.",
+        "deleteButton": "Eliminar Contacto"
+      }
+    }
   },
   "factories": {
     "title": "Fábricas de Serviço",
@@ -355,7 +476,204 @@
     "contractId": "ID do Contrato",
     "template": "Template",
     "createFactory": "Criar Fábrica",
-    "cancel": "Cancelar"
+    "createDeliverable": "Criar Entregável",
+    "folderName": "Nome da Pasta",
+    "driveLink": "Link do Google Drive",
+    "cancel": "Cancelar",
+    "pipelineManager": "Gestor de Pipeline",
+    "context": "Contexto",
+    "workDelivered": "Trabalho Entregue",
+    "waitingApproval": "A aguardar aprovação.",
+    "systemLogs": "Registos do Sistema",
+    "templateSelector": {
+      "title": "Selecionar Template de Pipeline",
+      "subtitle": "Esta fábrica necessita de um template de pipeline para iniciar. Por favor selecione um abaixo.",
+      "initialize": "Inicializar Fábrica",
+      "selectToContinue": "Selecione um Template para Continuar",
+      "noSelection": "Nenhuma Seleção",
+      "pickTemplate": "Escolha um template da lista para ver o plano de ação gerado por IA e estimativa de tempo.",
+      "generating": "A Gerar Análise IA...",
+      "aiInsights": "Insights IA",
+      "pipelineStrategy": "Estratégia de Pipeline",
+      "steps": "Passos de Implementação",
+      "velocity": "Velocidade Estimada"
+    },
+    "deliverables": {
+      "D_BRIEF": "Formulário de Briefing",
+      "D_KPI": "KPIs + Métricas de Sucesso",
+      "D_PERSONAS": "Personas do Público",
+      "D_POSITIONING": "Posicionamento da Marca + Mensagem",
+      "D_OFFER": "Oferta + Estrutura do Funil",
+      "D_SOC_AUDIT": "Auditoria Redes Sociais + Recomendações",
+      "A_BRANDKIT": "Kit de Marca (fontes/cores/voz)",
+      "A_TEMPLATES": "Templates de Design (posts/stories)",
+      "A_BROLL": "B-roll / Biblioteca de Ativos",
+      "A_COPYBANK": "Banco de Copy (ganchos/CTAs)",
+      "D_CONTENT_PILLARS": "Pilares de Conteúdo",
+      "D_CALENDAR": "Calendário de Conteúdo",
+      "A_POSTS_BATCH": "Lote de Posts (gráficos/legendas)",
+      "A_REELS_BATCH": "Lote de Vídeos Curtos/Reels",
+      "D_HASHTAGS": "Conjunto de Hashtags/Palavras-chave",
+      "D_SCHEDULING": "Configuração de Agendamento + Fila",
+      "D_COMMUNITY_GUIDE": "Diretrizes de Gestão de Comunidade",
+      "D_REPORT": "Relatório de Desempenho",
+      "D_CAMPAIGN_PLAN": "Plano de Campanha",
+      "A_AD_CREATIVES": "Criativos de Anúncios (estático/vídeo)",
+      "D_AD_COPY": "Variações de Copy de Anúncios",
+      "D_TRACKING": "Configuração de Rastreio (pixels/UTMs/eventos)",
+      "D_LANDING": "Draft/Construção de Landing Page",
+      "D_USECASES": "Casos de Uso IA + Priorização",
+      "D_DATA_MAP": "Mapa de Dados + Plano de Integrações",
+      "A_AUTOMATION": "Fluxo de Automação (Zap/Make/n8n)",
+      "D_AI_PROMPTS": "Pacote de Prompts / Instruções de Agente",
+      "A_CHATBOT": "Configuração de Chatbot / Assistente",
+      "D_TESTS": "Plano de Testes + Resultados",
+      "D_SOP": "SOP + Documentação de Entrega",
+      "D_TRAINING": "Notas da Sessão de Formação",
+      "D_SITEMAP": "Sitemap + AI",
+      "D_WIREFRAMES": "Wireframes",
+      "A_DESIGN": "Design UI / Mockups",
+      "A_WEB_BUILD": "Construção do Site",
+      "D_SEO": "Fundamentos de SEO (meta/schema)",
+      "D_ANALYTICS": "Configuração de Analytics (GA/GTM)",
+      "D_QA": "Checklist de QA + Correções",
+      "D_LAUNCH": "Checklist de Lançamento + Go-live",
+      "D_MAINT": "Plano de Manutenção"
+    },
+    "templates": {
+      "TPL_SOCIAL_RETAINER": {
+        "name": "Gestão de Redes Sociais (Avença)",
+        "category": "Marketing",
+        "stages": {
+          "S1_ONBOARD": "Onboarding",
+          "S2_STRATEGY": "Estratégia Mensal",
+          "S3_PRODUCTION": "Produção de Conteúdo",
+          "S4_SCHEDULE_COMMUNITY": "Agendamento + Comunidade",
+          "S5_REPORTING": "Relatórios + Otimização"
+        }
+      },
+      "TPL_CONTENT_SPRINT": {
+        "name": "Sprint de Conteúdo (Criação em Lote)",
+        "category": "Conteúdo",
+        "stages": {
+          "S1_SCOPE": "Scope + Pilares",
+          "S2_PLANNING": "Tópicos + Calendário",
+          "S3_BATCH": "Produção em Lote",
+          "S4_HANDOFF": "Entrega + Agendamento"
+        }
+      },
+      "TPL_LAUNCH_CAMPAIGN": {
+        "name": "Campanha de Lançamento (Orgânico + Pago)",
+        "category": "Marketing",
+        "stages": {
+          "S1_DISCOVERY": "Descoberta + Oferta",
+          "S2_CAMPAIGN": "Plano de Campanha",
+          "S3_ASSETS": "Produção Criativa",
+          "S4_LANDING": "Landing + QA",
+          "S5_LAUNCH": "Lançamento + Otimização"
+        }
+      },
+      "TPL_AI_INTEGRATION": {
+        "name": "Integração IA (Casos de Uso a Implementação)",
+        "category": "Tecnologia",
+        "stages": {
+          "S1_AI_DISCOVERY": "Descoberta IA",
+          "S2_DESIGN": "Design da Solução",
+          "S3_BUILD": "Construção + Integrações",
+          "S4_TEST": "Testes + Salvaguardas",
+          "S5_DEPLOY": "Implementação + Entrega"
+        }
+      },
+      "TPL_AUTOMATION_BUILD": {
+        "name": "Construção de Automação (Ops + CRM)",
+        "category": "Operações",
+        "stages": {
+          "S1_PROCESS_MAP": "Mapeamento de Processos",
+          "S2_WORKFLOW_DESIGN": "Design de Workflow",
+          "S3_IMPLEMENT": "Implementação",
+          "S4_QA": "QA + Monitorização",
+          "S5_HANDOVER": "Entrega"
+        }
+      },
+      "TPL_CHATBOT_DEPLOY": {
+        "name": "Implementação de Chatbot / Assistente IA",
+        "category": "Tecnologia",
+        "stages": {
+          "S1_ONBOARD": "Onboarding + Objetivos",
+          "S2_KNOWLEDGE": "Conhecimento + Tom",
+          "S3_BUILD": "Construção + Canais",
+          "S4_TEST": "Teste + Falhas",
+          "S5_GO_LIVE": "Go-live + Formação"
+        }
+      },
+      "TPL_WEBSITE_BROCHURE": {
+        "name": "Construção de Site (Brochura / Serviços)",
+        "category": "Desenvolvimento",
+        "stages": {
+          "S1_DISCOVERY": "Descoberta",
+          "S2_STRUCTURE": "Sitemap + Wireframes",
+          "S3_DESIGN": "Design",
+          "S4_BUILD": "Construção",
+          "S5_FOUNDATIONS": "SEO + Analytics",
+          "S6_QA": "QA",
+          "S7_LAUNCH": "Lançamento + Entrega"
+        }
+      },
+      "TPL_WEB_SOCIAL_STARTER": {
+        "name": "Pacote Inicial Website + Social",
+        "category": "Pacote",
+        "stages": {
+          "S1_ONBOARD": "Onboarding",
+          "S2_BRAND": "Marca + Mensagem",
+          "S3_WEB": "Entrega do Website",
+          "S4_SOCIAL_SYSTEM": "Configuração do Sistema Social",
+          "S5_INITIAL_CONTENT": "Pacote de Conteúdo Inicial"
+        }
+      },
+      "TPL_WEB_ECOM": {
+        "name": "Construção de Site (E-commerce)",
+        "category": "Desenvolvimento",
+        "stages": {
+          "S1_DISCOVERY": "Descoberta + Requisitos",
+          "S2_IA": "Estrutura + Wireframes",
+          "S3_DESIGN": "Design",
+          "S4_BUILD": "Construção + Integrações",
+          "S5_SEO_QA": "SEO + QA",
+          "S6_LAUNCH": "Lançamento + Entrega"
+        }
+      },
+      "TPL_WEB_MAINTENANCE": {
+        "name": "Manutenção de Site + Otimização (Avença)",
+        "category": "Operações",
+        "stages": {
+          "S1_BASELINE": "Baseline + Acesso",
+          "S2_MAINT": "Ciclo de Manutenção",
+          "S3_OPTIMIZE": "Otimização + Relatórios"
+        }
+      },
+      "TPL_SAAS_MVP": {
+        "name": "Construção MVP SaaS",
+        "category": "Desenvolvimento",
+        "stages": {
+          "S1_DISCOVERY": "Descoberta + Especificações",
+          "S2_DESIGN": "Design UI/UX",
+          "S3_DEV": "Sprint de Desenvolvimento",
+          "S4_QA": "QA + Testes",
+          "S5_DEPLOY": "Implementação"
+        }
+      },
+      "TPL_BRAND_IDENTITY": {
+        "name": "Renovação de Identidade de Marca",
+        "category": "Design",
+        "stages": {
+          "S1_DISCOVERY": "Descoberta da Marca",
+          "S2_CONCEPT": "Conceitos Visuais",
+          "S3_REFINEMENT": "Refinamento",
+          "S4_GUIDELINES": "Diretrizes da Marca",
+          "S5_ASSETS": "Entrega de Ativos"
+        }
+      }
+    }
   },
   "approvals": {
     "title": "Centro de Aprovações",
@@ -377,7 +695,46 @@
     "viewDetails": "Ver Detalhes",
     "client": "Cliente",
     "submittedBy": "Submetido por",
-    "deadline": "Prazo"
+    "details": {
+      "notFound": "Não Encontrado",
+      "back": "Voltar a Aprovações",
+      "reference": "Referência",
+      "created": "Criado",
+      "assignee": "É o Responsável",
+      "share": "Partilhar",
+      "actionRequired": "Ação Necessária",
+      "pendingDesc": "Este item está pendente de aprovação. Por favor, reveja os detalhes abaixo.",
+      "reject": "Rejeitar",
+      "approveDeliverable": "Aprovar Entregável",
+      "awaitingReview": "A Aguardar Revisão",
+      "assigneeWarning": "Este item está pendente de aprovação. Como responsável, não pode aprovar o seu próprio trabalho. Deve ser revisto por outro membro da equipa ou pelo cliente.",
+      "approvedTitle": "Aprovado",
+      "approvedDesc": "Este entregável foi aprovado e passou para a próxima fase.",
+      "rejectedTitle": "Rejeitado",
+      "rejectedDesc": "Este pedido foi rejeitado. Foi devolvido aos rascunhos.",
+      "description": "Descrição",
+      "attachments": "Anexos",
+      "noAttachments": "Nenhum anexo fornecido.",
+      "client": "Cliente",
+      "dueDate": "Data de Vencimento",
+      "sendReminder": "Enviar Lembrete",
+      "activity": "Atividade",
+      "aiDraft": "Assistente de Rascunho IA",
+      "reviewMessage": "Reveja a mensagem gerada antes de enviar.",
+      "aiThinking": "IA a pensar...",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "confirmApproval": "Confirmar Aprovação",
+      "confirmRejection": "Confirmar Rejeição",
+      "approvalBody": "Tem a certeza que pretende aprovar este entregável? Esta ação irá notificar o cliente.",
+      "rejectionBody": "Tem a certeza que pretende rejeitar este entregável? Será devolvido à fase de rascunho.",
+      "clipboard": "Link de verificação do cliente copiado para a área de transferência!"
+    },
+    "deadline": "Prazo",
+    "requireAttention": "Requer a sua atenção",
+    "lifetimeDecisions": "Decisões vitalícias",
+    "refreshList": "Atualizar Lista",
+    "noRequests": "Nenhum pedido de aprovação encontrado."
   },
   "qa": {
     "title": "Verificações QA",
@@ -397,16 +754,100 @@
     "nextRun": "Próxima Execução",
     "score": "Pontuação",
     "issues": "Problemas",
-    "issuesFound": "problemas encontrados"
+    "issuesFound": "problemas encontrados",
+    "details": {
+      "back": "Voltar à Visão Geral",
+      "version": "Versão",
+      "description": "Descrição",
+      "noDescription": "Nenhuma descrição disponível para este entregável.",
+      "attachments": "Anexos",
+      "noAttachments": "Nenhum anexo disponível.",
+      "loading": "A carregar...",
+      "markAll": "Marcar Todos",
+      "saveDraft": "Guardar e Sair",
+      "approveDeliver": "Aprovar e Entregar",
+      "remaining": "Restantes",
+      "file": "FICHEIRO",
+      "unknownSize": "Tamanho Desconhecido"
+    },
+    "checklists": {
+      "SOFTWARE": {
+        "title": "QA de Software (apps, automações, integrações)",
+        "blocks": {
+          "build": {
+            "name": "Compilação e Localização",
+            "items": { "0": "compila sem erros", "1": "variáveis de ambiente configuradas", "2": "links de produção/staging corretos" }
+          },
+          "smoke": {
+            "name": "Testes de Fumo Funcionais",
+            "items": { "0": "fluxos críticos funcionam de ponta a ponta", "1": "autenticação, permissões, cargos" }
+          },
+          "edge": {
+             "name": "Casos Limite",
+             "items": { "0": "estados vazios, tratamento de erros, timeouts", "1": "limites de taxa, tentativas, mensagens de falha" }
+          },
+          "integrations": {
+             "name": "Integrações",
+             "items": { "0": "eventos de webhook verificados", "1": "escopos de chaves API verificados", "2": "logs + monitorização presentes" }
+          },
+          "security": { "name": "Segurança e Privacidade Básica", "items": { "0": "sem segredos no repo", "1": "verificações de PII" } },
+          "performance": { "name": "Performance Básica", "items": { "0": "limites de carregamento / tempo de execução" } },
+          "docs": { "name": "Docs e Entrega", "items": { "0": "passos de configuração", "1": "passos de rollback / desativação", "2": "limitações conhecidas" } },
+          "artifacts": { "name": "Artefactos Produzidos", "items": { "0": "Relatório de QA (resumo automático)", "1": "Links de evidência de teste (gravações staging / screenshots)", "2": "Notas de lançamento" } }
+        }
+      },
+      "DESIGN": {
+        "title": "QA de Design (marca, websites, templates)",
+        "blocks": {
+            "brand": { "name": "Consistência da Marca", "items": { "0": "cores / tipo / espaçamento conforme diretrizes", "1": "regras de uso do logo respeitadas" } },
+            "layout": { "name": "Layout e Responsividade", "items": { "0": "breakpoints chave cobertos", "1": "espaçamento/alinhamentos consistentes" } },
+            "content": { "name": "Qualidade do Conteúdo", "items": { "0": "ortografia, gramática, tom", "1": "resolução de imagem, compressão, licenças" } },
+            "a11y": { "name": "Acessibilidade Básica", "items": { "0": "verificações de contraste", "1": "tamanho de fonte legível" } },
+            "export": { "name": "Formato de Exportação e Entrega", "items": { "0": "nomenclatura correta, formatos corretos", "1": "fonte editável incluída (Figma/AI) se prometido" } },
+            "implementation": { "name": "Prontidão para Implementação", "items": { "0": "componentes anotados", "1": "ativos organizados", "2": "notas de entrega incluídas" } },
+            "artifacts": { "name": "Artefactos Produzidos", "items": { "0": "Anotações de QA (comentários Figma)", "1": "Pacote de exportação + padrões de nomenclatura", "2": "Notas de entrega" } }
+        }
+      },
+      "REPORT": {
+        "title": "QA de Relatórios (estratégia, analytics, marketing)",
+        "blocks": {
+            "structure": { "name": "Estrutura e Completude", "items": { "0": "todas as secções necessárias presentes", "1": "resumo executivo incluído" } },
+            "data": { "name": "Precisão dos Dados", "items": { "0": "fontes citadas", "1": "números reconciliam entre gráficos/tabelas/texto" } },
+            "narrative": { "name": "Clareza Narrativa", "items": { "0": "conclusões suportadas pelos dados", "1": "recomendações acionáveis" } },
+            "formatting": { "name": "Formatação", "items": { "0": "cabeçalhos consistentes, espaçamento, quebras de página", "1": "branding do cliente na capa/rodapé se necessário" } },
+            "compliance": { "name": "Compliance / Alegações", "items": { "0": "sem alegações não verificadas", "1": "avisos legais onde apropriado" } },
+            "artifacts": { "name": "Artefactos Produzidos", "items": { "0": "Notas de QA + versão corrigida", "1": "Secção de fontes e pressupostos verificada" } }
+        }
+      },
+      "DOCUMENT": {
+        "title": "Verificação de Documento (genérico)",
+        "blocks": {
+            "general": { "name": "Verificação Geral", "items": { "0": "completude, formatação, links funcionam", "1": "ficheiro abre, branding", "2": "ortografia/gramática, exportação correta" } }
+        }
+      }
+    }
   },
   "reporting": {
-    "title": "Relatórios & KPIs",
+    "title": "Relatórios e KPIs",
+    "intelligenceDashboard": "Dashboard de Inteligência",
+    "metricsFor": "Métricas de desempenho em tempo real para ",
+    "noData": "Sem dados de telemetria para este período",
     "subtitle": "Análise de desempenho",
     "dashboardTitle": "Dashboard de Inteligência",
     "dashboardSubtitle": "Métricas de desempenho em tempo real para",
     "noTelemetry": "Sem dados de telemetria para este período",
     "analyticReports": "Relatórios Analíticos",
     "analyticReportsSubtitle": "Resumos executivos e insights gerados por IA",
+    "kpis": {
+      "totalClients": "Total de Clientes",
+      "activeProjects": "Projetos Ativos",
+      "totalDeliverables": "Total de Entregáveis",
+      "deliverablesPublished": "Entregáveis Publicados",
+      "recentActivity": "Atividade Recente",
+      "totalContractValue": "Valor Total de Contratos",
+      "activeContracts": "Contratos Ativos",
+      "storageUsage": "Uso de Armazenamento"
+    },
     "generating": "A gerar...",
     "generateReport": "Gerar Relatório",
     "vsLastPeriod": "vs último período",
@@ -420,6 +861,37 @@
     "thisMonth": "Este Mês",
     "thisYear": "Este Ano",
     "custom": "Personalizado",
+    "dashboard": "Dashboard",
+    "reports": "Relatórios",
+    "reportDetails": "Detalhes do Relatório",
+    "trendAnalysis": "Análise de Tendências",
+    "list": {
+      "title": "Relatórios Executivos",
+      "subtitle": "Gerir entregáveis narrativos e aprovações.",
+      "clearAll": "Limpar Todos os Relatórios",
+      "generate": "Gerar Novo Relatório",
+      "generating": "A Gerar...",
+      "empty": "Ainda não foram gerados relatórios"
+    },
+    "details": {
+      "back": "Voltar aos Relatórios",
+      "status": "Estado",
+      "generated": "Gerado",
+      "delete": "Apagar Relatório",
+      "approve": "Aprovar Relatório",
+      "send": "Enviar aos Stakeholders",
+      "empty": "O conteúdo do relatório está vazio ou a carregar...",
+      "footer": "CONFIDENCIAL - APENAS USO INTERNO • Gerado por Narrative BI"
+    },
+    "deleteModal": {
+      "titleSingle": "Apagar Relatório?",
+      "titleAll": "Apagar Todos os Relatórios?",
+      "descSingle": "Tem a certeza que pretende apagar este relatório? Esta ação não pode ser desfeita.",
+      "descAll": "Tem a certeza que pretende apagar todos os relatórios? Esta ação não pode ser desfeita.",
+      "cancel": "Cancelar",
+      "confirm": "Apagar",
+      "deleting": "A Apagar..."
+    },
     "status": {
       "generated": "Gerado",
       "approved": "Aprovado",
@@ -588,5 +1060,98 @@
     "noAssetsDesc": "Tente ajustar os filtros ou carregue novos ficheiros para começar.",
     "gridView": "Vista em Grelha",
     "listView": "Vista em Lista"
+  },
+  "actionModals": {
+    "titles": {
+      "newContract": "Novo Contrato",
+      "logMeeting": "Registar Reunião",
+      "addTask": "Adicionar Tarefa",
+      "uploadAsset": "Carregar Ficheiro",
+      "sendEmail": "Enviar Email",
+      "reportBug": "Reportar Bug",
+      "default": "Ação"
+    },
+    "newContract": {
+      "title": "Título do Contrato",
+      "value": "Valor ($)",
+      "payment": "Pagamento",
+      "status": "Estado",
+      "startDate": "Data de Início",
+      "endDate": "Data de Fim",
+      "paymentTypes": {
+        "regular": "Regular (2x)",
+        "monthly": "Mensal"
+      },
+      "statuses": {
+        "pending": "Pendente",
+        "active": "Ativo",
+        "expired": "Expirado"
+      }
+    },
+    "logMeeting": {
+      "subject": "Assunto da Reunião",
+      "dateTime": "Data e Hora",
+      "attendees": "Participantes (Executor)",
+      "notes": "Notas / Resultados"
+    },
+    "addTask": {
+      "title": "Título da Tarefa",
+      "assignee": "Responsável",
+      "dueDate": "Data Limite",
+      "description": "Descrição",
+      "priority": "Prioridade",
+      "unassigned": "Não Atribuído"
+    },
+    "uploadAsset": {
+      "title": "Nome do Ficheiro",
+      "category": "Categoria",
+      "dragDrop": "Clique para carregar ou arraste e solte",
+      "formats": "SVG, PNG, JPG ou PDF (max. 10MB)"
+    },
+    "sendEmail": {
+      "to": "Para",
+      "subject": "Assunto",
+      "message": "Mensagem"
+    },
+    "reportBug": {
+      "title": "Título do Bug",
+      "severity": "Gravidade",
+      "system": "Sistema / Componente",
+      "description": "Descrição"
+    },
+    "placeholders": {
+      "contractTitle": "ex: Retainer Q4 2026",
+      "value": "50000",
+      "meetingSubject": "ex: Sincronização Semanal",
+      "notes": "Principais conclusões...",
+      "taskTitle": "ex: Atualizar Ativos da Marca",
+      "description": "Detalhes da tarefa...",
+      "filename": "Nome do Ficheiro",
+      "emailTo": "cliente@exemplo.com",
+      "emailSubject": "Assunto",
+      "emailMessage": "Escreva a sua mensagem aqui...",
+      "bugTitle": "ex: Falha no login no staging",
+      "steps": "Passos para reproduzir..."
+    },
+    "options": {
+      "priority": {
+        "low": "Baixa",
+        "medium": "Média",
+        "high": "Alta",
+        "critical": "Crítica"
+      },
+      "system": {
+        "frontend": "Frontend",
+        "backend": "API Backend",
+        "database": "Base de Dados",
+        "infrastructure": "Infraestrutura"
+      },
+      "category": {
+        "brand": "Diretrizes de Marca",
+        "logos": "Logótipos",
+        "contracts": "Contratos",
+        "reports": "Relatórios"
+      }
+    }
   }
 }

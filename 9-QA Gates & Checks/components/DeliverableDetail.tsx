@@ -12,163 +12,52 @@ import {
   Paperclip,
   ExternalLink,
 } from "lucide-react";
+import { useLanguage } from "@bundlros/ui";
 import styles from "../App.module.css";
 import { QAService } from "../services";
 
 // Checklists definition based on exampleQA.md
-const CHECKLISTS = {
+// Checklists definition mapping to generic keys
+const CHECKLIST_DESCRIPTORS = {
   SOFTWARE: {
-    title: "Software QA (apps, automations, integrations)",
+    baseKey: "qa.checklists.SOFTWARE",
     blocks: [
-      {
-        name: "Build & deploy",
-        items: [
-          "builds without errors",
-          "environment variables configured",
-          "staging/production links correct",
-        ],
-      },
-      {
-        name: "Functional smoke tests",
-        items: [
-          "critical user flows work end-to-end",
-          "auth, permissions, roles",
-        ],
-      },
-      {
-        name: "Edge cases",
-        items: [
-          "empty states, error handling, timeouts",
-          "rate limits, retries, failure messages",
-        ],
-      },
-      {
-        name: "Integrations",
-        items: [
-          "webhook events verified",
-          "API keys scopes verified",
-          "logs + monitoring present",
-        ],
-      },
-      {
-        name: "Security & privacy basics",
-        items: ["no secrets in repo", "PII handling sanity checks"],
-      },
-      {
-        name: "Performance basics",
-        items: ["page load thresholds / automation run time bounds"],
-      },
-      {
-        name: "Docs & handoff",
-        items: ["setup steps", "rollback / disable steps", "known limitations"],
-      },
-      {
-        name: "Artifacts produced",
-        items: [
-          "QA report (auto-generated summary)",
-          "Test evidence links (staging recordings / screenshots)",
-          "Release notes",
-        ],
-      },
+      { key: "build", count: 3 },
+      { key: "smoke", count: 2 },
+      { key: "edge", count: 2 },
+      { key: "integrations", count: 3 },
+      { key: "security", count: 2 },
+      { key: "performance", count: 1 },
+      { key: "docs", count: 3 },
+      { key: "artifacts", count: 3 },
     ],
   },
   DESIGN: {
-    title: "Design QA (brand identity, website design, social templates)",
+    baseKey: "qa.checklists.DESIGN",
     blocks: [
-      {
-        name: "Brand consistency",
-        items: [
-          "colors / type / spacing per brand guidelines",
-          "logo usage rules respected",
-        ],
-      },
-      {
-        name: "Layout & responsiveness",
-        items: ["key breakpoints covered", "spacing/alignments consistent"],
-      },
-      {
-        name: "Content quality",
-        items: [
-          "spelling, grammar, tone",
-          "image resolution, compression, licensing",
-        ],
-      },
-      {
-        name: "Accessibility basics",
-        items: ["contrast checks", "legible font sizes"],
-      },
-      {
-        name: "Export & delivery format",
-        items: [
-          "correct naming, correct file formats",
-          "editable source included (Figma/AI) when promised",
-        ],
-      },
-      {
-        name: "Implementation readiness",
-        items: [
-          "components annotated",
-          "assets organized",
-          "handoff notes included",
-        ],
-      },
-      {
-        name: "Artifacts produced",
-        items: [
-          "QA annotations (Figma comments)",
-          "Export pack + naming standards pass",
-          "Handoff notes",
-        ],
-      },
+      { key: "brand", count: 2 },
+      { key: "layout", count: 2 },
+      { key: "content", count: 2 },
+      { key: "a11y", count: 2 },
+      { key: "export", count: 2 },
+      { key: "implementation", count: 3 },
+      { key: "artifacts", count: 3 },
     ],
   },
   REPORT: {
-    title: "Report QA (strategy doc, analytics, marketing report)",
+    baseKey: "qa.checklists.REPORT",
     blocks: [
-      {
-        name: "Structure & completeness",
-        items: ["all required sections present", "executive summary included"],
-      },
-      {
-        name: "Data accuracy",
-        items: ["sources cited", "numbers reconcile across charts/tables/text"],
-      },
-      {
-        name: "Narrative clarity",
-        items: ["conclusions supported by data", "recommendations actionable"],
-      },
-      {
-        name: "Formatting",
-        items: [
-          "consistent headings, spacing, page breaks",
-          "client branding in cover/footer if needed",
-        ],
-      },
-      {
-        name: "Compliance / claims",
-        items: ["no unverified claims", "disclaimers where appropriate"],
-      },
-      {
-        name: "Artifacts produced",
-        items: [
-          "QA notes + corrected version",
-          "Sources & assumptions section verified",
-        ],
-      },
+      { key: "structure", count: 2 },
+      { key: "data", count: 2 },
+      { key: "narrative", count: 2 },
+      { key: "formatting", count: 2 },
+      { key: "compliance", count: 2 },
+      { key: "artifacts", count: 2 },
     ],
   },
   DOCUMENT: {
-    title: "Document fallback (generic)",
-    blocks: [
-      {
-        name: "General Check",
-        items: [
-          "completeness, formatting, links work",
-          "file opens, branding",
-          "spelling/grammar, correct export",
-        ],
-      },
-    ],
+    baseKey: "qa.checklists.DOCUMENT",
+    blocks: [{ key: "general", count: 3 }],
   },
 };
 
@@ -193,9 +82,10 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
   onRerun,
   isRunning,
 }) => {
+  const { t } = useLanguage();
   // Initialize from persisted state if available
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>(
-    deliverable.qa_checklist_state || {}
+    deliverable.qa_checklist_state || {},
   );
   const [approvalData, setApprovalData] = useState<ApprovalData | null>(null);
   const [loadingApproval, setLoadingApproval] = useState(true);
@@ -224,25 +114,25 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
       type.includes("widget") ||
       type.includes("software")
     ) {
-      return CHECKLISTS.SOFTWARE;
+      return CHECKLIST_DESCRIPTORS.SOFTWARE;
     }
     if (
       type.includes("landing") ||
       type.includes("email") ||
       type.includes("design")
     ) {
-      return CHECKLISTS.DESIGN;
+      return CHECKLIST_DESCRIPTORS.DESIGN;
     }
     if (type.includes("report") || type.includes("strategy")) {
-      return CHECKLISTS.REPORT;
+      return CHECKLIST_DESCRIPTORS.REPORT;
     }
-    return CHECKLISTS.DOCUMENT;
+    return CHECKLIST_DESCRIPTORS.DOCUMENT;
   }, [deliverable.type]);
 
   // Calculate progress
   const totalItems = activeChecklist.blocks.reduce(
-    (acc, block) => acc + block.items.length,
-    0
+    (acc, block) => acc + block.count,
+    0,
   );
   const checkedCount = Object.values(checkedItems).filter(Boolean).length;
   const progress = Math.round((checkedCount / totalItems) * 100);
@@ -264,9 +154,10 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
   const handleMarkAll = () => {
     const allChecked: Record<string, boolean> = {};
     activeChecklist.blocks.forEach((block, bIdx) => {
-      block.items.forEach((_, iIdx) => {
-        allChecked[`${bIdx}-${iIdx}`] = true;
-      });
+      // Loop through 0..block.count
+      for (let i = 0; i < block.count; i++) {
+        allChecked[`${bIdx}-${i}`] = true;
+      }
     });
     setCheckedItems(allChecked);
     QAService.saveChecklistState(deliverable.id, allChecked).catch((err) => {
@@ -282,7 +173,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
           <button
             onClick={onBack}
             className={styles.backButton}
-            title="Back to Overview"
+            title={t("qa.details.back")}
           >
             <ArrowLeft size={16} />
           </button>
@@ -295,8 +186,8 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
               {deliverable.name}
             </h1>
             <p>
-              {deliverable.type} • ID: {deliverable.id} • Version:{" "}
-              {deliverable.version}
+              {deliverable.type} • ID: {deliverable.id} •{" "}
+              {t("qa.details.version")}: {deliverable.version}
             </p>
           </div>
         </div>
@@ -314,7 +205,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                   size={16}
                   style={{ color: "var(--color-accent-primary)" }}
                 />
-                Description
+                {t("qa.details.description")}
               </h3>
               <div className={styles.detailCard__content}>
                 {loadingApproval ? (
@@ -358,7 +249,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                   size={16}
                   style={{ color: "var(--color-accent-primary)" }}
                 />
-                Attachments
+                {t("qa.details.attachments")}
               </h3>
               <div className={styles.detailCard__content}>
                 {loadingApproval ? (
@@ -368,7 +259,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                       fontStyle: "italic",
                     }}
                   >
-                    Loading...
+                    {t("qa.details.loading")}
                   </p>
                 ) : approvalData?.attachmentName ? (
                   <div
@@ -394,7 +285,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                           ? approvalData.attachmentType
                               .split("/")[1]
                               ?.toUpperCase()
-                          : "FILE"}
+                          : t("qa.details.file")}
                         {approvalData.attachmentSize && (
                           <>
                             {" "}
@@ -434,7 +325,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
             <div className={styles.cardHeader}>
               <div className={styles.cardHeader__info}>
                 <div className={styles.cardHeader__type}>
-                  {activeChecklist.title}
+                  {t(`${activeChecklist.baseKey}.title`)}
                 </div>
                 <div
                   style={{
@@ -482,7 +373,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                   className={styles.analyzeButton}
                   style={{ marginRight: 0, fontSize: "0.6875rem" }}
                 >
-                  Mark All
+                  {t("qa.details.markAll")}
                 </button>
               </div>
             </div>
@@ -493,15 +384,18 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                 <div key={blockIndex} style={{ marginBottom: "1.5rem" }}>
                   <div className={styles.matrixHeader}>
                     <span className={styles.matrixHeader__title}>
-                      {block.name}
+                      {t(`${activeChecklist.baseKey}.blocks.${block.key}.name`)}
                     </span>
                     <div className={styles.matrixHeader__line} />
                   </div>
 
                   <div>
-                    {block.items.map((item, itemIndex) => {
+                    {Array.from({ length: block.count }).map((_, itemIndex) => {
                       const id = `${blockIndex}-${itemIndex}`;
                       const isChecked = checkedItems[id];
+                      const itemText = t(
+                        `${activeChecklist.baseKey}.blocks.${block.key}.items.${itemIndex}`,
+                      );
 
                       return (
                         <div
@@ -543,7 +437,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                                   fontWeight: 500,
                                 }}
                               >
-                                {item}
+                                {itemText}
                               </h4>
                             </div>
                           </div>
@@ -562,7 +456,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                 onClick={() => {
                   QAService.saveChecklistState(
                     deliverable.id,
-                    checkedItems
+                    checkedItems,
                   ).finally(() => {
                     onBack();
                   });
@@ -572,7 +466,7 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                   border: "1px solid var(--color-border-subtle)",
                 }}
               >
-                Save Draft & Exit
+                {t("qa.details.saveDraft")}
               </button>
               <button
                 className={styles.rerunButton}
@@ -587,12 +481,12 @@ export const DeliverableDetail: React.FC<DeliverableDetailProps> = ({
                 {isComplete ? (
                   <>
                     <CheckCircle size={14} />
-                    Approve & Deliver
+                    {t("qa.details.approveDeliver")}
                   </>
                 ) : (
                   <>
                     <AlertCircle size={14} />
-                    {totalItems - checkedCount} Remaining
+                    {totalItems - checkedCount} {t("qa.details.remaining")}
                   </>
                 )}
               </button>

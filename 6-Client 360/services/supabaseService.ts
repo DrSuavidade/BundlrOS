@@ -32,17 +32,30 @@ const mapContract = (contract: SupabaseContract): Contract => ({
 
 // Map Supabase deliverable to local type
 const mapDeliverable = (deliverable: SupabaseDeliverable): Deliverable => {
-    // Calculate progress based on status
-    const progressMap: Record<string, number> = {
-        'draft': 10,
-        'in_progress': 50,
-        'awaiting_approval': 75,
-        'in_qa': 85,
-        'qa_failed': 60,
-        'approved': 90,
-        'published': 100,
-        'archived': 100,
-    };
+    // Try to calculate progress from qa_checklist_state if available
+    const checklistState = (deliverable as any).qa_checklist_state as Record<string, boolean> | undefined;
+    let progress = 0;
+
+    if (checklistState && Object.keys(checklistState).length > 0) {
+        // Calculate real progress from checklist
+        const totalItems = Object.keys(checklistState).length;
+        const completedItems = Object.values(checklistState).filter(Boolean).length;
+        progress = Math.round((completedItems / totalItems) * 100);
+    } else {
+        // Fallback to status-based progress
+        const progressMap: Record<string, number> = {
+            'draft': 10,
+            'in_progress': 50,
+            'awaiting_approval': 75,
+            'in_qa': 85,
+            'qa_failed': 60,
+            'approved': 90,
+            'published': 100,
+            'archived': 100,
+        };
+        progress = progressMap[deliverable.status] || 0;
+    }
+
     const statusMap: Record<string, 'on-track' | 'at-risk' | 'delayed' | 'completed'> = {
         'draft': 'on-track',
         'in_progress': 'on-track',
@@ -57,7 +70,7 @@ const mapDeliverable = (deliverable: SupabaseDeliverable): Deliverable => {
     return {
         id: deliverable.id,
         title: deliverable.title,
-        progress: progressMap[deliverable.status] || 0,
+        progress,
         dueDate: deliverable.due_date || new Date().toISOString(),
         status: statusMap[deliverable.status] || 'on-track',
     };

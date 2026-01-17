@@ -36,7 +36,7 @@
     "search": "Search modules...",
     "notifications": "Notifications",
     "new": "new",
-    "viewAll": "View all",
+    "viewAll": "View All",
     "settings": "Settings",
     "help": "Help & Support",
     "signOut": "Sign Out",
@@ -45,6 +45,7 @@
     "close": "close",
     "noResults": "No results found",
     "loading": "Loading...",
+    "processing": "Processing...",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -69,7 +70,13 @@
     "export": "Export",
     "import": "Import",
     "download": "Download",
-    "upload": "Upload"
+    "upload": "Upload",
+    "timeRanges": {
+      "1W": "1W",
+      "1M": "1M",
+      "6M": "6M",
+      "1Y": "1Y"
+    }
   },
   "notif": {
     "newIntake": "New client intake received",
@@ -95,6 +102,10 @@
     "userDistribution": "User Distribution by Role",
     "recentActivity": "Recent Activity",
     "noRecentActivity": "No recent activity",
+    "unreadNotifications": "Unread Notifications",
+    "pendingApprovals": "Pending Approvals",
+    "activityTrends": "Activity Trends",
+    "recentNotifications": "Recent Notifications",
     "users": "Users",
     "iamContext": "IAM Context",
     "iamDashboard": "IAM Dashboard",
@@ -195,6 +206,37 @@
       "published": "Published",
       "archived": "Archived"
     },
+    "paymentHub": "Payment Hub",
+    "systemsActive": "Systems Active",
+    "mrr": "Monthly Recurring Revenue",
+    "activeRetainers": "Active Retainers",
+    "pendingOneOff": "Pending One-Off",
+    "paymentAlerts": "Payment Alerts",
+    "actionNeeded": "Action needed",
+    "totalIncome": "Total Income",
+    "totalCollected": "Total Collected",
+    "recurringRetainers": "Recurring Retainers",
+    "noActiveRetainers": "No active retainers",
+    "noActiveRetainersDesc": "All monthly subscriptions are processing normally.",
+    "oneOffProjects": "One-Off Projects",
+    "noPendingProjects": "No pending projects",
+    "noPendingProjectsDesc": "You're all caught up! No one-off projects are currently active.",
+    "monthlyValue": "Monthly Value",
+    "totalValue": "Total Value",
+    "paid": "Paid",
+    "nextPayment": "Next Payment",
+    "dueDate": "Due Date",
+    "payment": "Payment",
+    "receipt": "Receipt",
+    "remind": "Remind",
+    "invoice": "Invoice",
+    "unknownClient": "Unknown Client",
+    "paymentStatus": {
+      "upcoming": "Upcoming",
+      "overdue": "Overdue",
+      "dueSoon": "Due Soon",
+      "waitingPayment": "Waiting Payment"
+    },
     "deliverablesList": {
       "title": "Deliverables",
       "subtitle": "Manage project deliverables",
@@ -261,6 +303,17 @@
       "create": "Create Intake",
       "cancel": "Cancel"
     },
+    "list": {
+      "id": "ID",
+      "status": "Status",
+      "priority": "Priority",
+      "subject": "Subject",
+      "client": "Client",
+      "slaDue": "SLA Due",
+      "owner": "Owner",
+      "emptyTitle": "No intake items found",
+      "emptyDesc": "Try adjusting your search or filter criteria to find what you're looking for"
+    },
     "panel": {
       "assignMe": "Assign Me",
       "startWork": "Start Work",
@@ -304,6 +357,46 @@
     "contacts": "Contacts",
     "projects": "Projects",
     "billing": "Billing",
+    "activeEngagement": "Active Engagement",
+    "allContracts": "All Contracts",
+    "contracts": "Contracts",
+    "expires": "Expires",
+    "deliverables": "Deliverables",
+    "unknownIndustry": "Unknown Industry",
+    "clientPulse": "Client Pulse",
+    "refresh": "Refresh",
+    "aiInsight": "AI Insight",
+    "health": "Health",
+    "clientStatus": "Client Status",
+    "status": {
+      "excellent": "Excellent",
+      "good": "Good",
+      "needsAttention": "Needs Attention"
+    },
+    "valueDelivered": "Value Delivered",
+    "totalContract": "Total Contract",
+    "pendingApprovals": "Pending Approvals",
+    "allClear": "All Clear",
+    "loggedMeetings": "Logged Meetings",
+    "activity": "Activity",
+    "noActivity": "No activity found",
+    "noActivityDesc": "No recent emails or meetings for this filter.",
+    "viewHistory": "View All History",
+    "clientContacts": "Client Contacts",
+    "scheduleMeeting": "Schedule Meeting",
+    "addNewClient": "ADD NEW CLIENT",
+    "companyName": "Company Name",
+    "clientCode": "Client Code",
+    "email": "Email",
+    "nif": "NIF (Tax ID)",
+    "industry": "Industry",
+    "createClient": "Create Client",
+    "confirmDeletion": "Confirm Deletion",
+    "deleteConfirmation": "Are you sure you want to delete this client? This action cannot be undone and will remove all associated data.",
+    "deleteClient": "Delete Client",
+    "scheduleMeetingAI": "Schedule Meeting via AI",
+    "scheduleMeetingAIDesc": "An AI-generated message will be sent to this contact's email to initiate scheduling. Are you sure you want to continue?",
+    "viewAll": "View All",
     "notes": "Notes",
     "addClient": "Add Client",
     "clientDetails": "Client Details",
@@ -317,16 +410,44 @@
     "thisMonth": "this month",
     "projectTimeline": "Project Timeline",
     "recentActivity": "Recent Activity",
-    "viewAll": "View all",
     "aiInsights": "AI Insights",
     "generateInsight": "Generate Insight",
     "generating": "Generating...",
     "askAI": "Ask AI about this client",
     "keyStats": "Key Stats",
-    "deliverables": "Deliverables",
     "assets": "Assets",
     "interactions": "Interactions",
-    "contracts": "Contracts"
+    "totalValue": "Total Value",
+    "detailPanel": {
+      "activityLog": "Activity Log",
+      "filterList": "Filter list...",
+      "noResults": "No results found",
+      "adjustFilter": "Try adjusting your filter",
+      "actions": {
+        "viewAll": "View All",
+        "addNew": "Add New",
+        "edit": "Edit",
+        "delete": "Delete",
+        "all": "All",
+        "active": "Active",
+        "drafts": "Drafts",
+        "past": "Past",
+        "emails": "Emails",
+        "meetings": "Meetings",
+        "system": "System"
+      },
+      "form": {
+        "fullName": "Full Name",
+        "role": "Role",
+        "email": "Email",
+        "phone": "Phone",
+        "saveContact": "Save Contact",
+        "cancel": "Cancel",
+        "deleteTitle": "Delete Contact",
+        "deleteBody": "Are you sure you want to delete this contact? This action cannot be undone.",
+        "deleteButton": "Delete Contact"
+      }
+    }
   },
   "factories": {
     "title": "Service Factories",
@@ -355,7 +476,204 @@
     "contractId": "Contract ID",
     "template": "Template",
     "createFactory": "Create Factory",
-    "cancel": "Cancel"
+    "createDeliverable": "Create Deliverable",
+    "folderName": "Folder Name",
+    "driveLink": "Google Drive Link",
+    "cancel": "Cancel",
+    "pipelineManager": "Pipeline Manager",
+    "context": "Context",
+    "workDelivered": "Work Delivered",
+    "waitingApproval": "Waiting for approval.",
+    "systemLogs": "System Logs",
+    "templateSelector": {
+      "title": "Select Pipeline Template",
+      "subtitle": "This factory needs a pipeline template to initialize. Please select one below.",
+      "initialize": "Initialize Factory",
+      "selectToContinue": "Select a Template to Continue",
+      "noSelection": "No Selection",
+      "pickTemplate": "Pick a template from the list to see an AI-generated action plan and estimated timeline.",
+      "generating": "Generating AI Analysis...",
+      "aiInsights": "AI Insights",
+      "pipelineStrategy": "Pipeline Strategy",
+      "steps": "Key Implementation Steps",
+      "velocity": "Estimated Velocity"
+    },
+    "deliverables": {
+      "D_BRIEF": "Client Brief Form",
+      "D_KPI": "KPIs + Success Metrics",
+      "D_PERSONAS": "Audience Personas",
+      "D_POSITIONING": "Brand Positioning + Messaging",
+      "D_OFFER": "Offer + Funnel Outline",
+      "D_SOC_AUDIT": "Social Audit + Recommendations",
+      "A_BRANDKIT": "Brand Kit (fonts/colors/voice)",
+      "A_TEMPLATES": "Design Templates (posts/stories)",
+      "A_BROLL": "B-roll / Asset Library",
+      "A_COPYBANK": "Copy Bank (hooks/CTAs)",
+      "D_CONTENT_PILLARS": "Content Pillars",
+      "D_CALENDAR": "Content Calendar",
+      "A_POSTS_BATCH": "Batch of Posts (graphics/captions)",
+      "A_REELS_BATCH": "Batch of Short Videos/Reels",
+      "D_HASHTAGS": "Hashtag/Keyword Set",
+      "D_SCHEDULING": "Scheduling Setup + Queue",
+      "D_COMMUNITY_GUIDE": "Community Management Guidelines",
+      "D_REPORT": "Performance Report",
+      "D_CAMPAIGN_PLAN": "Campaign Plan",
+      "A_AD_CREATIVES": "Ad Creatives (static/video)",
+      "D_AD_COPY": "Ad Copy Variations",
+      "D_TRACKING": "Tracking Setup (pixels/UTMs/events)",
+      "D_LANDING": "Landing Page Draft/Build",
+      "D_USECASES": "AI Use Cases + Prioritization",
+      "D_DATA_MAP": "Data Map + Integrations Plan",
+      "A_AUTOMATION": "Automation Workflow (Zap/Make/n8n)",
+      "D_AI_PROMPTS": "Prompt Pack / Agent Instructions",
+      "A_CHATBOT": "Chatbot / Assistant Config",
+      "D_TESTS": "Test Plan + Results",
+      "D_SOP": "SOP + Handover Docs",
+      "D_TRAINING": "Client Training Session Notes",
+      "D_SITEMAP": "Sitemap + IA",
+      "D_WIREFRAMES": "Wireframes",
+      "A_DESIGN": "UI Design / Mockups",
+      "A_WEB_BUILD": "Website Build",
+      "D_SEO": "SEO Foundations (meta/schema)",
+      "D_ANALYTICS": "Analytics Setup (GA/GTM)",
+      "D_QA": "QA Checklist + Fixes",
+      "D_LAUNCH": "Launch Checklist + Go-live",
+      "D_MAINT": "Maintenance Plan"
+    },
+    "templates": {
+      "TPL_SOCIAL_RETAINER": {
+        "name": "Social Media Management (Retainer)",
+        "category": "Marketing",
+        "stages": {
+          "S1_ONBOARD": "Onboarding",
+          "S2_STRATEGY": "Monthly Strategy",
+          "S3_PRODUCTION": "Content Production",
+          "S4_SCHEDULE_COMMUNITY": "Scheduling + Community",
+          "S5_REPORTING": "Reporting + Optimization"
+        }
+      },
+      "TPL_CONTENT_SPRINT": {
+        "name": "Content Sprint (Batch Creation)",
+        "category": "Content",
+        "stages": {
+          "S1_SCOPE": "Scope + Pillars",
+          "S2_PLANNING": "Topics + Calendar",
+          "S3_BATCH": "Batch Production",
+          "S4_HANDOFF": "Handoff + Scheduling"
+        }
+      },
+      "TPL_LAUNCH_CAMPAIGN": {
+        "name": "Launch Campaign (Organic + Paid)",
+        "category": "Marketing",
+        "stages": {
+          "S1_DISCOVERY": "Discovery + Offer",
+          "S2_CAMPAIGN": "Campaign Plan",
+          "S3_ASSETS": "Creative Production",
+          "S4_LANDING": "Landing + QA",
+          "S5_LAUNCH": "Launch + Optimize"
+        }
+      },
+      "TPL_AI_INTEGRATION": {
+        "name": "AI Integration (Use-cases to Deployment)",
+        "category": "Technology",
+        "stages": {
+          "S1_AI_DISCOVERY": "AI Discovery",
+          "S2_DESIGN": "Solution Design",
+          "S3_BUILD": "Build + Integrations",
+          "S4_TEST": "Testing + Guardrails",
+          "S5_DEPLOY": "Deploy + Handover"
+        }
+      },
+      "TPL_AUTOMATION_BUILD": {
+        "name": "Automation Build (Ops + CRM)",
+        "category": "Operations",
+        "stages": {
+          "S1_PROCESS_MAP": "Process Mapping",
+          "S2_WORKFLOW_DESIGN": "Workflow Design",
+          "S3_IMPLEMENT": "Implementation",
+          "S4_QA": "QA + Monitoring",
+          "S5_HANDOVER": "Handover"
+        }
+      },
+      "TPL_CHATBOT_DEPLOY": {
+        "name": "Chatbot / AI Assistant Deployment",
+        "category": "Technology",
+        "stages": {
+          "S1_ONBOARD": "Onboarding + Goals",
+          "S2_KNOWLEDGE": "Knowledge + Tone",
+          "S3_BUILD": "Build + Channels",
+          "S4_TEST": "Test + Fail-safes",
+          "S5_GO_LIVE": "Go-live + Training"
+        }
+      },
+      "TPL_WEBSITE_BROCHURE": {
+        "name": "Website Build (Brochure / Service Site)",
+        "category": "Development",
+        "stages": {
+          "S1_DISCOVERY": "Discovery",
+          "S2_STRUCTURE": "Sitemap + Wireframes",
+          "S3_DESIGN": "Design",
+          "S4_BUILD": "Build",
+          "S5_FOUNDATIONS": "SEO + Analytics",
+          "S6_QA": "QA",
+          "S7_LAUNCH": "Launch + Handover"
+        }
+      },
+      "TPL_WEB_SOCIAL_STARTER": {
+        "name": "Website + Social Starter Bundle",
+        "category": "Bundle",
+        "stages": {
+          "S1_ONBOARD": "Onboarding",
+          "S2_BRAND": "Brand + Messaging",
+          "S3_WEB": "Website Delivery",
+          "S4_SOCIAL_SYSTEM": "Social System Setup",
+          "S5_INITIAL_CONTENT": "Initial Content Pack"
+        }
+      },
+      "TPL_WEB_ECOM": {
+        "name": "Website Build (E-commerce)",
+        "category": "Development",
+        "stages": {
+          "S1_DISCOVERY": "Discovery + Requirements",
+          "S2_IA": "Structure + Wireframes",
+          "S3_DESIGN": "Design",
+          "S4_BUILD": "Build + Integrations",
+          "S5_SEO_QA": "SEO + QA",
+          "S6_LAUNCH": "Launch + Handover"
+        }
+      },
+      "TPL_WEB_MAINTENANCE": {
+        "name": "Website Maintenance + Optimization (Retainer)",
+        "category": "Operations",
+        "stages": {
+          "S1_BASELINE": "Baseline + Access",
+          "S2_MAINT": "Maintenance Cycle",
+          "S3_OPTIMIZE": "Optimization + Reporting"
+        }
+      },
+      "TPL_SAAS_MVP": {
+        "name": "SaaS MVP Build",
+        "category": "Development",
+        "stages": {
+          "S1_DISCOVERY": "Discovery + Specs",
+          "S2_DESIGN": "UI/UX Design",
+          "S3_DEV": "Development Sprint",
+          "S4_QA": "QA + Testing",
+          "S5_DEPLOY": "Deployment"
+        }
+      },
+      "TPL_BRAND_IDENTITY": {
+        "name": "Brand Identity Overhaul",
+        "category": "Design",
+        "stages": {
+          "S1_DISCOVERY": "Brand Discovery",
+          "S2_CONCEPT": "Visual Concepts",
+          "S3_REFINEMENT": "Refinement",
+          "S4_GUIDELINES": "Brand Guidelines",
+          "S5_ASSETS": "Asset Handoff"
+        }
+      }
+    }
   },
   "approvals": {
     "title": "Approvals Center",
@@ -377,7 +695,46 @@
     "viewDetails": "View Details",
     "client": "Client",
     "submittedBy": "Submitted by",
-    "deadline": "Deadline"
+    "details": {
+      "notFound": "Not Found",
+      "back": "Back to Approvals",
+      "reference": "Reference",
+      "created": "Created",
+      "assignee": "You are Assignee",
+      "share": "Share",
+      "actionRequired": "Action Required",
+      "pendingDesc": "This item is currently pending approval. Please review the details below.",
+      "reject": "Reject",
+      "approveDeliverable": "Approve Deliverable",
+      "awaitingReview": "Awaiting Review",
+      "assigneeWarning": "This item is pending approval. As the assignee, you cannot approve your own work. It must be reviewed by another team member or the client.",
+      "approvedTitle": "Approved",
+      "approvedDesc": "This deliverable has been approved and moved to the next stage.",
+      "rejectedTitle": "Rejected",
+      "rejectedDesc": "This request has been rejected. It has been returned to drafts.",
+      "description": "Description",
+      "attachments": "Attachments",
+      "noAttachments": "No attachments provided.",
+      "client": "Client",
+      "dueDate": "Due Date",
+      "sendReminder": "Send Reminder",
+      "activity": "Activity",
+      "aiDraft": "AI Draft Assistant",
+      "reviewMessage": "Review the generated message before sending.",
+      "aiThinking": "AI is thinking...",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "confirmApproval": "Confirm Approval",
+      "confirmRejection": "Confirm Rejection",
+      "approvalBody": "Are you sure you want to approve this deliverable? This action will notify the client.",
+      "rejectionBody": "Are you sure you want to reject this deliverable? It will be returned to the draft stage.",
+      "clipboard": "Client verification link copied to clipboard!"
+    },
+    "deadline": "Deadline",
+    "requireAttention": "Require your attention",
+    "lifetimeDecisions": "Lifetime decisions",
+    "refreshList": "Refresh List",
+    "noRequests": "No approval requests found."
   },
   "qa": {
     "title": "QA Gates & Checks",
@@ -397,10 +754,94 @@
     "nextRun": "Next Run",
     "score": "Score",
     "issues": "Issues",
-    "issuesFound": "issues found"
+    "issuesFound": "issues found",
+    "details": {
+      "back": "Back to Overview",
+      "version": "Version",
+      "description": "Description",
+      "noDescription": "No description available for this deliverable.",
+      "attachments": "Attachments",
+      "noAttachments": "No attachments available.",
+      "loading": "Loading...",
+      "markAll": "Mark All",
+      "saveDraft": "Save Draft & Exit",
+      "approveDeliver": "Approve & Deliver",
+      "remaining": "Remaining",
+      "file": "FILE",
+      "unknownSize": "Unknown Size"
+    },
+    "checklists": {
+      "SOFTWARE": {
+        "title": "Software QA (apps, automations, integrations)",
+        "blocks": {
+          "build": {
+            "name": "Build & deploy",
+            "items": { "0": "builds without errors", "1": "environment variables configured", "2": "staging/production links correct" }
+          },
+          "smoke": {
+            "name": "Functional smoke tests",
+            "items": { "0": "critical user flows work end-to-end", "1": "auth, permissions, roles" }
+          },
+          "edge": {
+             "name": "Edge cases",
+             "items": { "0": "empty states, error handling, timeouts", "1": "rate limits, retries, failure messages" }
+          },
+          "integrations": {
+             "name": "Integrations",
+             "items": { "0": "webhook events verified", "1": "API keys scopes verified", "2": "logs + monitoring present" }
+          },
+          "security": { "name": "Security & privacy basics", "items": { "0": "no secrets in repo", "1": "PII handling sanity checks" } },
+          "performance": { "name": "Performance basics", "items": { "0": "page load thresholds / automation run time bounds" } },
+          "docs": { "name": "Docs & handoff", "items": { "0": "setup steps", "1": "rollback / disable steps", "2": "known limitations" } },
+          "artifacts": { "name": "Artifacts produced", "items": { "0": "QA report (auto-generated summary)", "1": "Test evidence links (staging recordings / screenshots)", "2": "Release notes" } }
+        }
+      },
+      "DESIGN": {
+        "title": "Design QA (brand identity, website design, social templates)",
+        "blocks": {
+            "brand": { "name": "Brand consistency", "items": { "0": "colors / type / spacing per brand guidelines", "1": "logo usage rules respected" } },
+            "layout": { "name": "Layout & responsiveness", "items": { "0": "key breakpoints covered", "1": "spacing/alignments consistent" } },
+            "content": { "name": "Content quality", "items": { "0": "spelling, grammar, tone", "1": "image resolution, compression, licensing" } },
+            "a11y": { "name": "Accessibility basics", "items": { "0": "contrast checks", "1": "legible font sizes" } },
+            "export": { "name": "Export & delivery format", "items": { "0": "correct naming, correct file formats", "1": "editable source included (Figma/AI) when promised" } },
+            "implementation": { "name": "Implementation readiness", "items": { "0": "components annotated", "1": "assets organized", "2": "handoff notes included" } },
+            "artifacts": { "name": "Artifacts produced", "items": { "0": "QA annotations (Figma comments)", "1": "Export pack + naming standards pass", "2": "Handoff notes" } }
+        }
+      },
+      "REPORT": {
+        "title": "Report QA (strategy doc, analytics, marketing report)",
+        "blocks": {
+            "structure": { "name": "Structure & completeness", "items": { "0": "all required sections present", "1": "executive summary included" } },
+            "data": { "name": "Data accuracy", "items": { "0": "sources cited", "1": "numbers reconcile across charts/tables/text" } },
+            "narrative": { "name": "Narrative clarity", "items": { "0": "conclusions supported by data", "1": "recommendations actionable" } },
+            "formatting": { "name": "Formatting", "items": { "0": "consistent headings, spacing, page breaks", "1": "client branding in cover/footer if needed" } },
+            "compliance": { "name": "Compliance / claims", "items": { "0": "no unverified claims", "1": "disclaimers where appropriate" } },
+            "artifacts": { "name": "Artifacts produced", "items": { "0": "QA notes + corrected version", "1": "Sources & assumptions section verified" } }
+        }
+      },
+      "DOCUMENT": {
+        "title": "Document fallback (generic)",
+        "blocks": {
+            "general": { "name": "General Check", "items": { "0": "completeness, formatting, links work", "1": "file opens, branding", "2": "spelling/grammar, correct export" } }
+        }
+      }
+    }
   },
   "reporting": {
     "title": "Reporting & KPIs",
+    "intelligenceDashboard": "Intelligence Dashboard",
+    "metricsFor": "Real-time performance metrics for ",
+    "noData": "No telemetry data for this period",
+    "kpis": {
+      "totalClients": "Total Clients",
+      "activeProjects": "Active Projects",
+      "totalDeliverables": "Total Deliverables",
+      "deliverablesPublished": "Deliverables Published",
+      "recentActivity": "Recent Activity",
+      "totalContractValue": "Total Contract Value",
+      "activeContracts": "Active Contracts",
+      "storageUsage": "Storage Usage"
+    },
     "subtitle": "Performance analytics",
     "overview": "Overview",
     "revenue": "Revenue",
@@ -412,7 +853,43 @@
     "thisWeek": "This Week",
     "thisMonth": "This Month",
     "thisYear": "This Year",
-    "custom": "Custom"
+    "custom": "Custom",
+    "dashboard": "Dashboard",
+    "reports": "Reports",
+    "reportDetails": "Report Details",
+    "trendAnalysis": "Trend Analysis",
+    "list": {
+      "title": "Executive Reports",
+      "subtitle": "Manage narrative deliverables and approvals.",
+      "clearAll": "Clear All Reports",
+      "generate": "Generate New Report",
+      "generating": "Generating...",
+      "empty": "No reports generated yet"
+    },
+    "details": {
+      "back": "Back to Reports",
+      "status": "Status",
+      "generated": "Generated",
+      "delete": "Delete Report",
+      "approve": "Approve Report",
+      "send": "Send to Stakeholders",
+      "empty": "Report content is empty or loading...",
+      "footer": "CONFIDENTIAL - INTERNAL USE ONLY • Generated by Narrative BI"
+    },
+    "deleteModal": {
+      "titleSingle": "Delete Report?",
+      "titleAll": "Delete All Reports?",
+      "descSingle": "Are you sure you want to delete this report? This action cannot be undone.",
+      "descAll": "Are you sure you want to delete all reports? This action cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "deleting": "Deleting..."
+    },
+    "status": {
+      "generated": "Generated",
+      "approved": "Approved",
+      "sent": "Sent"
+    }
   },
   "capacity": {
     "title": "Capacity Radar",
@@ -577,5 +1054,98 @@
     "noAssetsDesc": "Try adjusting your filters or upload new assets to get started.",
     "gridView": "Grid View",
     "listView": "List View"
+  },
+  "actionModals": {
+    "titles": {
+      "newContract": "New Contract",
+      "logMeeting": "Log Meeting",
+      "addTask": "Add Task",
+      "uploadAsset": "Upload Asset",
+      "sendEmail": "Send Email",
+      "reportBug": "Report Bug",
+      "default": "Action"
+    },
+    "newContract": {
+      "title": "Contract Title",
+      "value": "Value ($)",
+      "payment": "Payment",
+      "status": "Status",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "paymentTypes": {
+        "regular": "Regular (2x)",
+        "monthly": "Monthly"
+      },
+      "statuses": {
+        "pending": "Pending",
+        "active": "Active",
+        "expired": "Expired"
+      }
+    },
+    "logMeeting": {
+      "subject": "Meeting Subject",
+      "dateTime": "Date & Time",
+      "attendees": "Attendees (Performer)",
+      "notes": "Notes / Outcome"
+    },
+    "addTask": {
+      "title": "Task Title",
+      "assignee": "Assignee",
+      "dueDate": "Due Date",
+      "description": "Description",
+      "priority": "Priority",
+      "unassigned": "Unassigned"
+    },
+    "uploadAsset": {
+      "title": "Asset Name",
+      "category": "Category",
+      "dragDrop": "Click to upload or drag and drop",
+      "formats": "SVG, PNG, JPG or PDF (max. 10MB)"
+    },
+    "sendEmail": {
+      "to": "To",
+      "subject": "Subject",
+      "message": "Message"
+    },
+    "reportBug": {
+      "title": "Bug Title",
+      "severity": "Severity",
+      "system": "System / Component",
+      "description": "Description"
+    },
+    "placeholders": {
+      "contractTitle": "e.g. Q4 2026 Retainer",
+      "value": "50000",
+      "meetingSubject": "e.g. Weekly Sync",
+      "notes": "Key takeaways...",
+      "taskTitle": "e.g. Update Brand Assets",
+      "description": "Task details...",
+      "filename": "Filename",
+      "emailTo": "client@example.com",
+      "emailSubject": "Subject line",
+      "emailMessage": "Type your message here...",
+      "bugTitle": "e.g. Login failing on staging",
+      "steps": "Steps to reproduce..."
+    },
+    "options": {
+      "priority": {
+        "low": "Low",
+        "medium": "Medium",
+        "high": "High",
+        "critical": "Critical"
+      },
+      "system": {
+        "frontend": "Frontend",
+        "backend": "Backend API",
+        "database": "Database",
+        "infrastructure": "Infrastructure"
+      },
+      "category": {
+        "brand": "Brand Guidelines",
+        "logos": "Logos",
+        "contracts": "Contracts",
+        "reports": "Reports"
+      }
+    }
   }
 }

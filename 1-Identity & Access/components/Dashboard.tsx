@@ -66,7 +66,7 @@ export const Dashboard: React.FC = () => {
   // Pending Approvals logic: Status PENDING (case insensitive) and assignee != current user
   const pendingApprovalsCount = approvals.filter(
     (a) =>
-      a.status?.toUpperCase() === "PENDING" && a.assigneeId !== currentUser?.id
+      a.status?.toUpperCase() === "PENDING" && a.assigneeId !== currentUser?.id,
   ).length;
 
   // Calculate Activity Trends based on timeRange
@@ -127,7 +127,9 @@ export const Dashboard: React.FC = () => {
         <div className={styles.header}>
           <h1>{t("identity.title")}</h1>
         </div>
-        <div style={{ textAlign: "center", padding: "2rem" }}>Loading...</div>
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          {t("common.loading")}
+        </div>
       </div>
     );
   }
@@ -156,7 +158,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <div className={styles.statInfo}>
             <span className={styles.statLabel}>
-              {t("Unread Notifications")}
+              {t("identity.unreadNotifications")}
             </span>
             <span className={styles.statValue}>{unreadNotifications}</span>
           </div>
@@ -189,7 +191,9 @@ export const Dashboard: React.FC = () => {
             <FileCheck size={18} />
           </div>
           <div className={styles.statInfo}>
-            <span className={styles.statLabel}>{t("Pending Approvals")}</span>
+            <span className={styles.statLabel}>
+              {t("identity.pendingApprovals")}
+            </span>
             <span className={styles.statValue}>{pendingApprovalsCount}</span>
           </div>
         </div>
@@ -208,7 +212,9 @@ export const Dashboard: React.FC = () => {
               paddingRight: "16px",
             }}
           >
-            <h3 className={styles.sectionTitle}>{t("Activity Trends")}</h3>
+            <h3 className={styles.sectionTitle}>
+              {t("identity.activityTrends")}
+            </h3>
             <div
               style={{
                 display: "flex",
@@ -245,7 +251,7 @@ export const Dashboard: React.FC = () => {
                         : "none",
                   }}
                 >
-                  {range}
+                  {t(`common.timeRanges.${range}`)}
                 </button>
               ))}
             </div>
@@ -314,7 +320,9 @@ export const Dashboard: React.FC = () => {
         {/* Recent Notifications */}
         <div className={styles.sectionCard}>
           <div className={styles.sectionHeader}>
-            <h3 className={styles.sectionTitle}>{t("Recent Notifications")}</h3>
+            <h3 className={styles.sectionTitle}>
+              {t("identity.recentNotifications")}
+            </h3>
           </div>
           <div className={styles.sectionBody}>
             <div className={styles.activityList}>

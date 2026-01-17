@@ -11,6 +11,7 @@ import {
   Trash2,
 } from "lucide-react";
 import styles from "../App.module.css";
+import { useLanguage } from "@bundlros/ui";
 
 interface ReportListProps {
   reports: Report[];
@@ -27,6 +28,8 @@ const ReportList: React.FC<ReportListProps> = ({
   onClearAll,
   isGenerating,
 }) => {
+  const { t } = useLanguage();
+
   const getStatusClass = (status: ReportStatus) => {
     switch (status) {
       case ReportStatus.GENERATED:
@@ -57,8 +60,8 @@ const ReportList: React.FC<ReportListProps> = ({
     <div className={styles.reportList}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h2>Executive Reports</h2>
-          <p>Manage narrative deliverables and approvals.</p>
+          <h2>{t("reporting.list.title")}</h2>
+          <p>{t("reporting.list.subtitle")}</p>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
           {onClearAll && reports.length > 0 && (
@@ -71,7 +74,7 @@ const ReportList: React.FC<ReportListProps> = ({
                 color: "var(--color-text-secondary)",
                 padding: "0 8px",
               }}
-              title="Clear All Reports"
+              title={t("reporting.list.clearAll")}
             >
               <Trash2 size={14} />
             </button>
@@ -84,12 +87,12 @@ const ReportList: React.FC<ReportListProps> = ({
             {isGenerating ? (
               <>
                 <Sparkles size={12} className="animate-spin" />
-                Generating...
+                {t("reporting.list.generating")}
               </>
             ) : (
               <>
                 <Plus size={12} />
-                Generate New Report
+                {t("reporting.list.generate")}
               </>
             )}
           </button>
@@ -101,7 +104,7 @@ const ReportList: React.FC<ReportListProps> = ({
           <div className={styles.emptyState__icon}>
             <FileText size={24} />
           </div>
-          <p className={styles.emptyState__text}>No reports generated yet</p>
+          <p className={styles.emptyState__text}>{t("reporting.list.empty")}</p>
         </div>
       ) : (
         <div className={styles.reportList}>
@@ -126,11 +129,11 @@ const ReportList: React.FC<ReportListProps> = ({
 
               <span
                 className={`${styles.reportItem__status} ${getStatusClass(
-                  report.status
+                  report.status,
                 )}`}
               >
                 {getStatusIcon(report.status)}
-                {report.status}
+                {t(`reporting.status.${report.status.toLowerCase()}`)}
               </span>
               <ChevronRight
                 size={16}

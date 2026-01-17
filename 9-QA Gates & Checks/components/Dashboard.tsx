@@ -7,6 +7,7 @@ import {
   Clock,
   Layers,
 } from "lucide-react";
+import { useLanguage } from "../../_Shared/contexts/LanguageContext";
 
 interface DashboardProps {
   deliverables: Deliverable[];
@@ -19,6 +20,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onSelect,
   isRunningId,
 }) => {
+  const { t } = useLanguage();
   const getStatusColor = (status: QAStatus) => {
     switch (status) {
       case "passed":
@@ -47,7 +49,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               }
             </div>
             <div className="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
-              Passed
+              {t("qa.passed")}
             </div>
           </div>
         </div>
@@ -63,7 +65,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               }
             </div>
             <div className="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
-              Failed Gates
+              {t("qa.failedGates")}
             </div>
           </div>
         </div>
@@ -76,7 +78,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               {deliverables.length}
             </div>
             <div className="text-xs font-semibold text-[var(--color-text-tertiary)] uppercase tracking-wider">
-              Active Assets
+              {t("qa.activeAssets")}
             </div>
           </div>
         </div>
@@ -85,7 +87,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-[var(--color-bg-card)] rounded-xl shadow-xl border border-[var(--color-border-subtle)] overflow-hidden">
         <div className="px-6 py-4 border-b border-[var(--color-border-subtle)] bg-[var(--color-bg-subtle)] flex justify-between items-center">
           <h2 className="font-semibold text-[var(--color-text-primary)]">
-            Active Deliverables
+            {t("qa.activeDeliverables")}
           </h2>
           <span className="text-[10px] text-[var(--color-text-tertiary)] font-mono uppercase tracking-widest">
             n8n:gatekeeper_active
@@ -101,7 +103,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div className="flex items-center gap-4">
                 <div
                   className={`w-2 h-2 rounded-full ${getStatusColor(
-                    isRunningId === item.id ? "running" : item.lastResult.status
+                    isRunningId === item.id
+                      ? "running"
+                      : item.lastResult.status,
                   )} shadow-[0_0_8px_rgba(0,0,0,0.5)]`}
                 />
                 <div>
@@ -127,22 +131,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       isRunningId === item.id
                         ? "text-[var(--color-status-info)]"
                         : item.lastResult.status === "passed"
-                        ? "text-[var(--color-status-success)]"
-                        : "text-[var(--color-status-danger)]"
+                          ? "text-[var(--color-status-success)]"
+                          : "text-[var(--color-status-danger)]"
                     }`}
                   >
                     {isRunningId === item.id
-                      ? "RUNNING..."
+                      ? t("qa.running").toUpperCase() + "..."
                       : item.lastResult.status.toUpperCase()}
                   </div>
                   {item.lastResult.status !== "passed" && !isRunningId && (
                     <div className="text-[10px] text-[var(--color-text-tertiary)] mt-1 font-medium">
                       {
                         item.lastResult.checklist.filter(
-                          (c) => c.status === "failed"
+                          (c) => c.status === "failed",
                         ).length
                       }{" "}
-                      issues found
+                      {t("qa.issuesFound")}
                     </div>
                   )}
                 </div>

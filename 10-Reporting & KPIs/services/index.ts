@@ -11,7 +11,7 @@ export interface IReportingService {
     getPeriods: () => string[];
     getReports: () => Promise<Report[]>;
     getReportById: (id: string) => Promise<Report | undefined>;
-    createReport: (title: string, period: string) => Promise<Report>;
+    createReport: (title: string, period: string, lang?: string) => Promise<Report>;
     updateReport: (id: string, updates: Partial<Report>) => Promise<Report>;
     generateContent: (id: string, content: string) => Promise<Report>;
     approveReport: (id: string) => Promise<Report>;

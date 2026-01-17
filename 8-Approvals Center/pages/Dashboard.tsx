@@ -126,8 +126,8 @@ export const Dashboard: React.FC = () => {
     setApprovals(
       data.sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
     );
     setStats(statsData);
     setLoading(false);
@@ -169,7 +169,9 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className={styles.statCard__value}>{stats?.pending || 0}</div>
           </div>
-          <div className={styles.statCard__footer}>Require your attention</div>
+          <div className={styles.statCard__footer}>
+            {t("approvals.requireAttention")}
+          </div>
         </div>
 
         <div className={styles.statCard}>
@@ -179,7 +181,9 @@ export const Dashboard: React.FC = () => {
               {(stats?.approved || 0) + (stats?.rejected || 0)}
             </div>
           </div>
-          <div className={styles.statCard__footer}>Lifetime decisions</div>
+          <div className={styles.statCard__footer}>
+            {t("approvals.lifetimeDecisions")}
+          </div>
         </div>
 
         <div className={styles.distributionCard}>
@@ -199,7 +203,7 @@ export const Dashboard: React.FC = () => {
           <button
             className={styles.viewAllButton}
             onClick={fetchData}
-            title="Refresh List"
+            title={t("approvals.refreshList")}
           >
             <RefreshCw size={14} className="mr-2" />
           </button>
@@ -247,7 +251,7 @@ export const Dashboard: React.FC = () => {
           ))}
 
           {approvals.length === 0 && (
-            <div className={styles.emptyState}>No approval requests found.</div>
+            <div className={styles.emptyState}>{t("approvals.noRequests")}</div>
           )}
         </div>
       </div>

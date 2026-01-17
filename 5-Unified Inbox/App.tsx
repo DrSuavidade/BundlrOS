@@ -53,7 +53,7 @@ const generateMockData = (): IntakeItem[] => {
     // SLA between -12h (breached) and +48h
     const slaOffset = Math.random() * 60 - 12;
     const slaDueAt = new Date(
-      now.getTime() + slaOffset * 60 * 60 * 1000
+      now.getTime() + slaOffset * 60 * 60 * 1000,
     ).toISOString();
 
     return {
@@ -120,7 +120,7 @@ const App: React.FC = () => {
 
   const handleUpdateItem = (updated: IntakeItem) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === updated.id ? updated : item))
+      prev.map((item) => (item.id === updated.id ? updated : item)),
     );
     setSelectedItem(updated);
   };
@@ -186,7 +186,7 @@ const App: React.FC = () => {
       })
       .sort(
         (a, b) =>
-          new Date(a.slaDueAt).getTime() - new Date(b.slaDueAt).getTime()
+          new Date(a.slaDueAt).getTime() - new Date(b.slaDueAt).getTime(),
       ); // Sort by SLA urgency
   }, [items, filters]);
 
@@ -197,13 +197,13 @@ const App: React.FC = () => {
       (i) =>
         new Date(i.slaDueAt) < new Date() &&
         i.status !== Status.CLOSED &&
-        i.status !== Status.RESOLVED
+        i.status !== Status.RESOLVED,
     ).length;
     const critical = items.filter(
-      (i) => i.priority === Priority.CRITICAL && i.status !== Status.CLOSED
+      (i) => i.priority === Priority.CRITICAL && i.status !== Status.CLOSED,
     ).length;
     const unassigned = items.filter(
-      (i) => !i.assignee && i.status !== Status.CLOSED
+      (i) => !i.assignee && i.status !== Status.CLOSED,
     ).length;
     return { total, breached, critical, unassigned };
   }, [items]);
@@ -258,7 +258,7 @@ const App: React.FC = () => {
 
           <div className={`${styles.statCard} ${styles.unassigned}`}>
             <div>
-              <p className={styles.statLabel}>Unassigned</p>
+              <p className={styles.statLabel}>{t("inbox.panel.unassigned")}</p>
               <p className={styles.statValue}>{stats.unassigned}</p>
             </div>
             <div className={styles.statIconWrapper}>
@@ -578,7 +578,7 @@ const App: React.FC = () => {
               </div>
             </div>
           </div>,
-          document.body
+          document.body,
         )}
     </>
   );
