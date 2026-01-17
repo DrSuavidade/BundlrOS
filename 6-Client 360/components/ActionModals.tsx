@@ -684,20 +684,31 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   </span>
                 )}
               </label>
-              <div className="flex gap-2">
-                {["Low", "Medium", "High", "Critical"].map((p) => (
+              <div className="priority-options">
+                {[
+                  { value: "Low", key: "priority-low" },
+                  { value: "Medium", key: "priority-medium" },
+                  { value: "High", key: "priority-high" },
+                  { value: "Critical", key: "priority-critical" },
+                ].map((p) => (
                   <label
-                    key={p}
-                    className="flex items-center gap-1 text-xs text-gray-400 cursor-pointer"
+                    key={p.value}
+                    className={`priority-option ${p.key} ${
+                      (formData.priority || "Medium") === p.value
+                        ? "selected"
+                        : ""
+                    }`}
                   >
                     <input
                       type="radio"
                       name="priority"
-                      value={p}
-                      checked={(formData.priority || "Medium") === p}
+                      value={p.value}
+                      checked={(formData.priority || "Medium") === p.value}
                       onChange={(e) => handleChange("priority", e.target.value)}
-                    />{" "}
-                    {p}
+                    />
+                    {t(
+                      `actionModals.options.priority.${p.value.toLowerCase()}`,
+                    )}
                   </label>
                 ))}
               </div>
@@ -708,7 +719,7 @@ export const ActionModal: React.FC<ActionModalProps> = ({
         return (
           <>
             <div
-              className="border-2 border-dashed border-gray-700 rounded-lg p-8 flex flex-col items-center justify-center text-center hover:border-indigo-500 transition-colors cursor-pointer bg-white/5 mx-auto w-full"
+              className="dropzone"
               onClick={() => document.getElementById("file-upload")?.click()}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
@@ -730,8 +741,8 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                   }
                 }}
               />
-              <UploadCloud size={32} className="text-gray-400 mb-2" />
-              <p className="text-sm font-medium text-white">
+              <UploadCloud size={40} className="dropzone__icon" />
+              <span className="dropzone__title">
                 {formData.file
                   ? formData.file.name
                   : t("actionModals.uploadAsset.dragDrop")}
@@ -747,10 +758,10 @@ export const ActionModal: React.FC<ActionModalProps> = ({
                     *
                   </span>
                 )}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">
+              </span>
+              <span className="dropzone__subtitle">
                 {t("actionModals.uploadAsset.formats")}
-              </p>
+              </span>
             </div>
             <div className="form-group mt-4">
               <label className="form-label">
