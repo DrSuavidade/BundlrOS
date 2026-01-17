@@ -23,6 +23,7 @@ import {
     type AutomationRun
 } from '@bundlros/supabase';
 import { KPIRecord, KPIUnit, Report, ReportStatus } from '../types';
+import { generateReportNarrative } from './geminiService';
 
 const REPORTING_WORKFLOW_ID = 'n8n:reporting_agent';
 
@@ -303,8 +304,15 @@ export const SupabaseReportingService = {
         // We simulate the output immediately for better UX if the "agent" isn't actually running
         // In a real scenario, we might just set status='running'
 
-        // Simulating Agent Response for "Demo" purposes, but checking into DB
-        const narrative = `# Executive Summary - ${period}\n\nBased on the data, the company has seen ${kpis[0].value > 10 ? 'steady growth' : 'stable performance'}. Total contract value is ${kpis[5].value > 0 ? 'healthy' : 'pending'}.\n\n## Financial Performance\nRecurring revenue is tracking against targets.`;
+
+        // Generate narrative using Gemini
+        let narrative = "";
+        try {
+            narrative = await generateReportNarrative(period, kpis);
+        } catch (e) {
+            console.error("Failed to generate AI narrative, falling back to basic summary.", e);
+            narrative = `# Executive Summary - ${period}\n\nBased on the data, the company has seen ${kpis[0].value > 10 ? 'steady growth' : 'stable performance'}. Total contract value is ${kpis[5].value > 0 ? 'healthy' : 'pending'}.\n\n## Financial Performance\nRecurring revenue is tracking against targets.`;
+        }
 
         const run = await AutomationRunsApi.create({
             workflow_id: REPORTING_WORKFLOW_ID,
@@ -366,5 +374,24 @@ export const SupabaseReportingService = {
         return SupabaseReportingService.updateReport(id, {
             status: ReportStatus.SENT,
         });
+    },
+
+    deleteAllReports: async (): Promise<void> => {
+        try {
+            const runs = await AutomationRunsApi.getByWorkflowId(REPORTING_WORKFLOW_ID);
+            await Promise.all(runs.map(run => AutomationRunsApi.delete(run.id)));
+        } catch (error) {
+            console.error('[Reporting] Error deleting reports:', error);
+            throw error;
+        }
+    },
+
+    deleteReport: async (id: string): Promise<void> => {
+        try {
+            await AutomationRunsApi.delete(id);
+        } catch (error) {
+            console.error('[Reporting] Error deleting report:', error);
+            throw error;
+        }
     },
 };

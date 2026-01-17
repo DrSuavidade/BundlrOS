@@ -42,6 +42,19 @@ const Dashboard: React.FC<{
 
   return (
     <>
+      {/* Header */}
+      <div className={styles.header}>
+        <div className={styles.titleSection}>
+          <h1>
+            <Shield
+              size={22}
+              style={{ color: "var(--color-accent-primary)" }}
+            />
+            {t("qa.title")}
+          </h1>
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className={styles.statsGrid}>
         <div className={`${styles.statCard} ${styles.success}`}>

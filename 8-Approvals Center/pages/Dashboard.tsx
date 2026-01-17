@@ -153,11 +153,10 @@ export const Dashboard: React.FC = () => {
           <h1>
             <ClipboardCheck
               size={22}
-              className="text-[var(--color-accent-primary)]"
+              style={{ color: "var(--color-accent-primary)" }}
             />
             {t("approvals.title")}
           </h1>
-          <p>{t("approvals.subtitle")}</p>
         </div>
       </div>
 

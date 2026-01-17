@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ViewState, KPIRecord, KPIUnit, Report, ReportStatus } from "./types";
 import { ReportingService } from "./services";
 import {
@@ -14,9 +15,14 @@ import {
   Clock,
   ArrowLeft,
   Plus,
+  Loader2,
+  AlertTriangle,
+  X,
 } from "lucide-react";
-import { useLanguage } from "@bundlros/ui";
+import { useLanguage, Button } from "@bundlros/ui";
 import styles from "./App.module.css";
+import ReportList from "./components/ReportList";
+import ReportDetail from "./components/ReportDetail";
 import {
   AreaChart,
   Area,
@@ -305,126 +311,111 @@ const DashboardView: React.FC<{
   );
 };
 
-// Report List View
-const ReportListView: React.FC<{
-  reports: Report[];
-  onSelectReport: (r: Report) => void;
-  t: (key: string) => string;
-}> = ({ reports, onSelectReport, t }) => {
-  const getStatusClass = (status: ReportStatus) => {
-    switch (status) {
-      case ReportStatus.GENERATED:
-        return styles.generated;
-      case ReportStatus.APPROVED:
-        return styles.approved;
-      case ReportStatus.SENT:
-        return styles.sent;
-      default:
-        return "";
-    }
-  };
+// Delete Confirmation Modal
+const DeleteConfirmationModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+  title: string;
+  description: string;
+}> = ({ isOpen, onClose, onConfirm, isDeleting, title, description }) => {
+  if (!isOpen) return null;
 
-  return (
-    <>
-      {reports.length > 0 ? (
-        <div className={styles.reportList}>
-          {reports.map((report) => (
-            <div
-              key={report.id}
-              onClick={() => onSelectReport(report)}
-              className={styles.reportItem}
-            >
-              <div className={styles.reportItem__info}>
-                <h3 className={styles.reportItem__title}>{report.title}</h3>
-                <span className={styles.reportItem__meta}>
-                  {new Date(report.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-              <span
-                className={`${styles.reportItem__status} ${getStatusClass(
-                  report.status
-                )}`}
-              >
-                {report.status === ReportStatus.GENERATED && (
-                  <Clock size={10} />
-                )}
-                {report.status === ReportStatus.APPROVED && (
-                  <CheckCircle size={10} />
-                )}
-                {report.status === ReportStatus.SENT && <Send size={10} />}
-                {t(`reporting.status.${report.status.toLowerCase()}`)}
-              </span>
-            </div>
-          ))}
+  return createPortal(
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0, 0, 0, 0.6)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+        backdropFilter: "blur(4px)",
+      }}
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "var(--color-bg-card)",
+          border: "1px solid var(--color-border-subtle)",
+          borderRadius: "0.75rem",
+          boxShadow: "0 24px 64px rgba(0, 0, 0, 0.5)",
+          width: "100%",
+          maxWidth: "360px",
+          padding: "1.5rem",
+        }}
+      >
+        <h3
+          style={{
+            margin: "0 0 0.75rem",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            color: "var(--color-text-primary)",
+          }}
+        >
+          {title}
+        </h3>
+        <p
+          style={{
+            margin: "0 0 1.25rem",
+            fontSize: "0.75rem",
+            color: "var(--color-text-secondary)",
+            lineHeight: 1.5,
+          }}
+        >
+          {description}
+        </p>
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            justifyContent: "flex-end",
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              padding: "0.5rem 1rem",
+              background: "transparent",
+              border: "1px solid var(--color-border-subtle)",
+              borderRadius: "0.375rem",
+              color: "var(--color-text-secondary)",
+              fontSize: "0.75rem",
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            style={{
+              padding: "0.5rem 1rem",
+              background: "var(--color-status-danger, #ef4444)",
+              border: "none",
+              borderRadius: "0.375rem",
+              color: "white",
+              fontSize: "0.75rem",
+              fontWeight: 600,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              opacity: isDeleting ? 0.7 : 1,
+            }}
+          >
+            {isDeleting && <Loader2 className="animate-spin" size={12} />}
+            {isDeleting ? "Deleting..." : "Delete"}
+          </button>
         </div>
-      ) : (
-        <div className={styles.emptyState}>
-          <div className={styles.emptyState__icon}>
-            <FileText size={24} />
-          </div>
-          <p className={styles.emptyState__text}>No reports generated yet</p>
-        </div>
-      )}
-    </>
+      </div>
+    </div>,
+    document.body
   );
 };
-
-// Report Detail View
-const ReportDetailView: React.FC<{
-  report: Report;
-  onBack: () => void;
-  onApprove: (id: string) => void;
-  onSend: (id: string) => void;
-  t: (key: string) => string;
-}> = ({ report, onBack, onApprove, onSend, t }) => (
-  <div className={styles.reportDetail}>
-    <button
-      onClick={onBack}
-      className={styles.backButton}
-      title="Back to Reports"
-    >
-      <ArrowLeft size={16} />
-    </button>
-
-    <div className={styles.reportDetailCard}>
-      <div className={styles.reportDetailHeader}>
-        <h2 className={styles.reportDetailTitle}>{report.title}</h2>
-        <span
-          className={`${styles.reportItem__status} ${
-            report.status === ReportStatus.SENT
-              ? styles.sent
-              : report.status === ReportStatus.APPROVED
-              ? styles.approved
-              : styles.generated
-          }`}
-        >
-          {t(`reporting.status.${report.status.toLowerCase()}`)}
-        </span>
-      </div>
-      <div className={styles.reportDetailBody}>
-        <div className={styles.reportContent}>{report.content}</div>
-      </div>
-      <div className={styles.reportActions}>
-        <button
-          onClick={() => onApprove(report.id)}
-          disabled={report.status !== ReportStatus.GENERATED}
-          className={`${styles.actionButton} ${styles.approve}`}
-        >
-          <CheckCircle size={12} className="mr-1.5" />
-          Approve
-        </button>
-        <button
-          onClick={() => onSend(report.id)}
-          disabled={report.status !== ReportStatus.APPROVED}
-          className={`${styles.actionButton} ${styles.send}`}
-        >
-          <Send size={12} className="mr-1.5" />
-          Send to Stakeholders
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 // Main App
 const App: React.FC = () => {
@@ -437,6 +428,17 @@ const App: React.FC = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Delete Modal State
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    type: "single" | "all";
+    targetId?: string;
+  }>({
+    isOpen: false,
+    type: "single",
+  });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -509,9 +511,48 @@ const App: React.FC = () => {
     );
   };
 
+  const handleClearAllReports = () => {
+    setDeleteModal({ isOpen: true, type: "all" });
+  };
+
+  const handleDeleteReport = (id: string) => {
+    setDeleteModal({ isOpen: true, type: "single", targetId: id });
+  };
+
   const handleSelectReport = (report: Report) => {
     setSelectedReportId(report.id);
     setView("REPORT_DETAIL");
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      if (deleteModal.type === "all") {
+        // @ts-ignore
+        if (ReportingService.deleteAllReports) {
+          // @ts-ignore
+          await ReportingService.deleteAllReports();
+          setReports([]);
+        }
+      } else if (deleteModal.type === "single" && deleteModal.targetId) {
+        // @ts-ignore
+        if (ReportingService.deleteReport) {
+          // @ts-ignore
+          await ReportingService.deleteReport(deleteModal.targetId);
+          setReports((prev) =>
+            prev.filter((r) => r.id !== deleteModal.targetId)
+          );
+          if (view === "REPORT_DETAIL") {
+            setView("REPORTS");
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to delete report(s)", e);
+    } finally {
+      setIsDeleting(false);
+      setDeleteModal({ isOpen: false, type: "single" });
+    }
   };
 
   return (
@@ -522,7 +563,7 @@ const App: React.FC = () => {
           <h1>
             <BarChart3
               size={22}
-              className="text-[var(--color-accent-primary)]"
+              style={{ color: "var(--color-accent-primary)" }}
             />
             {view === "DASHBOARD"
               ? t("Analytics")
@@ -558,46 +599,46 @@ const App: React.FC = () => {
 
         {/* Right Side Controls */}
         <div className={styles.headerControls}>
-          {view === "REPORTS" && (
-            <button
-              onClick={handleRequestReport}
-              disabled={isGenerating}
-              className={styles.generateButton}
-            >
-              {isGenerating ? (
-                <>
-                  <Sparkles size={12} className="animate-spin" />
-                  {t("reporting.generating")}
-                </>
-              ) : (
-                <>
-                  <Plus size={12} />
-                  {t("reporting.generateReport")}
-                </>
-              )}
-            </button>
-          )}
+          {/* Controls moved to ReportList specific view or managed internally */}
         </div>
       </header>
 
       {/* Content */}
       {view === "DASHBOARD" && <DashboardView kpis={kpis} t={t} />}
       {view === "REPORTS" && (
-        <ReportListView
+        <ReportList
           reports={reports}
           onSelectReport={handleSelectReport}
-          t={t}
+          onRequestReport={handleRequestReport}
+          onClearAll={handleClearAllReports}
+          isGenerating={isGenerating}
         />
       )}
       {view === "REPORT_DETAIL" && activeReport && (
-        <ReportDetailView
+        <ReportDetail
           report={activeReport}
           onBack={() => setView("REPORTS")}
           onApprove={handleApproveReport}
           onSend={handleSendReport}
-          t={t}
+          onDelete={handleDeleteReport}
         />
       )}
+
+      {/* Delete Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ ...deleteModal, isOpen: false })}
+        onConfirm={confirmDelete}
+        isDeleting={isDeleting}
+        title={
+          deleteModal.type === "all" ? "Delete All Reports?" : "Delete Report?"
+        }
+        description={
+          deleteModal.type === "all"
+            ? "Are you sure you want to delete all reports? This action cannot be undone."
+            : "Are you sure you want to delete this report? This action cannot be undone."
+        }
+      />
     </div>
   );
 };

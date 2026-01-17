@@ -107,7 +107,6 @@ export default function App() {
             />
             {t("admin.title")}
           </h1>
-          <p>{t("admin.subtitle")}</p>
         </div>
 
         <div className={styles.headerActions}>

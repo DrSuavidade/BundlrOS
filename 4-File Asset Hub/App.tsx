@@ -7,6 +7,7 @@ import {
   Filter,
   Film,
   Image as ImageIcon,
+  FolderOpen,
 } from "lucide-react";
 
 import { Asset, Client, Deliverable } from "./types";
@@ -116,8 +117,13 @@ const App: React.FC = () => {
       {/* Module Header */}
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h1>{t("assets.title")}</h1>
-          <p>{t("assets.subtitle")}</p>
+          <h1>
+            <FolderOpen
+              size={22}
+              style={{ color: "var(--color-accent-primary)" }}
+            />
+            {t("assets.title")}
+          </h1>
         </div>
       </div>
 

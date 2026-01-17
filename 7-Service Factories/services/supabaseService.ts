@@ -119,5 +119,33 @@ export const FactoryService = {
             return false;
         }
         return true;
+    },
+
+    getCurrentUser: async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) return user;
+
+        // Fallback: Check for mocked session in localStorage (used by Identity module)
+        try {
+            const storedSession = localStorage.getItem("nexus_session");
+            if (storedSession) {
+                const parsed = JSON.parse(storedSession);
+                if (parsed && parsed.id) {
+                    return {
+                        id: parsed.id,
+                        email: parsed.email,
+                        // Add other fields if needed to match User interface partially
+                        user_metadata: parsed,
+                        app_metadata: {},
+                        aud: "authenticated",
+                        created_at: new Date().toISOString()
+                    } as any;
+                }
+            }
+        } catch (e) {
+            console.error("Failed to read nexus_session", e);
+        }
+
+        return null;
     }
 };

@@ -18,6 +18,7 @@ import {
   FileText,
   Clock,
   Loader2,
+  Inbox,
 } from "lucide-react";
 import { AppShell, Button, useLanguage } from "@bundlros/ui";
 import styles from "./components/Inbox.module.css";
@@ -213,8 +214,13 @@ const App: React.FC = () => {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.titleSection}>
-            <h1>{t("inbox.title")}</h1>
-            <p>{t("inbox.subtitle")}</p>
+            <h1>
+              <Inbox
+                size={22}
+                style={{ color: "var(--color-accent-primary)" }}
+              />
+              {t("inbox.title")}
+            </h1>
           </div>
         </div>
 

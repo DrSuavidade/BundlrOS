@@ -310,10 +310,37 @@ const App: React.FC = () => {
       (s) => s.id === selectedFactory.currentStageId
     );
     const isLastStage = currentStageIndex === currentTemplate.stages.length - 1;
-
     let updated: Factory;
 
     if (isLastStage) {
+      // Auto-assign current user if no assignee
+      if (!selectedFactory.assigneeId) {
+        setIsLoading(true);
+        try {
+          const user = await FactoryService.getCurrentUser();
+          if (user) {
+            const factoryWithAssignee = {
+              ...selectedFactory,
+              assigneeId: user.id,
+            };
+
+            await FactoryService.update(factoryWithAssignee);
+
+            // Refetch data to ensure UI is in sync and profile exists
+            const [freshFactories, freshProfiles] = await Promise.all([
+              FactoryService.getAll(),
+              FactoryService.getProfiles(),
+            ]);
+            setFactories(freshFactories);
+            setProfiles(freshProfiles);
+          }
+        } catch (error) {
+          console.error("Failed to auto-assign user", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
       setIsDeliverableModalOpen(true);
       return; // Stop here, wait for modal confirmation
     } else {

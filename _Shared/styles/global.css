@@ -1125,3 +1125,57 @@ a {
     color: var(--color-text-secondary);
     line-height: 1.5;
 }
+
+/* ==========================================
+   UNIFIED MODULE LAYOUT SYSTEM
+   Consistent design across all BundlrOS modules
+   ========================================== */
+
+/* Module Page Container - unified lateral padding and layout */
+.module-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: var(--color-bg-app);
+    color: var(--color-text-primary);
+    padding: 0 var(--space-6);
+}
+
+/* Module Header - consistent header with blue icon */
+.module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-8);
+    padding-top: var(--space-2);
+}
+
+.module-header__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.module-header__title svg,
+.module-header__title .module-header__icon {
+    color: var(--color-accent-primary);
+    flex-shrink: 0;
+}
+
+.module-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+/* Module Header Center - for tabs or centered controls */
+.module-header__center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}

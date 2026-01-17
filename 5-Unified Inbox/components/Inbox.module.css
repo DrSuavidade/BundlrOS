@@ -5,6 +5,7 @@
     background-color: var(--color-bg-app);
     color: var(--color-text-primary);
     overflow: hidden;
+    padding: 0 var(--space-6);
 }
 
 /* Header Section */
@@ -20,13 +21,10 @@
     font-weight: 700;
     letter-spacing: -0.025em;
     color: var(--color-text-primary);
-    margin-bottom: 0.25rem;
-}
-
-.titleSection p {
-    font-size: 0.75rem;
-    color: var(--color-text-tertiary);
-    font-weight: 500;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
 }
 
 /* Stats Grid */

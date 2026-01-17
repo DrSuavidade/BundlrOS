@@ -203,11 +203,10 @@ export const Dashboard: React.FC = () => {
           <h1>
             <CreditCard
               size={28}
-              className="text-[var(--color-accent-primary)]"
+              style={{ color: "var(--color-accent-primary)" }}
             />
             Payment Hub
           </h1>
-          <p>Financial overview and payment management</p>
         </div>
         <div className={styles.statusBadge}>
           <div className={styles.statusDot} />

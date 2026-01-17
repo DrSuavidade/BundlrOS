@@ -587,7 +587,7 @@ export const AppBar: React.FC<AppBarProps> = ({
                       </div>
                     </div>
                   )}
-                  {notifications.map((notif) => (
+                  {notifications.slice(0, 3).map((notif) => (
                     <div
                       key={notif.id}
                       onClick={() => handleMarkRead(notif.id, notif.link)}

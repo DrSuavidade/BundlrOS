@@ -840,6 +840,15 @@ export const AutomationRunsApi = {
             error: errorData,
             completed_at: new Date().toISOString()
         });
+    },
+
+    async delete(id: string): Promise<void> {
+        const { error } = await supabase
+            .from('automation_runs')
+            .delete()
+            .eq('id', id);
+
+        if (error) handleError(error);
     }
 };
 

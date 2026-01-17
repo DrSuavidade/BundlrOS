@@ -347,12 +347,12 @@ const App: React.FC = () => {
       <div className={styles.header}>
         <div className={styles.titleSection}>
           <h1>
-            <Wallet size={22} className="text-[var(--color-accent-primary)]" />
+            <Wallet
+              size={22}
+              style={{ color: "var(--color-accent-primary)" }}
+            />
             Proposal Builder
           </h1>
-          <p>
-            {selectedCount} {labels.servicesSelected}
-          </p>
         </div>
 
         {/* Language is now controlled from the global navbar */}

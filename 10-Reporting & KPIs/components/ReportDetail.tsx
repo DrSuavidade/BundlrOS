@@ -1,100 +1,177 @@
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Report, ReportStatus } from '../types';
-import { ArrowLeft, CheckCircle, Send, Printer, Share2 } from 'lucide-react';
+import React from "react";
+import ReactMarkdown from "react-markdown";
+import { Report, ReportStatus } from "../types";
+import {
+  ArrowLeft,
+  CheckCircle,
+  Send,
+  Printer,
+  Share2,
+  Trash2,
+} from "lucide-react";
+import styles from "../App.module.css";
 
 interface ReportDetailProps {
   report: Report;
   onBack: () => void;
   onApprove: (id: string) => void;
   onSend: (id: string) => void;
+  onDelete?: (id: string) => void;
 }
 
-const ReportDetail: React.FC<ReportDetailProps> = ({ report, onBack, onApprove, onSend }) => {
+const ReportDetail: React.FC<ReportDetailProps> = ({
+  report,
+  onBack,
+  onApprove,
+  onSend,
+  onDelete,
+}) => {
   return (
-    <div className="max-w-5xl mx-auto h-[calc(100vh-2rem)] flex flex-col">
-      {/* Header Toolbar */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200 flex-shrink-0">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={onBack}
-            className="p-2 hover:bg-slate-200 rounded-full text-slate-500 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
+    <div className={styles.reportDetail}>
+      <button
+        onClick={onBack}
+        className={styles.backButton}
+        title="Back to Reports"
+      >
+        <ArrowLeft size={16} />
+      </button>
+
+      <div className={styles.reportDetailCard}>
+        <div className={styles.reportDetailHeader}>
           <div>
-            <h2 className="text-xl font-bold text-slate-900">{report.title}</h2>
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-               <span>Status: {report.status}</span>
-               {report.generatedAt && <span>• Generated: {new Date(report.generatedAt).toLocaleString()}</span>}
+            <h2 className={styles.reportDetailTitle}>{report.title}</h2>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                marginTop: "4px",
+                fontSize: "12px",
+                color: "var(--color-text-tertiary)",
+              }}
+            >
+              <span>Status: {report.status}</span>
+              {report.generatedAt && (
+                <span>
+                  • Generated: {new Date(report.generatedAt).toLocaleString()}
+                </span>
+              )}
             </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            {onDelete && (
+              <button
+                onClick={() => onDelete(report.id)}
+                className={`${styles.actionButton}`}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "transparent",
+                  color: "var(--color-text-secondary)",
+                  border: "1px solid var(--color-border-subtle)",
+                }}
+                title="Delete Report"
+              >
+                <Trash2 size={12} />
+              </button>
+            )}
+
+            {report.status === ReportStatus.GENERATED && (
+              <button
+                onClick={() => onApprove(report.id)}
+                className={`${styles.actionButton} ${styles.approve}`}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <CheckCircle size={12} />
+                Approve Report
+              </button>
+            )}
+
+            {report.status === ReportStatus.APPROVED && (
+              <button
+                onClick={() => onSend(report.id)}
+                className={`${styles.actionButton} ${styles.send}`}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
+              >
+                <Send size={12} />
+                Send to Stakeholders
+              </button>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="p-2 text-slate-400 hover:text-slate-600">
-             <Printer className="w-5 h-5" />
-          </button>
-           <button className="p-2 text-slate-400 hover:text-slate-600 mr-2">
-             <Share2 className="w-5 h-5" />
-          </button>
-
-          {report.status === ReportStatus.GENERATED && (
-            <button 
-              onClick={() => onApprove(report.id)}
-              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors"
-            >
-              <CheckCircle className="w-4 h-4" />
-              Approve Report
-            </button>
-          )}
-
-          {report.status === ReportStatus.APPROVED && (
-            <button 
-              onClick={() => onSend(report.id)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-            >
-              <Send className="w-4 h-4" />
-              Send to Stakeholders
-            </button>
-          )}
-          
-          {report.status === ReportStatus.SENT && (
-             <div className="px-4 py-2 bg-slate-100 text-slate-500 rounded-lg font-medium flex items-center gap-2">
-               <CheckCircle className="w-4 h-4" />
-               Sent
-             </div>
-          )}
+        <div className={styles.reportDetailBody}>
+          <div className={styles.reportContent}>
+            {report.content ? (
+              <ReactMarkdown
+                components={{
+                  h1: ({ node, ...props }) => (
+                    <h1
+                      style={{
+                        fontSize: "1.5rem",
+                        fontWeight: 700,
+                        marginBottom: "1rem",
+                        color: "var(--color-text-primary)",
+                      }}
+                      {...props}
+                    />
+                  ),
+                  h2: ({ node, ...props }) => (
+                    <h2
+                      style={{
+                        fontSize: "1.1rem",
+                        fontWeight: 600,
+                        marginTop: "1.5rem",
+                        marginBottom: "0.5rem",
+                        color: "var(--color-text-primary)",
+                      }}
+                      {...props}
+                    />
+                  ),
+                  p: ({ node, ...props }) => (
+                    <p style={{ marginBottom: "1rem" }} {...props} />
+                  ),
+                  ul: ({ node, ...props }) => (
+                    <ul
+                      style={{
+                        marginLeft: "1.5rem",
+                        marginBottom: "1rem",
+                        listStyleType: "disc",
+                      }}
+                      {...props}
+                    />
+                  ),
+                  li: ({ node, ...props }) => (
+                    <li style={{ marginBottom: "0.25rem" }} {...props} />
+                  ),
+                }}
+              >
+                {report.content}
+              </ReactMarkdown>
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  padding: "2rem",
+                  color: "var(--color-text-tertiary)",
+                }}
+              >
+                <p>Report content is empty or loading...</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Document View */}
-      <div className="flex-1 overflow-auto bg-white rounded-xl shadow-sm border border-slate-200 p-12 md:p-16 prose-content">
-        <article className="prose prose-slate prose-lg max-w-none font-serif text-slate-800 leading-relaxed">
-          {/* We render markdown content here. Ideally, specific components for H1, H2 could be styled via components prop */}
-          {report.content ? (
-             <ReactMarkdown 
-               components={{
-                 h1: ({node, ...props}) => <h1 className="text-3xl font-bold text-slate-900 mb-6" {...props} />,
-                 h2: ({node, ...props}) => <h2 className="text-xl font-bold text-indigo-900 mt-8 mb-4 border-b border-indigo-100 pb-2" {...props} />,
-                 p: ({node, ...props}) => <p className="mb-4 text-slate-700" {...props} />,
-                 ul: ({node, ...props}) => <ul className="list-disc list-outside ml-6 mb-6 space-y-2" {...props} />,
-                 li: ({node, ...props}) => <li className="text-slate-700" {...props} />,
-               }}
-             >
-               {report.content}
-             </ReactMarkdown>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
-               <p>Report content is empty or loading...</p>
-            </div>
-          )}
-        </article>
-      </div>
-      
-      {/* Footer / Meta info */}
-      <div className="mt-4 text-center text-xs text-slate-400 flex-shrink-0 pb-4">
-        CONFIDENTIAL - INTERNAL USE ONLY • Generated by Narrative BI
+        <div className={styles.reportActions}>
+          <span
+            style={{ fontSize: "10px", color: "var(--color-text-tertiary)" }}
+          >
+            CONFIDENTIAL - INTERNAL USE ONLY • Generated by Narrative BI
+          </span>
+        </div>
       </div>
     </div>
   );
