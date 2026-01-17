@@ -18,8 +18,8 @@
 .header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.25rem;
+    align-items: center;
+    margin-bottom: 2rem;
 }
 
 .titleSection h1 {

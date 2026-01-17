@@ -167,9 +167,10 @@ export const SupabaseQAService = {
 
     saveChecklistState: async (deliverableId: string, state: Record<string, boolean>): Promise<void> => {
         try {
+            // Use type assertion since qa_checklist_state is a custom column not in the base Supabase types
             await DeliverablesApi.update(deliverableId, {
                 qa_checklist_state: state
-            });
+            } as any);
         } catch (error) {
             console.error('[QA] Error saving checklist state:', error);
             throw error;
@@ -184,5 +185,36 @@ export const SupabaseQAService = {
             failed: deliverables.filter(d => d.lastResult.status === 'failed').length,
             pending: deliverables.filter(d => ['pending', 'running'].includes(d.lastResult.status)).length,
         };
+    },
+
+    getApprovalByDeliverableId: async (deliverableId: string): Promise<{
+        description: string;
+        attachmentName?: string;
+        attachmentUrl?: string;
+        attachmentType?: string;
+        attachmentSize?: number;
+    } | null> => {
+        try {
+            // Import the ApprovalsApi from supabase
+            const { ApprovalsApi } = await import('@bundlros/supabase');
+
+            // Get all approvals and find one that matches this deliverable_id
+            const approvals = await ApprovalsApi.getAll();
+            const approval = approvals.find((a: any) => a.deliverable_id === deliverableId);
+
+            if (approval) {
+                return {
+                    description: approval.description || '',
+                    attachmentName: approval.asset_name,
+                    attachmentUrl: approval.asset_url,
+                    attachmentType: undefined, // Not available in schema
+                    attachmentSize: undefined, // Not available in schema
+                };
+            }
+            return null;
+        } catch (error) {
+            console.error('[QA] Error fetching approval for deliverable:', error);
+            return null;
+        }
     },
 };

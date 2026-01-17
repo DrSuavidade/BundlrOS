@@ -274,9 +274,9 @@ export const ApprovalDetail: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column */}
-        <div className="lg:col-span-2">
+      <div className={styles.contentGrid}>
+        {/* Left Column - Document Card spanning full height */}
+        <div className={styles.leftColumn}>
           {/* Main Document Card */}
           <div className={styles.documentCard}>
             {/* Description Section */}
@@ -347,8 +347,13 @@ export const ApprovalDetail: React.FC = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-sm text-[var(--color-text-tertiary)] italic p-6 text-center border dashed border-[var(--color-border-subtle)] rounded-lg bg-[var(--color-bg-subtle)]/50">
-                    No attachments provided.
+                  <div className={styles.emptyState}>
+                    <div className={styles.emptyState__icon}>
+                      <Paperclip size={20} />
+                    </div>
+                    <span className={styles.emptyState__text}>
+                      No attachments provided.
+                    </span>
                   </div>
                 )}
               </div>
@@ -356,40 +361,60 @@ export const ApprovalDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column - Timeline & Meta */}
-        <div className="space-y-6">
+        {/* Right Column - Details & Timeline */}
+        <div className={styles.rightColumn}>
+          {/* Details Card */}
           <div className={styles.sectionCard}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>
                 <User
                   size={14}
-                  className="text-[var(--color-accent-primary)]"
+                  style={{ color: "var(--color-accent-primary)" }}
                 />
                 Details
               </div>
             </div>
             <div className={styles.sectionBody}>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-[var(--color-text-secondary)]">
-                    Client
-                  </span>
-                  <span className="font-semibold text-[var(--color-text-primary)]">
-                    {approval.clientName}
-                  </span>
+              <div className={styles.detailGrid}>
+                <div className={styles.detailCard}>
+                  <div
+                    className={styles.detailCard__icon}
+                    style={{ background: "rgba(34, 211, 238, 0.1)" }}
+                  >
+                    <User size={16} style={{ color: "rgb(34, 211, 238)" }} />
+                  </div>
+                  <div className={styles.detailCard__content}>
+                    <span className={styles.detailCard__label}>Client</span>
+                    <span className={styles.detailCard__value}>
+                      {approval.clientName}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-[var(--color-text-secondary)]">
-                    Due Date
-                  </span>
-                  <span className="font-medium text-[var(--color-text-primary)]">
-                    {format(new Date(approval.dueDate), "MMM d, yyyy")}
-                  </span>
+
+                <div className={styles.detailCard}>
+                  <div
+                    className={styles.detailCard__icon}
+                    style={{ background: "rgba(251, 191, 36, 0.1)" }}
+                  >
+                    <Clock size={16} style={{ color: "rgb(251, 191, 36)" }} />
+                  </div>
+                  <div className={styles.detailCard__content}>
+                    <span className={styles.detailCard__label}>Due Date</span>
+                    <span className={styles.detailCard__value}>
+                      {format(new Date(approval.dueDate), "MMM d, yyyy")}
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {approval.status === ApprovalStatus.PENDING && (
-                <div className="mt-6 pt-4 border-t border-[var(--color-border-subtle)]">
+                <div
+                  style={{
+                    marginTop: "1.25rem",
+                    paddingTop: "1rem",
+                    borderTop: "1px solid var(--color-border-subtle)",
+                  }}
+                >
                   <Button
                     variant="secondary"
                     size="sm"
@@ -404,30 +429,46 @@ export const ApprovalDetail: React.FC = () => {
             </div>
           </div>
 
-          <div className={styles.sectionCard}>
+          {/* Activity Timeline Card */}
+          <div className={`${styles.sectionCard} ${styles.activityCard}`}>
             <div className={styles.sectionHeader}>
               <div className={styles.sectionTitle}>
                 <Clock
                   size={14}
-                  className="text-[var(--color-accent-primary)]"
+                  style={{ color: "var(--color-accent-primary)" }}
                 />
                 Activity
               </div>
             </div>
             <div className={styles.sectionBody}>
-              <div className="relative pl-2">
+              <div className="relative">
                 {approval.history.map((event, idx) => (
                   <div key={event.id} className={styles.timelineItem}>
-                    <div className={styles.timelineIcon}>
+                    <div
+                      className={styles.timelineIcon}
+                      style={{
+                        background:
+                          event.type === "STATUS_CHANGED"
+                            ? "rgba(16, 185, 129, 0.1)"
+                            : "var(--color-bg-card)",
+                        borderColor:
+                          event.type === "STATUS_CHANGED"
+                            ? "rgba(16, 185, 129, 0.3)"
+                            : "var(--color-border-subtle)",
+                      }}
+                    >
                       {event.type === "STATUS_CHANGED" ? (
-                        <CheckCircle size={12} className="text-emerald-500" />
+                        <CheckCircle
+                          size={14}
+                          style={{ color: "rgb(16, 185, 129)" }}
+                        />
                       ) : (
-                        <Clock size={12} />
+                        <Clock size={14} />
                       )}
                     </div>
                     <div className={styles.timelineContent}>
                       <h4>{event.description}</h4>
-                      <p className="text-xs">{event.actor}</p>
+                      <p>{event.actor}</p>
                       <span className={styles.timelineTime}>
                         {format(new Date(event.timestamp), "MMM d, h:mm a")}
                       </span>

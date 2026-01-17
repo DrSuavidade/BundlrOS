@@ -202,7 +202,7 @@ export const Dashboard: React.FC = () => {
         <div className={styles.titleSection}>
           <h1>
             <CreditCard
-              size={28}
+              size={22}
               style={{ color: "var(--color-accent-primary)" }}
             />
             Payment Hub

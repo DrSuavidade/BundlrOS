@@ -1,23 +1,19 @@
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { IntakeItem, Priority, Status, AIAnalysisResult } from "../types";
+import { IntakeItem, Priority, Status } from "../types";
 import { Badge } from "./Badge";
 import { InboxService } from "../services";
 import { useAuth, useLanguage } from "@bundlros/ui";
 import {
   X,
-  CheckCircle,
   AlertTriangle,
   User,
   Briefcase,
   Zap,
-  ArrowRight,
   CheckSquare,
   Activity,
-  Sparkles,
   Trash2,
 } from "lucide-react";
-import { analyzeIntakeItem } from "../services/geminiService";
 import styles from "./Inbox.module.css";
 
 interface IntakeDetailPanelProps {
@@ -35,37 +31,9 @@ export const IntakeDetailPanel: React.FC<IntakeDetailPanelProps> = ({
 }) => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAssignConfirm, setShowAssignConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleTriage = async () => {
-    if (!item) return;
-    setIsAnalyzing(true);
-    try {
-      const analysis = await analyzeIntakeItem(item);
-      onUpdate({
-        ...item,
-        aiAnalysis: analysis,
-        status: item.status === Status.NEW ? Status.TRIAGING : item.status,
-      });
-    } catch (e) {
-      console.error("Analysis failed", e);
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  const applyAiSuggestion = () => {
-    if (item?.aiAnalysis) {
-      onUpdate({
-        ...item,
-        priority: item.aiAnalysis.suggestedPriority,
-        tags: [...new Set([...item.tags, item.aiAnalysis.suggestedCategory])],
-      });
-    }
-  };
 
   // Handle Assign Me button
   const handleAssignMe = async () => {
@@ -325,137 +293,100 @@ export const IntakeDetailPanel: React.FC<IntakeDetailPanelProps> = ({
                 )}
               </div>
 
-              {/* Meta Info Grid */}
+              {/* Meta Info Grid - Modern Professional Cards */}
               <div className={styles.metaGrid}>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>
-                    {t("inbox.form.client")}
-                  </span>
-                  <span className={styles.metaValue}>
-                    <Briefcase size={12} className="mr-1.5 text-cyan-400" />
-                    {item.client}
-                  </span>
-                </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>
-                    {t("inbox.form.requestor")}
-                  </span>
-                  <span className={styles.metaValue}>
-                    <User size={12} className="mr-1.5 text-purple-400" />
-                    {item.requestor}
-                  </span>
-                </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>
-                    {t("inbox.form.priority")}
-                  </span>
-                  <Badge type="priority" value={item.priority} />
-                </div>
-                <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>
-                    {t("inbox.panel.assignee")}
-                  </span>
-                  <span className={styles.metaValue}>
-                    {item.assignee ? (
-                      <>
-                        <User size={12} className="mr-1.5 text-green-400" />
-                        {item.assignee}
-                      </>
-                    ) : (
-                      <span className="text-[var(--color-text-tertiary)] italic text-xs">
-                        {t("inbox.panel.unassigned")}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              {/* AI Triage Section */}
-              <div className={styles.aiContainer}>
-                <div className={styles.aiContainer__header}>
-                  <h3 className={styles.aiContainer__title}>
-                    <Sparkles size={14} />
-                    {t("inbox.panel.aiTriage.title")}
-                  </h3>
-                  {!item.aiAnalysis && (
-                    <button
-                      onClick={handleTriage}
-                      disabled={isAnalyzing}
-                      className={styles.aiButton}
-                    >
-                      <Zap size={12} />
-                      {isAnalyzing
-                        ? t("inbox.panel.aiTriage.analyzing")
-                        : t("inbox.panel.aiTriage.run")}
-                    </button>
-                  )}
-                </div>
-
-                {item.aiAnalysis && (
-                  <div className={styles.aiResultBox}>
-                    <div className="flex justify-between items-start mb-3">
-                      <div className={styles.aiResultBox__section}>
-                        <span className={styles.aiResultBox__label}>
-                          {t("inbox.panel.aiTriage.suggestedPriority")}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            type="priority"
-                            value={item.aiAnalysis.suggestedPriority}
-                          />
-                          {item.aiAnalysis.suggestedPriority !==
-                            item.priority && (
-                            <button
-                              onClick={applyAiSuggestion}
-                              className="text-xs text-[var(--color-accent-primary)] hover:text-white underline"
-                            >
-                              {t("inbox.panel.aiTriage.apply")}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className={styles.aiResultBox__label}>
-                          {t("inbox.panel.aiTriage.confidence")}
-                        </span>
-                        <span className="text-xs font-mono text-emerald-400 font-semibold">
-                          HIGH
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className={styles.aiResultBox__section}>
-                      <span className={styles.aiResultBox__label}>
-                        {t("inbox.panel.aiTriage.reasoning")}
-                      </span>
-                      <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed">
-                        {item.aiAnalysis.reasoning}
-                      </p>
-                    </div>
-
-                    <div className={styles.aiResultBox__section}>
-                      <span className={styles.aiResultBox__label}>
-                        {t("inbox.panel.aiTriage.nextSteps")}
-                      </span>
-                      <ul className="text-xs text-[var(--color-text-secondary)] space-y-1 mt-1">
-                        {item.aiAnalysis.nextSteps.map((step, idx) => (
-                          <li key={idx} className="flex items-start gap-1.5">
-                            <span className="w-4 h-4 rounded-full bg-[var(--color-accent-primary)] text-white text-[9px] flex items-center justify-center flex-shrink-0 mt-0.5">
-                              {idx + 1}
-                            </span>
-                            {step}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <button className={styles.generateButton}>
-                      <Sparkles size={12} />
-                      {t("inbox.panel.aiTriage.generateDraft")}
-                      <ArrowRight size={10} />
-                    </button>
+                <div className={styles.metaCard}>
+                  <div
+                    className={styles.metaCard__icon}
+                    style={{ background: "rgba(34, 211, 238, 0.1)" }}
+                  >
+                    <Briefcase
+                      size={16}
+                      style={{ color: "rgb(34, 211, 238)" }}
+                    />
                   </div>
-                )}
+                  <div className={styles.metaCard__content}>
+                    <span className={styles.metaCard__label}>
+                      {t("inbox.form.client")}
+                    </span>
+                    <span className={styles.metaCard__value}>
+                      {item.client}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.metaCard}>
+                  <div
+                    className={styles.metaCard__icon}
+                    style={{ background: "rgba(168, 85, 247, 0.1)" }}
+                  >
+                    <User size={16} style={{ color: "rgb(168, 85, 247)" }} />
+                  </div>
+                  <div className={styles.metaCard__content}>
+                    <span className={styles.metaCard__label}>
+                      {t("inbox.form.requestor")}
+                    </span>
+                    <span className={styles.metaCard__value}>
+                      {item.requestor}
+                    </span>
+                  </div>
+                </div>
+
+                <div className={styles.metaCard}>
+                  <div
+                    className={styles.metaCard__icon}
+                    style={{ background: "rgba(251, 191, 36, 0.1)" }}
+                  >
+                    <Zap size={16} style={{ color: "rgb(251, 191, 36)" }} />
+                  </div>
+                  <div className={styles.metaCard__content}>
+                    <span className={styles.metaCard__label}>
+                      {t("inbox.form.priority")}
+                    </span>
+                    <div className={styles.metaCard__value}>
+                      <Badge type="priority" value={item.priority} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.metaCard}>
+                  <div
+                    className={styles.metaCard__icon}
+                    style={{
+                      background: item.assignee
+                        ? "rgba(16, 185, 129, 0.1)"
+                        : "rgba(100, 116, 139, 0.1)",
+                    }}
+                  >
+                    <User
+                      size={16}
+                      style={{
+                        color: item.assignee
+                          ? "rgb(16, 185, 129)"
+                          : "rgb(100, 116, 139)",
+                      }}
+                    />
+                  </div>
+                  <div className={styles.metaCard__content}>
+                    <span className={styles.metaCard__label}>
+                      {t("inbox.panel.assignee")}
+                    </span>
+                    <span className={styles.metaCard__value}>
+                      {item.assignee ? (
+                        item.assignee
+                      ) : (
+                        <span
+                          style={{
+                            color: "var(--color-text-tertiary)",
+                            fontStyle: "italic",
+                          }}
+                        >
+                          {t("inbox.panel.unassigned")}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </>
