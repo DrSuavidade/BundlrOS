@@ -11,7 +11,7 @@
     "dist/**/*",
     "electron/**/*.cjs",
     "package.json",
-    "!**/node_modules/**"
+    "!**/node_modules/@bundlros/**"
   ],
   "extraMetadata": {
     "main": "electron/main.cjs"

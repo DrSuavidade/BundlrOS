@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppShell, LanguageProvider, AuthProvider } from "@bundlros/ui";
 import { TitleBar } from "./components/TitleBar";
 
@@ -23,7 +23,7 @@ const App: React.FC = () => {
       <div style={{ paddingTop: "0" }}>
         <AuthProvider>
           <LanguageProvider>
-            <BrowserRouter>
+            <HashRouter>
               <Suspense
                 fallback={
                   <div className="h-screen w-screen bg-[#080809] flex items-center justify-center text-white font-mono">
@@ -130,7 +130,7 @@ const App: React.FC = () => {
                   />
                 </Routes>
               </Suspense>
-            </BrowserRouter>
+            </HashRouter>
           </LanguageProvider>
         </AuthProvider>
       </div>
