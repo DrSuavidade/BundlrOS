@@ -1,0 +1,163 @@
+.titleBar {
+    display: flex;
+    align-items: center;
+    height: 38px;
+    background: linear-gradient(180deg, rgba(20, 20, 30, 0.98) 0%, rgba(15, 15, 22, 0.98) 100%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    user-select: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.visible {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* App branding */
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    height: 100%;
+    -webkit-app-region: no-drag;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+    border-radius: 6px;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.title {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: 0.3px;
+}
+
+.version {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.3px;
+}
+
+/* Draggable region fills the middle */
+.dragRegion {
+    flex: 1;
+    height: 100%;
+    -webkit-app-region: drag;
+}
+
+/* Update status */
+.updateStatus {
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    -webkit-app-region: no-drag;
+}
+
+.updateText {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+.updateButton {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    border: none;
+    border-radius: 4px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.updateButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.updateButton:active {
+    transform: translateY(0);
+}
+
+/* Window controls */
+.windowControls {
+    display: flex;
+    height: 100%;
+    -webkit-app-region: no-drag;
+}
+
+.controlButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 100%;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.65);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.controlButton:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.controlButton:active {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.closeButton:hover {
+    background: #e81123;
+    color: white;
+}
+
+.closeButton:active {
+    background: #c50f1f;
+}
+
+/* Ensure SVGs render properly */
+.controlButton svg {
+    flex-shrink: 0;
+}

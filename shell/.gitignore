@@ -1,0 +1,8 @@
+# Electron build outputs
+release/
+electron/**/*.js
+electron/**/*.js.map
+
+# OS files
+.DS_Store
+Thumbs.db

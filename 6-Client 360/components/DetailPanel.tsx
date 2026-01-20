@@ -19,6 +19,8 @@ import {
   Pencil,
   Trash2,
   Plus,
+  Calendar,
+  ChevronDown,
 } from "lucide-react";
 import styles from "./Dashboard.module.css";
 import { Badge, useLanguage } from "@bundlros/ui";
@@ -58,6 +60,9 @@ export const DetailPanel: React.FC<PanelProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [filteredData, setFilteredData] = useState(data);
+  const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Reset state when panel opens/type changes
   useEffect(() => {
@@ -67,6 +72,7 @@ export const DetailPanel: React.FC<PanelProps> = ({
     setSelectedId(null);
     setDeleteModalOpen(false);
     setFormData({ name: "", role: "", email: "", phone: "" });
+    setExpandedNotes({});
   }, [type, isOpen]);
 
   // Handle Edit Click
@@ -322,15 +328,12 @@ export const DetailPanel: React.FC<PanelProps> = ({
           {/* LIST VIEW */}
           {viewMode === "list" && (
             <>
-              <div className="relative mb-4">
-                <Search
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-tertiary)]"
-                />
+              <div className={styles.searchContainer}>
+                <Search className={styles.searchIcon} />
                 <input
                   type="text"
                   placeholder={t("clients.detailPanel.filterList")}
-                  className="w-full pl-9 pr-4 py-2 bg-[var(--color-bg-subtle)] border border-[var(--color-border-subtle)] rounded-lg text-sm text-[var(--color-text-primary)] focus:outline-none focus:border-[var(--color-accent-primary)] placeholder-[var(--color-text-tertiary)] transition-all"
+                  className={styles.searchInput}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -350,12 +353,15 @@ export const DetailPanel: React.FC<PanelProps> = ({
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredData.map((item: any, idx: number) => {
                   const isSelected = selectedId === item.id;
+                  const itemKey = item.id || `item-${idx}`;
+                  const isNotesExpanded = expandedNotes[itemKey] || false;
+
                   return (
                     <div
-                      key={item.id || idx}
+                      key={itemKey}
                       className={`${styles.listItem} ${
                         isSelected ? styles.listItemSelected : ""
                       }`}
@@ -368,9 +374,10 @@ export const DetailPanel: React.FC<PanelProps> = ({
                       }
                     >
                       {type === "contracts" ? (
-                        <>
-                          <div className="flex justify-between items-start mb-2">
-                            <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                        /* Contract Card */
+                        <div className={styles.contractCard}>
+                          <div className={styles.contractCard__header}>
+                            <h3 className={styles.contractCard__title}>
                               {item.title}
                             </h3>
                             <Badge
@@ -381,69 +388,119 @@ export const DetailPanel: React.FC<PanelProps> = ({
                               {item.status}
                             </Badge>
                           </div>
-                          <div className="flex justify-between items-end">
-                            <div className="text-xs text-[var(--color-text-secondary)]">
-                              {t("clients.expires")}: {item.endDate}
+                          <div className={styles.contractCard__footer}>
+                            <div className={styles.contractCard__meta}>
+                              <Calendar />
+                              <span>
+                                {t("clients.expires")}: {item.endDate}
+                              </span>
                             </div>
-                            <div className="text-sm font-bold font-mono text-[var(--color-text-primary)]">
+                            <div className={styles.contractCard__value}>
                               {item.value}
                             </div>
                           </div>
-                        </>
+                        </div>
                       ) : type === "contacts" ? (
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
+                        /* Contact Card */
+                        <div className={styles.contactCard}>
+                          <div className={styles.contactCard__avatar}>
+                            {item.name
+                              ?.split(" ")
+                              .map((n: string) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase() || "?"}
+                          </div>
+                          <div className={styles.contactCard__info}>
+                            <h3 className={styles.contactCard__name}>
                               {item.name}
                             </h3>
-                            <div className="text-xs text-[var(--color-text-tertiary)] mt-0.5">
+                            <div className={styles.contactCard__role}>
                               {item.role}
                             </div>
                           </div>
-                          <div className="flex flex-col items-start gap-0.5">
+                          <div className={styles.contactCard__details}>
                             {item.email && (
-                              <div className="text-xs text-[var(--color-text-secondary)]">
-                                {item.email}
+                              <div className={styles.contactCard__detail}>
+                                <Mail />
+                                <span>{item.email}</span>
                               </div>
                             )}
                             {item.phone && (
-                              <div className="text-xs text-[var(--color-text-tertiary)]">
-                                {item.phone}
+                              <div className={styles.contactCard__detail}>
+                                <Phone />
+                                <span>{item.phone}</span>
                               </div>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <>
-                          {/* Activity Item */}
-                          <div className="flex justify-between items-start mb-1.5">
-                            <div className="flex items-center gap-2">
-                              <div
-                                className="w-2 h-2 rounded-full"
-                                style={{
-                                  backgroundColor:
-                                    item.type === "meeting"
-                                      ? "rgb(168, 85, 247)"
-                                      : item.type === "email"
-                                        ? "rgb(249, 115, 22)"
-                                        : "rgb(59, 130, 246)",
-                                }}
-                              />
-                              <span className="text-[10px] font-mono text-[var(--color-text-tertiary)]">
-                                {item.displayTimestamp}
-                              </span>
+                        /* Activity Card */
+                        <div className={styles.activityCard}>
+                          <div className={styles.activityCard__header}>
+                            <div
+                              className={`${styles.activityCard__icon} ${
+                                styles[item.type] || ""
+                              }`}
+                            >
+                              {item.type === "meeting" ? (
+                                <Briefcase size={18} />
+                              ) : item.type === "email" ? (
+                                <Mail size={18} />
+                              ) : (
+                                <Sparkles size={18} />
+                              )}
                             </div>
-                            <div className="px-1.5 py-0.5 rounded text-[9px] uppercase font-bold tracking-wider bg-[var(--color-bg-app)] border border-[var(--color-border-subtle)] text-[var(--color-text-tertiary)]">
-                              {item.type}
+                            <div className={styles.activityCard__content}>
+                              <div className={styles.activityCard__meta}>
+                                <span className={styles.activityCard__type}>
+                                  {item.type}
+                                </span>
+                                <span className={styles.activityCard__time}>
+                                  {item.displayTimestamp}
+                                </span>
+                              </div>
+                              <h3 className={styles.activityCard__title}>
+                                {item.title}
+                              </h3>
                             </div>
                           </div>
-                          <h3 className="text-sm font-medium text-[var(--color-text-primary)] mb-1">
-                            {item.title}
-                          </h3>
-                          <p className="text-xs text-[var(--color-text-secondary)] line-clamp-3 leading-relaxed border-l-2 border-[var(--color-border-subtle)] pl-2 ml-1">
-                            {item.notes}
-                          </p>
-                        </>
+                          {/* Notes Toggle & Content */}
+                          {item.notes && (
+                            <>
+                              <div
+                                className={`${styles.activityCard__notesToggle} ${
+                                  isNotesExpanded ? styles.expanded : ""
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedNotes((prev) => ({
+                                    ...prev,
+                                    [itemKey]: !prev[itemKey],
+                                  }));
+                                }}
+                              >
+                                <ChevronDown />
+                                <span>
+                                  {isNotesExpanded
+                                    ? t("common.close")
+                                    : t("clients.notes")}
+                                </span>
+                              </div>
+                              {isNotesExpanded && (
+                                <div className={styles.activityCard__notes}>
+                                  <div
+                                    className={
+                                      styles.activityCard__notesContent
+                                    }
+                                  >
+                                    {item.notes}
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
                   );

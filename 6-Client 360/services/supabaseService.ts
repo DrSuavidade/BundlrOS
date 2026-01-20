@@ -32,30 +32,36 @@ const mapContract = (contract: SupabaseContract): Contract => ({
 
 // Map Supabase deliverable to local type
 const mapDeliverable = (deliverable: SupabaseDeliverable): Deliverable => {
+    // Get the raw deliverable status
+    const rawStatus = deliverable.status;
+
     // Try to calculate progress from qa_checklist_state if available
     const checklistState = (deliverable as any).qa_checklist_state as Record<string, boolean> | undefined;
     let progress = 0;
 
-    if (checklistState && Object.keys(checklistState).length > 0) {
+    if (checklistState && typeof checklistState === 'object' && Object.keys(checklistState).length > 0) {
         // Calculate real progress from checklist
         const totalItems = Object.keys(checklistState).length;
         const completedItems = Object.values(checklistState).filter(Boolean).length;
         progress = Math.round((completedItems / totalItems) * 100);
     } else {
-        // Fallback to status-based progress
+        // Fallback to status-based progress only for certain statuses that don't have checklists
+        // For statuses that should have checklist data, default to 0%
         const progressMap: Record<string, number> = {
-            'draft': 10,
-            'in_progress': 50,
-            'awaiting_approval': 75,
-            'in_qa': 85,
-            'qa_failed': 60,
-            'approved': 90,
+            'draft': 0,
+            'in_progress': 0,
+            'awaiting_approval': 0,
+            'in_qa': 0,
+            'qa_failed': 0, // Failed QA should show actual progress (0 if no checklist)
+            'approved': 0,
             'published': 100,
             'archived': 100,
         };
-        progress = progressMap[deliverable.status] || 0;
+        progress = progressMap[rawStatus] ?? 0;
     }
 
+    // Map to visual status - qa_failed is "at-risk" (red), 
+    // published/archived are "completed", others depend on context
     const statusMap: Record<string, 'on-track' | 'at-risk' | 'delayed' | 'completed'> = {
         'draft': 'on-track',
         'in_progress': 'on-track',
@@ -72,7 +78,7 @@ const mapDeliverable = (deliverable: SupabaseDeliverable): Deliverable => {
         title: deliverable.title,
         progress,
         dueDate: deliverable.due_date || new Date().toISOString(),
-        status: statusMap[deliverable.status] || 'on-track',
+        status: statusMap[rawStatus] || 'on-track',
     };
 };
 

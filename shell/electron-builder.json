@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  "appId": "com.bundlr.bundlros",
+  "productName": "BundlrOS",
+  "copyright": "Copyright © 2026 Bundlr",
+  "directories": {
+    "output": "release",
+    "buildResources": "build"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*.cjs",
+    "package.json",
+    "!**/node_modules/**"
+  ],
+  "extraMetadata": {
+    "main": "electron/main.cjs"
+  },
+  "asar": true,
+  "asarUnpack": [
+    "**/*.node"
+  ],
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
+    "icon": "build/icon.ico",
+    "artifactName": "${productName}-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "deleteAppDataOnUninstall": false,
+    "installerIcon": "build/icon.ico",
+    "uninstallerIcon": "build/icon.ico",
+    "installerHeaderIcon": "build/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "BundlrOS"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "DrSuavidade",
+    "repo": "BundlrOS",
+    "releaseType": "release"
+  }
+}
